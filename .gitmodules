@@ -1,0 +1,6 @@
+[submodule "external/src/charm"]
+	path = external/src/charm
+	url = https://github.com/UIUC-PPL/charm.git
+[submodule "external/src/trilinos"]
+	path = external/src/trilinos
+	url = https://github.com/trilinos/Trilinos.git
