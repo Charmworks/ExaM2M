@@ -13,6 +13,7 @@
 mainmodule exam2m {
 
   extern module transporter;
+  extern module partitioner;
 
   readonly CProxy_Main mainProxy;
 

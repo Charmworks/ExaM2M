@@ -63,7 +63,7 @@ class Main : public CBase_Main {
     try :
       // Create driver
       m_signal( tk::setSignalHandlers() ),
-      m_driver()
+      m_driver( msg->argc, msg->argv )
     {
       delete msg;
       mainProxy = thisProxy;
@@ -78,7 +78,8 @@ class Main : public CBase_Main {
     //! Migrate constructor: returning from a checkpoint
     explicit Main( CkMigrateMessage* msg ) : CBase_Main( msg ),
       m_signal( tk::setSignalHandlers() ),
-      m_driver()
+      m_driver( reinterpret_cast<CkArgMsg*>(msg)->argc,
+                reinterpret_cast<CkArgMsg*>(msg)->argv )
     {
       mainProxy = thisProxy;
       CkStartQD( CkCallback( CkIndex_Main::quiescence(), thisProxy ) );

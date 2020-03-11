@@ -349,8 +349,11 @@ endif(BUILD_SHARED_LIBS)
 set(EXAM2M_EXECUTABLE exam2m)
 
 # Components
-if (CHARM_FOUND)
+if (CHARM_FOUND AND BRIGAND_FOUND AND SEACASExodus_FOUND AND EXODIFF_FOUND AND
+    HDF5_FOUND AND BRIGAND_FOUND AND HIGHWAYHASH_FOUND)
   add_subdirectory(Base)
+  add_subdirectory(IO)
+  add_subdirectory(Mesh)
   add_subdirectory(Main)
 endif()
 

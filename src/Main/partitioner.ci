@@ -1,0 +1,45 @@
+// *****************************************************************************
+/*!
+  \file      src/Main/partitioner.ci
+  \copyright 2020 Charmworks, Inc.
+             All rights reserved. See the LICENSE file for details.
+  \brief     Charm++ module interface file for the chare partitioner nodegroup
+  \details   Charm++ module interface file for the chare partitioner nodegroup
+             used to perform mesh partitioning.
+*/
+// *****************************************************************************
+
+module partitioner {
+
+  include "Types.hpp";
+  include "UnsMesh.hpp";
+  include "Callback.hpp";
+
+  extern module transporter;
+  extern module meshwriter;
+
+  namespace exam2m {
+
+    nodegroup [migratable] Partitioner {
+      entry Partitioner(
+        const std::string& meshfilename,
+        const tk::PartitionerCallback& cbp,
+        const tk::CProxy_MeshWriter& meshwriter,
+        const std::map< int, std::vector< std::size_t > >& bface,
+        const std::map< int, std::vector< std::size_t > >& faces,
+        const std::map< int, std::vector< std::size_t > >& bnode );
+      entry [exclusive] void partition( int nchare );
+      entry [exclusive] void addMesh(
+        int fromnode,
+        const std::unordered_map< int,
+                std::tuple<
+                  std::vector< std::size_t >,
+                  tk::UnsMesh::CoordMap,
+                  std::unordered_map< int, std::vector< std::size_t > >,
+                  std::unordered_map< int, std::vector< std::size_t > >
+                > >& chmesh );
+      entry [exclusive] void recvMesh();
+    };
+
+  } // exam2m::
+}

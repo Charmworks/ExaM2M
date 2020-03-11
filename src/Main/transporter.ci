@@ -13,7 +13,9 @@ module transporter {
   namespace exam2m {
 
     chare [migratable] Transporter {
-      entry Transporter();
+      entry Transporter( const std::vector< std::string >& argv );
+      entry [reductiontarget] void load( std::size_t nelem );
+      entry [reductiontarget] void distributed();
     }
 
   } // exam2m::

@@ -10,3 +10,12 @@
 [submodule "external/src/netcdf"]
 	path = external/src/netcdf
 	url = https://github.com/Unidata/netcdf-c.git
+[submodule "external/src/brigand"]
+	path = external/src/brigand
+	url = https://github.com/edouarda/brigand.git
+[submodule "external/src/highwayhash"]
+	path = external/src/highwayhash
+	url = https://github.com/google/highwayhash.git
+[submodule "external/src/hdf5-ampi"]
+	path = external/src/hdf5-ampi
+	url = http://charm.cs.illinois.edu/gerrit/hdf5-ampi

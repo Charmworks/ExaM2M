@@ -73,6 +73,8 @@ set(ENABLE_CHARM ON CACHE BOOL "Enable Charm++")
 set(ENABLE_HDF5 ON CACHE BOOL "Enable HDF5")
 set(ENABLE_NETCDF ON CACHE BOOL "Enable NetCDF")
 set(ENABLE_TRILINOS ON CACHE BOOL "Enable Trilinos")
+set(ENABLE_BRIGAND ON CACHE BOOL "Enable Brigand")
+set(ENABLE_HIGHWAYHASH ON CACHE BOOL "Enable HighwayHash")
 
 # Charm++
 if (ENABLE_CHARM)
@@ -361,12 +363,32 @@ if (ENABLE_TRILINOS)
   endif()
 endif()
 
+# Brigand
+if (ENABLE_BRIGAND)
+  find_package(Brigand)
+  if(Brigand_FOUND)
+    set(brigand "")
+  else()
+    set(brigand "brigand")
+  endif()
+endif()
+
+# Highwayhash
+if (ENABLE_HIGHWAYHASH)
+  find_package(HighwayHash)
+  if(HighwayHash_FOUND)
+    set(highwayhash "")
+  else()
+    set(highwayhash "highwayhash")
+  endif()
+endif()
+
 # Get compiler flags (CFLAGS, CXXFLAGS, FFLAGS) independent of CMAKE_BUILD_TYPE
 # and echo flags that will be passed to all TPL builds
 include(get_compiler_flags)
 get_compiler_flags()
 
-set(tpls2build ${charm} ${hdf5} ${netcdf} ${trilinos})
+set(tpls2build ${charm} ${hdf5} ${netcdf} ${trilinos} ${brigand} ${highwayhash})
 
 list(LENGTH tpls2build ntpl)
 list(SORT tpls2build)
@@ -583,5 +605,39 @@ if(trilinos)
     LOG_CONFIGURE 1
     LOG_BUILD 1
     LOG_INSTALL 1
+  )
+endif()
+
+#### Brigand ###################################################################
+# https://github.com/edouarda/brigand
+# Header only, only if not found
+if (brigand)
+  ExternalProject_Add(
+    brigand
+    PREFIX brigand
+    # Header-only, copy include dir over
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory
+                      ${PROJECT_SOURCE_DIR}/src/brigand/include/brigand
+                      ${CMAKE_INSTALL_PREFIX}/include/brigand
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    DOWNLOAD_COMMAND ""
+  )
+endif()
+
+#### HighwayHash, Fast strong hash functions: SipHash/HighwayHash  #############
+# https://github.com/google/highwayhash
+# Header only, only if not found
+if (highwayhash)
+  ExternalProject_Add(
+    highwayhash
+    PREFIX highwayhash
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E copy_directory
+                      ${PROJECT_SOURCE_DIR}/src/highwayhash/highwayhash
+                      ${CMAKE_INSTALL_PREFIX}/include/highwayhash
+    LOG_CONFIGURE 1
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    DOWNLOAD_COMMAND ""
   )
 endif()

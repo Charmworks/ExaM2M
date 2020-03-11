@@ -39,4 +39,15 @@ find_package(SEACASExodus)
 set(EXODUS_ROOT ${TPL_DIR}) # prefer ours
 find_package(Exodiff)
 
+#### Configure Brigand
+set(BRIGAND_ROOT ${TPL_DIR}) # prefer ours
+find_package(Brigand)
+
+#### Zoltan2 library
+find_package(Zoltan2)
+
+#### Configure HighwayHash
+set(HIGHWAYHASH_ROOT ${TPL_DIR}) # prefer ours
+find_package(HighwayHash)
+
 message(STATUS "------------------------------------------")

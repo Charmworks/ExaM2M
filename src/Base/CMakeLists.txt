@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.5)
 
 add_library(Base
             Exception.cpp
+            LoadDistributor.cpp
             ProcessException.cpp)
 
 target_include_directories(Base PUBLIC
