@@ -27,10 +27,10 @@ class Transporter : public CBase_Transporter {
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function
-    //! \param[in,out] p Charm++'s PUP::er serializer object reference
+    // //! \param[in,out] p Charm++'s PUP::er serializer object reference
     //! \note This is a Charm++ mainchare, pup() is thus only for
     //!    checkpoint/restart.
-    void pup( PUP::er & ) override {
+    void pup( PUP::er& ) override {
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
