@@ -1,0 +1,35 @@
+// *****************************************************************************
+/*!
+  \file      src/Main/exam2m.ci
+  \copyright 2020 CharmWorks, Inc.
+             All rights reserved. See the LICENSE file for details.
+  \brief     Charm++ module interface file for exam2m
+  \details   Charm++ module interface file for the mesh-to-mesh transfer
+             library, exam2m.
+  \see http://charm.cs.illinois.edu/manuals/html/charm++/manual.html
+*/
+// *****************************************************************************
+
+mainmodule exam2m {
+
+  extern module transporter;
+
+  readonly CProxy_Main mainProxy;
+
+  namespace exam2m {
+
+    // Order important: must be the same as in Main/ExaM2M.cpp
+    // readonly ...
+
+  } // exam2m::
+
+  mainchare [migratable] Main {
+    entry Main( CkArgMsg* msg );
+    entry void execute();
+    entry void finalize();
+    entry void quiescence();
+  }
+
+  chare [migratable] execute { entry execute(); }
+
+}
