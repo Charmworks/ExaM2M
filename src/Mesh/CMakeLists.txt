@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 2.8.5)
 
 add_library(Mesh
             ZoltanInterOp.cpp
+            DerivedData.cpp
             Reorder.cpp)
 
 target_include_directories(Mesh PUBLIC
                            ${PROJECT_SOURCE_DIR}
                            ${PROJECT_SOURCE_DIR}/Base
+                           ${PROJECT_BINARY_DIR}/Main
+                           ${CHARM_INCLUDE_DIRS}
                            ${Zoltan2_INCLUDE_DIRS}
                            ${HIGHWAYHASH_INCLUDE_DIRS}
                            ${MPI_CXX_INCLUDE_DIRS})

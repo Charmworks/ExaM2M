@@ -1,0 +1,43 @@
+// *****************************************************************************
+/*!
+  \file      src/Main/mapper.ci
+  \copyright 2020 Charmworks, Inc.
+             All rights reserved. See the LICENSE file for details.
+  \brief     Charm++ module interface file for setting up communication maps
+  \details   Charm++ module interface file for setting up communication maps.
+*/
+// *****************************************************************************
+
+module mapper {
+
+  include "Callback.hpp";
+  include "CommMap.hpp";
+
+  extern module meshwriter;
+  extern module worker;
+
+  namespace exam2m {
+
+    array [1D] Mapper {
+      entry Mapper( const tk::CProxy_MeshWriter& meshwriter,
+                    const CProxy_Worker& worker,
+                    const tk::MapperCallback& cbm,
+                    const tk::WorkerCallback& cbw,
+                    const std::vector< std::size_t >& ginpoel,
+                    const tk::UnsMesh::CoordMap& coordmap,
+                    const std::map< int, std::vector< std::size_t > >& bface,
+                    const std::vector< std::size_t >& triinpoel,
+                    const std::map< int, std::vector< std::size_t > >& bnode,
+                    int nchare );
+      entry void setup( std::size_t npoin );
+      entry void query( int fromch, const tk::AllCommMaps& bnd );
+      entry void recvquery();
+      entry void response();
+      entry void bnd( int fromch, tk::CommMaps& commap );
+      entry void recvbnd();
+      entry void create();
+    };
+
+  } // exam2m::
+
+}

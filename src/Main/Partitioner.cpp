@@ -23,12 +23,20 @@ using exam2m::Partitioner;
 Partitioner::Partitioner(
   const std::string& meshfilename,
   const tk::PartitionerCallback& cbp,
+  const tk::MapperCallback& cbm,
+  const tk::WorkerCallback& cbw,
   const tk::CProxy_MeshWriter& meshwriter,
+  const CProxy_Mapper& mapper,
+  const CProxy_Worker& worker,
   const std::map< int, std::vector< std::size_t > >& bface,
   const std::map< int, std::vector< std::size_t > >& faces,
   const std::map< int, std::vector< std::size_t > >& bnode ) :
   m_cbp( cbp ),
+  m_cbm( cbm ),
+  m_cbw( cbw ),
   m_meshwriter( meshwriter ),
+  m_mapper( mapper ),
+  m_worker( worker ),
   m_ginpoel(),
   m_coord(),
   m_inpoel(),
@@ -47,6 +55,8 @@ Partitioner::Partitioner(
 //  Constructor
 //! \param[in] meshfilename Name of mesh file to read
 //! \param[in] cbp Charm++ callbacks for Partitioner
+//! \param[in] cbm Charm++ callbacks for Mapper
+//! \param[in] cbw Charm++ callbacks for Worker
 //! \param[in] meshwriter Mesh writer proxy
 //! \param[in] scheme Discretization scheme
 //! \param[in] bface File-internal elem ids of side sets (whole mesh)
@@ -478,6 +488,60 @@ Partitioner::distribution( int npart ) const
   auto mynchare = chunksize;
   if (CkMyNode() == CkNumNodes()-1) mynchare += npart % CkNumNodes();
   return {{ chunksize, mynchare }};
+}
+
+void
+Partitioner::map()
+// *****************************************************************************
+// Create Mappers computing the communication maps between mesh chunks
+// *****************************************************************************
+{
+  auto dist = distribution( m_nchare );
+
+  int error = 0;
+  if (m_chinpoel.size() < static_cast<std::size_t>(dist[1])) {
+
+    error = 1;
+
+  } else {
+
+    for (int c=0; c<dist[1]; ++c) {
+      // compute chare ID
+      auto cid = CkMyNode() * dist[0] + c;
+      // create Mapper Charm++ chare array elements
+      m_mapper[ cid ].insert( m_meshwriter,
+                              m_worker,
+                              m_cbm,
+                              m_cbw,
+                              tk::cref_find(m_chinpoel,cid),
+                              tk::cref_find(m_chcoordmap,cid),
+                              tk::cref_find(m_chbface,cid),
+                              tk::cref_find(m_chtriinpoel,cid),
+                              tk::cref_find(m_chbnode,cid),
+                              m_nchare );
+    }
+
+  }
+
+  tk::destroy( m_ginpoel );
+  tk::destroy( m_coord );
+  tk::destroy( m_inpoel );
+  tk::destroy( m_lid );
+  tk::destroy( m_nface );
+  tk::destroy( m_nodech );
+  tk::destroy( m_linnodes );
+  tk::destroy( m_chinpoel );
+  tk::destroy( m_chcoordmap );
+  tk::destroy( m_chbface );
+  tk::destroy( m_chtriinpoel );
+  tk::destroy( m_chbnode );
+  tk::destroy( m_bnodechares );
+  tk::destroy( m_bface );
+  tk::destroy( m_triinpoel );
+  tk::destroy( m_bnode );
+
+  contribute( sizeof(int), &error, CkReduction::max_int,
+              m_cbp.get< tag::mapinserted >() );
 }
 
 #include "NoWarning/partitioner.def.h"

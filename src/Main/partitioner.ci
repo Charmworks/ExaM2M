@@ -15,8 +15,9 @@ module partitioner {
   include "UnsMesh.hpp";
   include "Callback.hpp";
 
-  extern module transporter;
   extern module meshwriter;
+  extern module mapper;
+  extern module worker;
 
   namespace exam2m {
 
@@ -24,7 +25,11 @@ module partitioner {
       entry Partitioner(
         const std::string& meshfilename,
         const tk::PartitionerCallback& cbp,
+        const tk::MapperCallback& cbm,
+        const tk::WorkerCallback& cbw,
         const tk::CProxy_MeshWriter& meshwriter,
+        const CProxy_Mapper& mapper,
+        const CProxy_Worker& worker,
         const std::map< int, std::vector< std::size_t > >& bface,
         const std::map< int, std::vector< std::size_t > >& faces,
         const std::map< int, std::vector< std::size_t > >& bnode );
@@ -39,6 +44,7 @@ module partitioner {
                   std::unordered_map< int, std::vector< std::size_t > >
                 > >& chmesh );
       entry [exclusive] void recvMesh();
+      entry void map();
     };
 
   } // exam2m::

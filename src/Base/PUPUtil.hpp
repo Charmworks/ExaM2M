@@ -20,7 +20,7 @@
 #include <variant>
 #include <optional>
 
-#include <pup_stl.h>
+#include "NoWarning/pup_stl.hpp"
 
 //! Extensions to Charm++'s Pack/Unpack routines
 namespace PUP {

@@ -16,6 +16,7 @@
 #include "Partitioner.hpp"
 
 #include "NoWarning/transporter.decl.h"
+#include "NoWarning/mapper.decl.h"
 
 namespace exam2m{
 
@@ -34,6 +35,21 @@ class Transporter : public CBase_Transporter {
 
     //! Reduction target: all PEs have distrbuted their mesh after partitioning
     void distributed();
+
+    //! Reduction target: all PEs have created their Mappers
+    void mapinserted( int error );
+
+    //! Reduction target: all Mapper chares have queried their boundary nodes
+    void queried();
+    //! \brief Reduction target: all Mapper chares have responded with their
+    //!   boundary nodes
+    void responded();
+
+    ///! Reduction target: all Workers have been created
+    void workinserted();
+
+    //! Reduction target: all Worker constructors have been called
+    void workcreated();
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -56,6 +72,10 @@ class Transporter : public CBase_Transporter {
     int m_nchare;                        //!< Number of worker chares
     CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy    
     tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
+    CProxy_Mapper m_mapper;              //!< Mapper array proxy
+    CProxy_Worker m_worker;              //!< Worker array proxy
+    std::size_t m_nelem;                 //!< Total number of elements in mesh
+    std::size_t m_npoin;                 //!< Total number of nodes in mesh
 
     //! Normal finish of time stepping
     void finish();

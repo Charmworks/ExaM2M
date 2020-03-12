@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.5)
 
 add_library(Base
+            Vector.cpp
             Exception.cpp
             LoadDistributor.cpp
             ProcessException.cpp)
@@ -8,6 +9,7 @@ add_library(Base
 target_include_directories(Base PUBLIC
                            ${PROJECT_SOURCE_DIR}
                            ${PROJECT_SOURCE_DIR}/Base
+                           ${PROJECT_BINARY_DIR}/Main
                            ${MPI_CXX_INCLUDE_DIRS}
                            ${CHARM_INCLUDE_DIRS})
 

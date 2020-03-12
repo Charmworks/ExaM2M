@@ -1,0 +1,26 @@
+// *****************************************************************************
+/*!
+  \file      src/Main/ExaM2MConfig.hpp
+  \copyright 2020 Charmworks, Inc.
+             All rights reserved. See the LICENSE file for details.
+  \brief     ExaM2M configuration macros imported from cmake
+  \details   ExaM2M configuration macros inported from cmake.
+  \see       src/CMakeListst.txt
+ */
+// *****************************************************************************
+#ifndef ExaM2MConfig_h
+#define ExaM2MConfig_h
+
+#include <iosfwd>
+
+namespace tk {
+ 
+// Compile-time options
+
+// Data layout for mesh data
+#cmakedefine FIELD_DATA_LAYOUT_AS_FIELD_MAJOR
+#cmakedefine FIELD_DATA_LAYOUT_AS_EQUATION_MAJOR
+
+} // tk::
+
+#endif // ExaM2MConfig_h

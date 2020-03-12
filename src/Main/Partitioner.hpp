@@ -40,7 +40,11 @@ class Partitioner : public CBase_Partitioner {
     //! Constructor
     Partitioner( const std::string& meshfilename,
                  const tk::PartitionerCallback& cbp,
-                 const tk::CProxy_MeshWriter& mw,
+                 const tk::MapperCallback& cbm,
+                 const tk::WorkerCallback& cbw,
+                 const tk::CProxy_MeshWriter& meshwriter,
+                 const CProxy_Mapper& mapper,
+                 const CProxy_Worker& w,
                  const std::map< int, std::vector< std::size_t > >& bface,
                  const std::map< int, std::vector< std::size_t > >& faces,
                  const std::map< int, std::vector< std::size_t > >& bnode );
@@ -70,6 +74,9 @@ class Partitioner : public CBase_Partitioner {
 
     //! Acknowledge received mesh after initial mesh refinement
     void recvMesh();
+
+    //! Create Mappers computing the communication maps between mesh chunks
+    void map();
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -106,10 +113,18 @@ class Partitioner : public CBase_Partitioner {
     //@}
 
   private:
-    //! Charm++ callbacks associated to compile-time tags for partitioner
+    //! Charm++ callbacks associated to compile-time tags for Partitioner
     tk::PartitionerCallback m_cbp;
+    //! Charm++ callbacks associated to compile-time tags for Mapper
+    tk::MapperCallback m_cbm;
+    //! Charm++ callbacks associated to compile-time tags for Worker
+    tk::WorkerCallback m_cbw;
     //! Mesh writer proxy
     tk::CProxy_MeshWriter m_meshwriter;
+    //! Mapper proxy
+    CProxy_Mapper m_mapper;
+    //! Worker proxy
+    CProxy_Worker m_worker;
     //! Element connectivity of this compute node's mesh chunk (global ids)
     std::vector< std::size_t > m_ginpoel;
     //! Coordinates of mesh nodes of this compute node's mesh chunk

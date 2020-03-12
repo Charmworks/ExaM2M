@@ -10,12 +10,19 @@
 
 module transporter {
 
+  extern module worker;
+
   namespace exam2m {
 
     chare [migratable] Transporter {
       entry Transporter( const std::vector< std::string >& argv );
       entry [reductiontarget] void load( std::size_t nelem );
       entry [reductiontarget] void distributed();
+      entry [reductiontarget] void mapinserted( int error );
+      entry [reductiontarget] void queried();
+      entry [reductiontarget] void responded();
+      entry [reductiontarget] void workinserted();
+      entry [reductiontarget] void workcreated();
     }
 
   } // exam2m::

@@ -21,6 +21,19 @@ using PartitionerCallback =
   tk::TaggedTuple< brigand::list<
       tag::load,           CkCallback
     , tag::distributed,    CkCallback
+    , tag::mapinserted,    CkCallback
+  > >;
+
+using MapperCallback =
+  tk::TaggedTuple< brigand::list<
+      tag::queried,        CkCallback
+    , tag::responded,      CkCallback
+    , tag::workinserted,   CkCallback
+  > >;
+
+using WorkerCallback =
+  tk::TaggedTuple< brigand::list<
+      tag::workcreated,   CkCallback
   > >;
 
 } // tk::

@@ -321,6 +321,13 @@ message(STATUS "C compiler flags: '${CMAKE_C_FLAGS}'")
 message(STATUS "C++ compiler flags: '${CMAKE_CXX_FLAGS}'")
 message(STATUS "Executable linker flags: '${CMAKE_EXE_LINKER_FLAGS}'")
 
+# Include cmake code to enable configuration for data layouts
+include(ConfigureDataLayout)
+
+# Configure cmake variables to pass to the build
+configure_file( "${PROJECT_SOURCE_DIR}/Main/ExaM2MConfig.hpp.in"
+                "${PROJECT_BINARY_DIR}/Main/ExaM2MConfig.hpp" )
+
 if (BUILD_SHARED_LIBS)
 
   ### Set RPATH so that shared libs paths stay in the binary after install ###
@@ -354,6 +361,7 @@ if (CHARM_FOUND AND BRIGAND_FOUND AND SEACASExodus_FOUND AND EXODIFF_FOUND AND
   add_subdirectory(Base)
   add_subdirectory(IO)
   add_subdirectory(Mesh)
+  add_subdirectory(Transfer)
   add_subdirectory(Main)
 endif()
 
