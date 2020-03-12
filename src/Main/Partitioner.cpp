@@ -132,7 +132,7 @@ Partitioner::partition( int nchare )
 
   m_nchare = nchare;
   // coordinate-based algorithms hooked up: rcb, rib, hsfc, multijagged, phg
-  const auto che = tk::zoltan::geomPartMesh( "rib",
+  const auto che = tk::zoltan::geomPartMesh( "rcb",
                                              centroids( m_inpoel, m_coord ),
                                              gelemid,
                                              nchare );

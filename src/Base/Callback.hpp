@@ -34,6 +34,7 @@ using MapperCallback =
 using WorkerCallback =
   tk::TaggedTuple< brigand::list<
       tag::workcreated,   CkCallback
+    , tag::written,       CkCallback
   > >;
 
 } // tk::

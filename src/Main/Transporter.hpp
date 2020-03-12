@@ -51,6 +51,9 @@ class Transporter : public CBase_Transporter {
     //! Reduction target: all Worker constructors have been called
     void workcreated();
 
+    //! Reduction target: all Workers have written out mesh/field data
+    void written();
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function

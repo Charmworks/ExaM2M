@@ -75,6 +75,7 @@ Transporter::Transporter( const std::vector< std::string >& argv ) :
     // Create Worker callbacks (order matters)
     tk::WorkerCallback cbw {{
         CkCallback( CkReductionTarget(Transporter,workcreated), thisProxy )
+      , CkCallback( CkReductionTarget(Transporter,written), thisProxy )
     }};
 
     // Create MeshWriter chare group
@@ -197,8 +198,16 @@ Transporter::workcreated()
 {
   std::cout << "Number of tetrahedra: " << m_nelem << '\n';;
   std::cout << "Number of points: " << m_npoin << '\n';
-  std::cout << "Normal finish\n";
 
+  m_worker.out();
+}
+
+void
+Transporter::written()
+// *****************************************************************************
+// Reduction target: all Workers have written out mesh/field data
+// *****************************************************************************
+{
   finish();
 }
 
@@ -217,6 +226,7 @@ Transporter::finish()
 // Normal finish of time stepping
 // *****************************************************************************
 {
+  std::cout << "Normal finish\n";
   mainProxy.finalize();
 }
 

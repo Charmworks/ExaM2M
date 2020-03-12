@@ -68,6 +68,59 @@ Worker::Worker(
   contribute( m_cbw.get< tag::workcreated >() );
 }
 
+void
+Worker::out()
+// *****************************************************************************
+// Write out some field data to file(s)
+// *****************************************************************************
+{
+  // Volume elem field data
+  std::vector< std::string > elemfieldnames;
+  std::vector< std::vector< tk::real > > elemfields;
+
+  // Empty elem field data for now (but the writer should be able write those
+  // fine too, and may be useful for debugging later.
+
+  // Volume node field data (this is what we care about mostly at first)
+  std::vector< std::string > nodefieldnames;
+  std::vector< std::vector< tk::real > > nodefields;
+
+  nodefieldnames.push_back( "scalar" );
+  const auto& x = m_coord[0];
+  const auto& y = m_coord[1];
+  const auto& z = m_coord[2];
+  auto npoin = m_coord[0].size();
+  std::vector< tk::real > s( npoin, 0.0 );
+  for (std::size_t i=0; i<npoin; ++i) {
+    s[i] = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
+  }
+  nodefields.push_back( s );
+
+  // Surface field data in nodes
+  std::vector< std::string > nodesurfnames;
+  std::vector< std::vector< tk::real > > nodesurfs;
+
+  // Surface field output should also work fine, but empty for now. This may be
+  // used for outputing data along side sets, which is usually orders of
+  // magnitude smaller then volume field data. Could also be useful for
+  // debugging.
+
+  // Send mesh and fields data for output to file
+  write( m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
+         m_triinpoel, elemfieldnames, nodefieldnames, nodesurfnames,
+         elemfields, nodefields, nodesurfs,
+         CkCallback(CkIndex_Worker::written(), thisProxy[thisIndex]) );
+}
+
+void
+Worker::written()
+// *****************************************************************************
+// Mesh and field data written to file(s)
+// *****************************************************************************
+{
+  contribute( m_cbw.get< tag::written >() );
+}
+
 tk::UnsMesh::Coords
 Worker::setCoord( const tk::UnsMesh::CoordMap& coordmap )
 // *****************************************************************************
@@ -154,10 +207,11 @@ Worker::write(
 
   m_meshwriter[ CkNodeFirst( CkMyNode() ) ].
     write( meshoutput, fieldoutput, m_itr, m_itf, m_t, thisIndex,
-           "out",
+           "out",       // output basefilename
            inpoel, coord, bface, bnode, triinpoel, elemfieldnames,
            nodefieldnames, nodesurfnames, elemfields, nodefields, nodesurfs,
-           {}, c );
+           {},  // no surface output for now (even if passed in nodesurf)
+           c );
 }
 
 #include "NoWarning/worker.def.h"

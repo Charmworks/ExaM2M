@@ -23,6 +23,7 @@ module transporter {
       entry [reductiontarget] void responded();
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
+      entry [reductiontarget] void written();
     }
 
   } // exam2m::

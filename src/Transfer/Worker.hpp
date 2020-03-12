@@ -61,6 +61,12 @@ class Worker : public CBase_Worker {
                 const std::vector< std::vector< tk::real > >& nodesurfs,
                 CkCallback c );
 
+    //! Write out some field data to file(s)
+    void out();
+
+    //! Mesh and field data written to file(s)
+    void written();
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function

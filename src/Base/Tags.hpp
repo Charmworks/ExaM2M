@@ -22,6 +22,7 @@ struct node {};
 struct edge {};
 struct queried {};
 struct responded {};
+struct written {};
 
 } // tag::
 
