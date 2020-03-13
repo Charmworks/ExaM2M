@@ -99,6 +99,7 @@ Mapper::setup( std::size_t npoin )
         for (std::size_t n=0; n<3; ++n) {
           auto g = m_ginpoel[ mark+tk::lpofa[f][n] ];
           auto bin = g / chunksize;
+          if (bin >= N) bin = N - 1;
           Assert( bin < N, "Will index out of number of chares" );
           auto& b = chbnd[ static_cast< int >( bin ) ];
           b.get< tag::node >().insert( g );
