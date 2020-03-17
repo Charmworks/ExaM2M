@@ -25,7 +25,7 @@ class Transporter : public CBase_Transporter {
 
   public:
     //! Constructor
-    explicit Transporter( const std::vector< std::string >& argv );
+    explicit Transporter( const std::string& argv );
 
     //! Migrate constructor: returning from a checkpoint
     explicit Transporter( CkMigrateMessage* m );

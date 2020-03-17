@@ -20,7 +20,7 @@ extern CProxy_Main mainProxy;
 
 using exam2m::Transporter;
 
-Transporter::Transporter( const std::vector< std::string >& argv ) :
+Transporter::Transporter( const std::string& meshfilename ) :
   m_nchare( 0 ),
   m_partitioner(),
   m_meshwriter(),
@@ -35,13 +35,6 @@ Transporter::Transporter( const std::vector< std::string >& argv ) :
   std::size_t nstep = 1;
 
   if ( nstep != 0 ) {    // start time stepping, exercising mesh-to-mesh transfer
-
-    std::cout << "Args: ";
-    for (const auto& arg : argv) std::cout << arg << ' ';
-    std::cout << '\n';
-
-    if (argv.empty()) Throw( "The first argument must be an exodus filename" );
-    std::string meshfilename( argv[0] );
 
     std::map< int, std::vector< std::size_t > > bface;
     std::map< int, std::vector< std::size_t > > faces;

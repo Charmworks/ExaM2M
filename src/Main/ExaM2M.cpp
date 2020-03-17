@@ -63,6 +63,7 @@ class Main : public CBase_Main {
     try :
       // Create driver
       m_signal( tk::setSignalHandlers() ),
+      m_mesh_complete( 0 ),
       m_driver( msg->argc, msg->argv )
     {
       delete msg;
@@ -95,7 +96,10 @@ class Main : public CBase_Main {
     //! Towards normal exit but collect chare state first (if any)
     void finalize() {
       try {
-        CkExit();
+        m_mesh_complete++;
+        if ( m_mesh_complete == 2 ) {
+          CkExit();
+        }
       } catch (...) { tk::processExceptionCharm(); }
     }
 
@@ -122,6 +126,7 @@ class Main : public CBase_Main {
 
   private:
     int m_signal;                       //!< Used to set signal handlers
+    int m_mesh_complete;                //!< Used to delay exit until all done
     exam2m::ExaM2MDriver m_driver;      //!< Driver
 };
 

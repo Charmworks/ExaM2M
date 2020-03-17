@@ -8,6 +8,8 @@
 */
 // *****************************************************************************
 
+#include <iostream>
+
 #include "ExaM2MDriver.hpp"
 
 #include "NoWarning/transporter.decl.h"
@@ -36,5 +38,12 @@ ExaM2MDriver::execute() const
   // Instantiate Transporter chare on PE 0 which drives time-integration,
   // during which there are multiple mesh-to-mesh transfers may be required as
   // a problem evolves in time.
-  CProxy_Transporter::ckNew( m_argv, 0 );
+
+  std::cout << "Args: ";
+  for (const auto& arg : m_argv) std::cout << arg << ' ';
+  std::cout << '\n';
+
+  if ( m_argv.size() < 2 ) Throw( "The first two arguments must be exodus filenames");
+  CProxy_Transporter::ckNew( m_argv[0], 0 );
+  CProxy_Transporter::ckNew( m_argv[1], 0 );
 }
