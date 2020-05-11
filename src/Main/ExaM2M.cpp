@@ -17,6 +17,8 @@
 
 #include "NoWarning/exam2m.decl.h"
 
+#include "collidecharm.h"
+
 #if defined(__clang__)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
@@ -25,6 +27,9 @@
 //! \brief Charm handle to the main proxy, facilitates call-back to finalize,
 //!    etc., must be in global scope.
 CProxy_Main mainProxy;
+
+//! \brief Charm handle to the collision detection library instance
+CollideHandle collideHandle;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -54,6 +59,8 @@ namespace exam2m {
 
 } // exam2m::
 
+void printCollisionHandler(void *param,int nColl,Collision *colls) {}
+
 //! Charm++ main chare for the exam2m executable.
 class Main : public CBase_Main {
 
@@ -74,6 +81,11 @@ class Main : public CBase_Main {
       // necessary so that this->execute() can access already migrated
       // global-scope data.
       CProxy_execute::ckNew();
+
+      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
+      collideHandle = CollideCreate(gridMap,
+          CollideSerialClient(printCollisionHandler, 0));
+
     } catch (...) { tk::processExceptionCharm(); }
 
     //! Migrate constructor: returning from a checkpoint

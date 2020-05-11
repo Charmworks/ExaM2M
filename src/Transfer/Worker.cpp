@@ -11,6 +11,10 @@
 #include "Worker.hpp"
 #include "Reorder.hpp"
 
+#include "collidecharm.h"
+
+extern CollideHandle collideHandle;
+
 using exam2m::Worker;
 
 Worker::Worker(
@@ -62,6 +66,8 @@ Worker::Worker(
     m_nodeCommMap[c] = maps.get< tag::node >();
     m_edgeCommMap[c] = maps.get< tag::edge >();
   }
+
+  CollideRegister(collideHandle, thisIndex);
 
   // Tell the RTS that the Worker chares have been created and compute
   // the total number of mesh points across whole problem

@@ -16,6 +16,7 @@ mainmodule exam2m {
   extern module partitioner;
 
   readonly CProxy_Main mainProxy;
+  readonly CollideHandle collideHandle;
 
   namespace exam2m {
 
