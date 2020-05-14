@@ -67,6 +67,12 @@ class Worker : public CBase_Worker {
     //! Mesh and field data written to file(s)
     void written();
 
+    //! Contribute vertex information to the collsion detection library
+    void collideVertices() const;
+
+    //! Contribute tet information to the collision detection library
+    void collideTets() const;
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function

@@ -31,6 +31,8 @@ module worker {
                     int nchare );
       entry void out();
       entry void written();
+      entry void collideVertices();
+      entry void collideTets();
     }
 
   } // exam2m::

@@ -127,6 +127,43 @@ Worker::written()
   contribute( m_cbw.get< tag::written >() );
 }
 
+void
+Worker::collideVertices() const
+// *****************************************************************************
+// Pass vertex information to the collision detection library
+// *****************************************************************************
+{
+  int nBoxes = m_coord[0].size();
+  bbox3d* boxes = new bbox3d[nBoxes];
+  for (int i = 0; i < nBoxes; i++) {
+    boxes[i].empty();
+    boxes[i].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
+  }
+  CollideBoxesPrio(collideHandle, thisIndex, nBoxes, boxes, NULL);
+  delete[] boxes;
+}
+
+void
+Worker::collideTets() const
+// *****************************************************************************
+// Pass tet information to the collision detection library
+// *****************************************************************************
+{
+  int nBoxes = m_inpoel.size() / 4;
+  bbox3d* boxes = new bbox3d[nBoxes];
+  for (int i = 0; i < nBoxes; i++) {
+    boxes[i].empty();
+    for (int j = 0; j < 4; j++) {
+      // Get index of the jth point of the ith tet
+      int p = m_inpoel[i * 4 + j];
+      // Add that point to the tets bounding box
+      boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
+    }
+  }
+  CollideBoxesPrio(collideHandle, thisIndex, nBoxes, boxes, NULL);
+  delete[] boxes;
+}
+
 tk::UnsMesh::Coords
 Worker::setCoord( const tk::UnsMesh::CoordMap& coordmap )
 // *****************************************************************************
