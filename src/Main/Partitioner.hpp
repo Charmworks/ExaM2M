@@ -38,7 +38,8 @@ class Partitioner : public CBase_Partitioner {
 
   public:
     //! Constructor
-    Partitioner( const std::string& meshfilename,
+    Partitioner( int meshid,
+                 const std::string& meshfilename,
                  const tk::PartitionerCallback& cbp,
                  const tk::MapperCallback& cbm,
                  const tk::WorkerCallback& cbw,
@@ -85,6 +86,7 @@ class Partitioner : public CBase_Partitioner {
     //! \note This is a Charm++ nodegroup, pup() is thus only for
     //!    checkpoint/restart.
     void pup( PUP::er &p ) override {
+      p | m_meshid;
       p | m_cbp;
       p | m_meshwriter;
       p | m_ginpoel;
@@ -113,6 +115,8 @@ class Partitioner : public CBase_Partitioner {
     //@}
 
   private:
+    //! The ID of the mesh, supplied by the Transporter
+    int m_meshid;
     //! Charm++ callbacks associated to compile-time tags for Partitioner
     tk::PartitionerCallback m_cbp;
     //! Charm++ callbacks associated to compile-time tags for Mapper

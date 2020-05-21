@@ -30,7 +30,8 @@ class Mapper : public CBase_Mapper {
 
   public:
     //! Constructor
-    explicit Mapper( const tk::CProxy_MeshWriter& meshwriter,
+    explicit Mapper( std::size_t meshid,
+                     const tk::CProxy_MeshWriter& meshwriter,
                      const CProxy_Worker& worker,
                      const tk::MapperCallback& cbm,
                      const tk::WorkerCallback& cbw,
@@ -97,6 +98,8 @@ class Mapper : public CBase_Mapper {
     //@}
 
   private:
+    //! Mesh ID
+    std::size_t m_meshid;
     //! MeshWriter proxy
     tk::CProxy_MeshWriter m_meshwriter;
     //! Worker proxy

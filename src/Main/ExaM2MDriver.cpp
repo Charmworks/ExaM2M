@@ -44,6 +44,8 @@ ExaM2MDriver::execute() const
   std::cout << '\n';
 
   if ( m_argv.size() < 2 ) Throw( "The first two arguments must be exodus filenames");
-  CProxy_Transporter::ckNew( m_argv[0], 0 );
-  CProxy_Transporter::ckNew( m_argv[1], 0 );
+  CProxy_Transporter t = CProxy_Transporter::ckNew( 0 );
+  // TODO: This is not synchronized in the Transporter
+  t.addMesh(m_argv[0]);
+  t.addMesh(m_argv[1]);
 }

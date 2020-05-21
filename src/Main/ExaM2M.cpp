@@ -59,7 +59,10 @@ namespace exam2m {
 
 } // exam2m::
 
-void printCollisionHandler(void *param,int nColl,Collision *colls) {}
+void printCollisionHandler(void *param,int nColl,Collision *colls) {
+  std::cout << "Collisions found: " << nColl << std::endl;
+  mainProxy.finalize();
+}
 
 //! Charm++ main chare for the exam2m executable.
 class Main : public CBase_Main {
@@ -108,10 +111,7 @@ class Main : public CBase_Main {
     //! Towards normal exit but collect chare state first (if any)
     void finalize() {
       try {
-        m_mesh_complete++;
-        if ( m_mesh_complete == 2 ) {
-          CkExit();
-        }
+        CkExit();
       } catch (...) { tk::processExceptionCharm(); }
     }
 

@@ -15,14 +15,15 @@ module transporter {
   namespace exam2m {
 
     chare [migratable] Transporter {
-      entry Transporter( const std::string& argv );
-      entry [reductiontarget] void load( std::size_t nelem );
-      entry [reductiontarget] void distributed();
-      entry [reductiontarget] void mapinserted( int error );
-      entry [reductiontarget] void queried();
-      entry [reductiontarget] void responded();
-      entry [reductiontarget] void workinserted();
-      entry [reductiontarget] void workcreated();
+      entry Transporter();
+      entry void addMesh( const std::string& mesh );
+      entry [reductiontarget] void load( std::size_t meshid, std::size_t nelem );
+      entry [reductiontarget] void distributed( std::size_t meshid );
+      entry [reductiontarget] void mapinserted( std::size_t meshid, std::size_t error );
+      entry [reductiontarget] void queried( std::size_t meshid );
+      entry [reductiontarget] void responded( std::size_t meshid );
+      entry [reductiontarget] void workinserted( std::size_t meshid );
+      entry [reductiontarget] void workcreated( std::size_t meshid );
       entry [reductiontarget] void written();
     }
 

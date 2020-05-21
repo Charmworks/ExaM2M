@@ -23,6 +23,7 @@ module partitioner {
 
     nodegroup [migratable] Partitioner {
       entry Partitioner(
+        int mesh_id,
         const std::string& meshfilename,
         const tk::PartitionerCallback& cbp,
         const tk::MapperCallback& cbm,

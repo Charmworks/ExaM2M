@@ -20,113 +20,113 @@ extern CProxy_Main mainProxy;
 
 using exam2m::Transporter;
 
-Transporter::Transporter( const std::string& meshfilename ) :
-  m_nchare( 0 ),
-  m_partitioner(),
-  m_meshwriter(),
-  m_worker(),
-  m_nelem( 0 ),
-  m_npoin( 0 )
+Transporter::Transporter() : completed(0)
 // *****************************************************************************
 //  Constructor
-//! \param[in] argv Command line arguments
+// *****************************************************************************
+{}
+
+void Transporter::addMesh( const std::string& file )
+// *****************************************************************************
+//  addMesh
+//! \param[in] file Name of the file to read the mesh data from
 // *****************************************************************************
 {
-  std::size_t nstep = 1;
+  std::map< int, std::vector< std::size_t > > bface;
+  std::map< int, std::vector< std::size_t > > faces;
+  std::map< int, std::vector< std::size_t > > bnode;
 
-  if ( nstep != 0 ) {    // start time stepping, exercising mesh-to-mesh transfer
+  MeshData mesh;
+  int meshid = meshes.size();
 
-    std::map< int, std::vector< std::size_t > > bface;
-    std::map< int, std::vector< std::size_t > > faces;
-    std::map< int, std::vector< std::size_t > > bnode;
+  // Create ExodusII mesh file reader
+  tk::ExodusIIMeshReader mr( file );
 
-    // Create ExodusII mesh file reader 
-    tk::ExodusIIMeshReader mr( meshfilename );
+  // Read out total number of mesh points from mesh file
+  mesh.m_npoin = mr.npoin();
 
-    // Read out total number of mesh points from mesh file
-    m_npoin = mr.npoin();
+  // Read boundary-face connectivity on side sets
+  mr.readSidesetFaces( bface, faces );
+  // Read node lists on side sets
+  bnode = mr.readSidesetNodes();
 
-    // Read boundary-face connectivity on side sets
-    mr.readSidesetFaces( bface, faces );
-    // Read node lists on side sets
-    bnode = mr.readSidesetNodes();
+  // Create Partitioner callbacks (order matters)
+  tk::PartitionerCallback cbp {{
+      CkCallback( CkReductionTarget(Transporter,load), thisProxy )
+    , CkCallback( CkReductionTarget(Transporter,distributed), thisProxy )
+    , CkCallback( CkReductionTarget(Transporter,mapinserted), thisProxy )
+  }};
 
-    // Create Partitioner callbacks (order matters)
-    tk::PartitionerCallback cbp {{
-        CkCallback( CkReductionTarget(Transporter,load), thisProxy )
-      , CkCallback( CkReductionTarget(Transporter,distributed), thisProxy )
-      , CkCallback( CkReductionTarget(Transporter,mapinserted), thisProxy )
-    }};
+  // Create Mapper callbacks (order matters)
+  tk::MapperCallback cbm {{
+      CkCallback( CkReductionTarget(Transporter,queried), thisProxy )
+    , CkCallback( CkReductionTarget(Transporter,responded), thisProxy )
+    , CkCallback( CkReductionTarget(Transporter,workinserted), thisProxy )
+  }};
 
-    // Create Mapper callbacks (order matters)
-    tk::MapperCallback cbm {{
-        CkCallback( CkReductionTarget(Transporter,queried), thisProxy )
-      , CkCallback( CkReductionTarget(Transporter,responded), thisProxy )
-      , CkCallback( CkReductionTarget(Transporter,workinserted), thisProxy )
-    }};
+  // Create Worker callbacks (order matters)
+  tk::WorkerCallback cbw {{
+      CkCallback( CkReductionTarget(Transporter,workcreated), thisProxy )
+    , CkCallback( CkReductionTarget(Transporter,written), thisProxy )
+  }};
 
-    // Create Worker callbacks (order matters)
-    tk::WorkerCallback cbw {{
-        CkCallback( CkReductionTarget(Transporter,workcreated), thisProxy )
-      , CkCallback( CkReductionTarget(Transporter,written), thisProxy )
-    }};
+  // Create MeshWriter chare group
+  mesh.m_meshwriter = tk::CProxy_MeshWriter::ckNew();
 
-    // Create MeshWriter chare group
-    m_meshwriter = tk::CProxy_MeshWriter::ckNew();
+  // Create empty Mappers, will setup communication maps
+  mesh.m_mapper = CProxy_Mapper::ckNew();
 
-    // Create empty Mappers, will setup communication maps
-    m_mapper = CProxy_Mapper::ckNew();
+  // Create empty Workers, will hold chunk of the mesh
+  mesh.m_worker = CProxy_Worker::ckNew();
 
-    // Create empty Workers, will hold chunk of the mesh
-    m_worker = CProxy_Worker::ckNew();
+  // Create Partitioner nodegroup
+  mesh.m_partitioner =
+    CProxy_Partitioner::ckNew( meshid, file, cbp, cbm, cbw,
+       mesh.m_meshwriter, mesh.m_mapper, mesh.m_worker, bface, faces, bnode );
 
-    // Create Partitioner nodegroup
-    m_partitioner =
-      CProxy_Partitioner::ckNew( meshfilename, cbp, cbm, cbw,
-         m_meshwriter, m_mapper, m_worker, bface, faces, bnode );
-
-  } else finish();      // stop if no time stepping requested
+  meshes.push_back(mesh);
 }
 
 void
-Transporter::load( std::size_t nelem )
+Transporter::load( std::size_t meshid, std::size_t nelem )
 // *****************************************************************************
 // Reduction target: the mesh has been read from file on all PEs
 //! \param[in] nelem Total number of mesh elements (summed across all nodes)
 // *****************************************************************************
 {
   tk::real virtualization = 0.0;
-  m_nelem = nelem;
+  meshes[meshid].m_nelem = nelem;
 
   // Compute load distribution given total work (nelem) and virtualization
   uint64_t chunksize, remainder;
-  m_nchare = static_cast< int >(
+  // TODO: This needs to be used to ensure unique chunk IDs at some point?
+  meshes[meshid].m_nchare = static_cast< int >(
                tk::linearLoadDistributor( virtualization,
                  nelem, CkNumPes(), chunksize, remainder ) );
 
   // Print out info on load distribution
   std::cout << "Initial load distribution\n";
   std::cout << "Virtualization [0.0...1.0]: " << virtualization << '\n';
-  std::cout << "Number of work units: " << m_nchare << '\n';
+  std::cout << "Number of work units: " << meshes[meshid].m_nchare << '\n';
 
   // Tell the meshwriter the total number of chares
-  m_meshwriter.nchare( m_nchare );
+  meshes[meshid].m_meshwriter.nchare( meshes[meshid].m_nchare );
 
   // Partition the mesh
-  m_partitioner.partition( m_nchare );
+  meshes[meshid].m_partitioner.partition( meshes[meshid].m_nchare );
 }
 
 void
-Transporter::distributed()
+Transporter::distributed( std::size_t meshid )
 // *****************************************************************************
 // Reduction target: all PEs have distrbuted their mesh after partitioning
 // *****************************************************************************
 {
-  m_partitioner.map();
+  meshes[meshid].m_partitioner.map();
 }
 
 void
-Transporter::mapinserted( int error )
+Transporter::mapinserted( std::size_t meshid, std::size_t error )
 // *****************************************************************************
 // Reduction target: all PEs have created their Mappers
 //! \param[in] error aggregated across all PEs with operator max
@@ -150,49 +150,57 @@ Transporter::mapinserted( int error )
 
   } else {
 
-     m_mapper.doneInserting();
-     m_mapper.setup( m_npoin );
+     meshes[meshid].m_mapper.doneInserting();
+     meshes[meshid].m_mapper.setup( meshes[meshid].m_npoin );
 
   }
 }
 
 void
-Transporter::queried()
+Transporter::queried( std::size_t meshid )
 // *****************************************************************************
 // Reduction target: all Mapper chares have queried their boundary nodes
 // *****************************************************************************
 {
-  m_mapper.response();
+  meshes[meshid].m_mapper.response();
 }
 
 void
-Transporter::responded()
+Transporter::responded( std::size_t meshid )
 // *****************************************************************************
 // Reduction target: all Mapper chares have responded with their boundary nodes
 // *****************************************************************************
 {
-  m_mapper.create();
+  meshes[meshid].m_mapper.create();
 }
 
 void
-Transporter::workinserted()
+Transporter::workinserted( std::size_t meshid )
 // *****************************************************************************
 // Reduction target: all Workers have been created
 // *****************************************************************************
 {
-  m_worker.doneInserting();
+  meshes[meshid].m_worker.doneInserting();
 } 
 
 void
-Transporter::workcreated()
+Transporter::workcreated( std::size_t meshid )
 // *****************************************************************************
 // Reduction target: all Worker constructors have been called
 // *****************************************************************************
 {
-  std::cout << "Number of tetrahedra: " << m_nelem << '\n';;
-  std::cout << "Number of points: " << m_npoin << '\n';
+  std::cout << "Number of tetrahedra for mesh " << meshid << ": "
+      << meshes[meshid].m_nelem << '\n';;
+  std::cout << "Number of points for mesh " << meshid << ": "
+      << meshes[meshid].m_npoin << '\n';
 
-  m_worker.out();
+  meshes[meshid].m_worker.out();
+
+  completed++;
+  if (completed == meshes.size()) {
+    meshes[0].m_worker.collideVertices();
+    meshes[1].m_worker.collideTets();
+  }
 }
 
 void
@@ -201,7 +209,8 @@ Transporter::written()
 // Reduction target: all Workers have written out mesh/field data
 // *****************************************************************************
 {
-  finish();
+  // FIXME: No guarantee the write finishes.
+  //finish();
 }
 
 Transporter::Transporter( CkMigrateMessage* m ) : CBase_Transporter( m )

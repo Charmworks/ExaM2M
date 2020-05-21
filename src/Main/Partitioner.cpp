@@ -21,6 +21,7 @@
 using exam2m::Partitioner;
 
 Partitioner::Partitioner(
+  int meshid,
   const std::string& meshfilename,
   const tk::PartitionerCallback& cbp,
   const tk::MapperCallback& cbm,
@@ -31,6 +32,7 @@ Partitioner::Partitioner(
   const std::map< int, std::vector< std::size_t > >& bface,
   const std::map< int, std::vector< std::size_t > >& faces,
   const std::map< int, std::vector< std::size_t > >& bnode ) :
+  m_meshid( meshid ),
   m_cbp( cbp ),
   m_cbm( cbm ),
   m_cbw( cbw ),
@@ -81,8 +83,9 @@ Partitioner::Partitioner(
   ownBndNodes( m_lid, m_bnode );
 
   // Compute number of cells across whole problem
-  std::size_t nelem = m_ginpoel.size()/4;
-  contribute( sizeof(std::size_t), &nelem, CkReduction::sum_ulong,
+  std::size_t data[] = { 0, m_ginpoel.size() / 4 };
+  if (thisIndex == 0) data[0] = m_meshid;
+  contribute( 2 * sizeof(std::size_t), data, CkReduction::sum_ulong,
               m_cbp.get< tag::load >() );
 }
 
@@ -227,7 +230,9 @@ Partitioner::recvMesh()
 //  Acknowledge received mesh chunk and its nodes after mesh refinement
 // *****************************************************************************
 {
-  if (--m_ndist == 0) contribute( m_cbp.get< tag::distributed >() );
+  if (--m_ndist == 0)
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbp.get< tag::distributed >() );
 }
 
 std::array< std::vector< tk::real >, 3 >
@@ -460,7 +465,8 @@ Partitioner::distribute( std::unordered_map< int, MeshData >&& mesh )
 
   // Export chare IDs and mesh we do not own to fellow compute nodes
   if (exp.empty()) {
-    contribute( m_cbp.get< tag::distributed >() );
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbp.get< tag::distributed >() );
   } else {
      m_ndist += exp.size();
      for (const auto& [ targetchare, chunk ] : exp)
@@ -498,7 +504,7 @@ Partitioner::map()
 {
   auto dist = distribution( m_nchare );
 
-  int error = 0;
+  std::size_t error = 0;
   if (m_chinpoel.size() < static_cast<std::size_t>(dist[1])) {
 
     error = 1;
@@ -509,7 +515,8 @@ Partitioner::map()
       // compute chare ID
       auto cid = CkMyNode() * dist[0] + c;
       // create Mapper Charm++ chare array elements
-      m_mapper[ cid ].insert( m_meshwriter,
+      m_mapper[ cid ].insert( m_meshid,
+                              m_meshwriter,
                               m_worker,
                               m_cbm,
                               m_cbw,
@@ -540,7 +547,9 @@ Partitioner::map()
   tk::destroy( m_triinpoel );
   tk::destroy( m_bnode );
 
-  contribute( sizeof(int), &error, CkReduction::max_int,
+  std::size_t data[] = { 0, error };
+  if (thisIndex == 0) data[0] = m_meshid;
+  contribute( 2 * sizeof(std::size_t), &data, CkReduction::max_ulong,
               m_cbp.get< tag::mapinserted >() );
 }
 

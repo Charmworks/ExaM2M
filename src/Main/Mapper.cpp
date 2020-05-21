@@ -17,7 +17,8 @@
 
 using exam2m::Mapper;
 
-Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
+Mapper::Mapper( std::size_t meshid,
+                const tk::CProxy_MeshWriter& meshwriter,
                 const CProxy_Worker& worker,
                 const tk::MapperCallback& cbm,
                 const tk::WorkerCallback& cbw,
@@ -27,6 +28,7 @@ Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
                 const std::vector< std::size_t >& triinpoel,
                 const std::map< int, std::vector< std::size_t > >& bnode,
                 int nchare ) :
+  m_meshid (meshid),
   m_meshwriter( meshwriter ),
   m_worker( worker ),
   m_cbm( cbm ),
@@ -116,7 +118,8 @@ Mapper::setup( std::size_t npoin )
   // on the sender side, i.e., this chare.
   m_nbnd = chbnd.size();
   if (m_nbnd == 0)
-    contribute( m_cbm.get< tag::queried >() );
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbm.get< tag::queried >() );
   else
     for (const auto& [ targetchare, bnd ] : chbnd)
       thisProxy[ targetchare ].query( thisIndex, bnd );
@@ -151,7 +154,9 @@ Mapper::recvquery()
 // Receive receipt of boundary node lists to query
 // *****************************************************************************
 {
-  if (--m_nbnd == 0) contribute( m_cbm.get< tag::queried >() );
+  if (--m_nbnd == 0)
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbm.get< tag::queried >() );
 }
 
 void
@@ -189,7 +194,8 @@ Mapper::response()
   // the responses on the sender side, i.e., this chare.
   m_nbnd = exp.size();
   if (m_nbnd == 0)
-    contribute( m_cbm.get< tag::responded >() );
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbm.get< tag::responded >() );
   else
     for (const auto& [ targetchare, maps ] : exp)
       thisProxy[ targetchare ].bnd( thisIndex, maps );
@@ -221,7 +227,9 @@ Mapper::recvbnd()
 // Receive receipt of boundary node communication map
 // *****************************************************************************
 {
-  if (--m_nbnd == 0) contribute( m_cbm.get< tag::responded >() );
+  if (--m_nbnd == 0)
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbm.get< tag::responded >() );
 }
 
 void
@@ -230,10 +238,11 @@ Mapper::create()
 //  Create worker chare array elements
 // *****************************************************************************
 {
-  m_worker[ thisIndex ].insert( m_meshwriter, m_cbw,
+  m_worker[ thisIndex ].insert( m_meshid, m_meshwriter, m_cbw,
     m_ginpoel, m_coordmap, m_commap, m_bface, m_triinpoel, m_bnode, m_nchare );
 
-  contribute( m_cbm.get< tag::workinserted >() );
+    contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,
+        m_cbm.get< tag::workinserted >() );
 
   // Free up some memory
   tk::destroy( m_ginpoel );

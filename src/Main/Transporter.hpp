@@ -25,31 +25,34 @@ class Transporter : public CBase_Transporter {
 
   public:
     //! Constructor
-    explicit Transporter( const std::string& argv );
+    explicit Transporter();
 
     //! Migrate constructor: returning from a checkpoint
     explicit Transporter( CkMigrateMessage* m );
 
+    //! Add mesh by filename
+    void addMesh( const std::string& file );
+
     //! Reduction target: the mesh has been read from file on all PEs
-    void load( std::size_t nelem );
+    void load( std::size_t meshid, std::size_t nelem );
 
     //! Reduction target: all PEs have distrbuted their mesh after partitioning
-    void distributed();
+    void distributed( std::size_t meshid );
 
     //! Reduction target: all PEs have created their Mappers
-    void mapinserted( int error );
+    void mapinserted( std::size_t meshid, std::size_t error );
 
     //! Reduction target: all Mapper chares have queried their boundary nodes
-    void queried();
+    void queried( std::size_t meshid );
     //! \brief Reduction target: all Mapper chares have responded with their
     //!   boundary nodes
-    void responded();
+    void responded( std::size_t meshid );
 
     ///! Reduction target: all Workers have been created
-    void workinserted();
+    void workinserted( std::size_t meshid );
 
     //! Reduction target: all Worker constructors have been called
-    void workcreated();
+    void workcreated( std::size_t meshid );
 
     //! Reduction target: all Workers have written out mesh/field data
     void written();
@@ -61,9 +64,9 @@ class Transporter : public CBase_Transporter {
     //! \note This is a Charm++ mainchare, pup() is thus only for
     //!    checkpoint/restart.
     void pup( PUP::er& p ) override {
-      p | m_nchare;
-      p | m_partitioner;
-      p | m_meshwriter;
+      //p | m_nchare;
+      //p | m_partitioner;
+      //p | m_meshwriter;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -72,13 +75,18 @@ class Transporter : public CBase_Transporter {
     //@}
 
   private:
-    int m_nchare;                        //!< Number of worker chares
-    CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy    
-    tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
-    CProxy_Mapper m_mapper;              //!< Mapper array proxy
-    CProxy_Worker m_worker;              //!< Worker array proxy
-    std::size_t m_nelem;                 //!< Total number of elements in mesh
-    std::size_t m_npoin;                 //!< Total number of nodes in mesh
+
+    struct MeshData {
+      int m_nchare;                        //!< Number of worker chares
+      CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy
+      tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
+      CProxy_Mapper m_mapper;              //!< Mapper array proxy
+      CProxy_Worker m_worker;              //!< Worker array proxy
+      std::size_t m_nelem;                 //!< Total number of elements in mesh
+      std::size_t m_npoin;                 //!< Total number of nodes in mesh
+    };
+    std::vector<MeshData> meshes;
+    int completed;
 
     //! Normal finish of time stepping
     void finish();

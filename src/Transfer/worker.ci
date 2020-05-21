@@ -20,7 +20,8 @@ module worker {
   namespace exam2m {
 
     array [1D] Worker {
-      entry Worker( const tk::CProxy_MeshWriter& meshwriter,
+      entry Worker( std::size_t meshid,
+                    const tk::CProxy_MeshWriter& meshwriter,
                     const tk::WorkerCallback& cbw,
                     const std::vector< std::size_t >& ginpoel,
                     const tk::UnsMesh::CoordMap& coordmap,
