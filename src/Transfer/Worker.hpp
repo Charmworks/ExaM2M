@@ -27,6 +27,7 @@ class Worker : public CBase_Worker {
     explicit
       Worker(
         std::size_t meshid,
+        std::size_t firstchunk,
         const tk::CProxy_MeshWriter& meshwriter,
         const tk::WorkerCallback& cbw,
         const std::vector< std::size_t >& ginpoel,
@@ -105,6 +106,8 @@ class Worker : public CBase_Worker {
   private:
     //! Mesh ID
     std::size_t m_meshid;
+    //! First chunk ID for collision detection
+    std::size_t m_firstchunk;
     //! Charm++ callbacks associated to compile-time tags for Worker
     tk::WorkerCallback m_cbw;
     //! Total number of Worker chares

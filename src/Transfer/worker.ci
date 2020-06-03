@@ -21,6 +21,7 @@ module worker {
 
     array [1D] Worker {
       entry Worker( std::size_t meshid,
+                    std::size_t firstchunk,
                     const tk::CProxy_MeshWriter& meshwriter,
                     const tk::WorkerCallback& cbw,
                     const std::vector< std::size_t >& ginpoel,

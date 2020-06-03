@@ -67,7 +67,7 @@ Mapper::Mapper( std::size_t meshid,
 }
 
 void
-Mapper::setup( std::size_t npoin )
+Mapper::setup( std::size_t npoin, std::size_t firstchunk )
 // *****************************************************************************
 // Setup chare mesh boundary node communication map
 //! \param[in] npoin Total number of mesh points in mesh
@@ -78,6 +78,7 @@ Mapper::setup( std::size_t npoin )
   // node id, bounded between [0...npoin-1], inclusive. To compute the bin id,
   // we use the chunksize which always gives a chare id that is (strictly)
   // lower than the number of chares.
+  m_firstchunk = firstchunk;
   auto N = static_cast< std::size_t >( m_nchare );
   std::size_t chunksize = npoin / N;
 
@@ -238,7 +239,7 @@ Mapper::create()
 //  Create worker chare array elements
 // *****************************************************************************
 {
-  m_worker[ thisIndex ].insert( m_meshid, m_meshwriter, m_cbw,
+  m_worker[ thisIndex ].insert( m_meshid, m_firstchunk, m_meshwriter, m_cbw,
     m_ginpoel, m_coordmap, m_commap, m_bface, m_triinpoel, m_bnode, m_nchare );
 
     contribute( sizeof(std::size_t), &m_meshid, CkReduction::nop,

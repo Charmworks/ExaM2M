@@ -20,7 +20,7 @@ extern CProxy_Main mainProxy;
 
 using exam2m::Transporter;
 
-Transporter::Transporter() : completed(0)
+Transporter::Transporter() : completed(0), m_currentchunk(0)
 // *****************************************************************************
 //  Constructor
 // *****************************************************************************
@@ -103,6 +103,8 @@ Transporter::load( std::size_t meshid, std::size_t nelem )
   meshes[meshid].m_nchare = static_cast< int >(
                tk::linearLoadDistributor( virtualization,
                  nelem, CkNumPes(), chunksize, remainder ) );
+  meshes[meshid].m_firstchunk = m_currentchunk;
+  m_currentchunk += meshes[meshid].m_nchare;
 
   // Print out info on load distribution
   std::cout << "Initial load distribution\n";
@@ -151,7 +153,7 @@ Transporter::mapinserted( std::size_t meshid, std::size_t error )
   } else {
 
      meshes[meshid].m_mapper.doneInserting();
-     meshes[meshid].m_mapper.setup( meshes[meshid].m_npoin );
+     meshes[meshid].m_mapper.setup( meshes[meshid].m_npoin, meshes[meshid].m_firstchunk );
 
   }
 }

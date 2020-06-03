@@ -78,6 +78,7 @@ class Transporter : public CBase_Transporter {
 
     struct MeshData {
       int m_nchare;                        //!< Number of worker chares
+      int m_firstchunk;                    //!< First chunk ID (for collision)
       CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy
       tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
       CProxy_Mapper m_mapper;              //!< Mapper array proxy
@@ -86,6 +87,7 @@ class Transporter : public CBase_Transporter {
       std::size_t m_npoin;                 //!< Total number of nodes in mesh
     };
     std::vector<MeshData> meshes;
+    std::size_t m_currentchunk;
     int completed;
 
     //! Normal finish of time stepping

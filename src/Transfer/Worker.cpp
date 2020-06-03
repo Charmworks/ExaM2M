@@ -19,6 +19,7 @@ using exam2m::Worker;
 
 Worker::Worker(
   std::size_t meshid,
+  std::size_t firstchunk,
   const tk::CProxy_MeshWriter& meshwriter,
   const tk::WorkerCallback& cbw,
   const std::vector< std::size_t >& ginpoel,
@@ -28,7 +29,8 @@ Worker::Worker(
   const std::vector< std::size_t >& triinpoel,
   const std::map< int, std::vector< std::size_t > >& bnode,
   int nc ) :
-  m_meshid( meshid),
+  m_meshid( meshid ),
+  m_firstchunk( firstchunk ),
   m_cbw( cbw ),
   m_nchare( nc ),
   m_it( 0 ),
@@ -69,7 +71,7 @@ Worker::Worker(
     m_edgeCommMap[c] = maps.get< tag::edge >();
   }
 
-  CollideRegister(collideHandle, thisIndex);
+  CollideRegister(collideHandle, m_firstchunk + thisIndex);
 
   // Tell the RTS that the Worker chares have been created and compute
   // the total number of mesh points across whole problem
@@ -142,7 +144,7 @@ Worker::collideVertices() const
     boxes[i].empty();
     boxes[i].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
   }
-  CollideBoxesPrio(collideHandle, thisIndex, nBoxes, boxes, NULL);
+  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, NULL);
   delete[] boxes;
 }
 
@@ -163,7 +165,7 @@ Worker::collideTets() const
       boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
     }
   }
-  CollideBoxesPrio(collideHandle, thisIndex, nBoxes, boxes, NULL);
+  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, NULL);
   delete[] boxes;
 }
 

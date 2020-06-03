@@ -30,7 +30,7 @@ module mapper {
                     const std::vector< std::size_t >& triinpoel,
                     const std::map< int, std::vector< std::size_t > >& bnode,
                     int nchare );
-      entry void setup( std::size_t npoin );
+      entry void setup( std::size_t npoin, std::size_t firstchunk );
       entry void query( int fromch, const tk::AllCommMaps& bnd );
       entry void recvquery();
       entry void response();
