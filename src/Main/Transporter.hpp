@@ -57,6 +57,8 @@ class Transporter : public CBase_Transporter {
     //! Reduction target: all Workers have written out mesh/field data
     void written();
 
+    void processCollisions( int nColl, Collision* colls );
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function
@@ -88,6 +90,8 @@ class Transporter : public CBase_Transporter {
     };
     std::vector<MeshData> meshes;
     std::size_t m_currentchunk;
+    std::size_t m_sourcemeshid;
+    std::size_t m_destmeshid;
     int completed;
 
     //! Normal finish of time stepping

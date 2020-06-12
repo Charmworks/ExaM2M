@@ -16,6 +16,7 @@ module worker {
   include "UnsMesh.hpp";
   include "Callback.hpp";
   include "CommMap.hpp";
+  include "collidecharm.h";
 
   namespace exam2m {
 
@@ -35,6 +36,13 @@ module worker {
       entry void written();
       entry void collideVertices();
       entry void collideTets();
+      entry void processCollisions( int nColls,
+                                    Collision colls[nColls],
+                                    std::size_t nchares,
+                                    std::size_t offset,
+                                    CProxy_Worker proxy );
+      entry void checkPoints( int nPoints,
+                              std::pair<CkVector3d,int> points[nPoints] );
     }
 
   } // exam2m::

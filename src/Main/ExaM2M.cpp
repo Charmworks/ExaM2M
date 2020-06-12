@@ -19,6 +19,8 @@
 
 #include "collidecharm.h"
 
+using exam2m::CProxy_Transporter;
+
 #if defined(__clang__)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
@@ -30,6 +32,8 @@ CProxy_Main mainProxy;
 
 //! \brief Charm handle to the collision detection library instance
 CollideHandle collideHandle;
+
+CProxy_Transporter transporterProxy;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -60,8 +64,7 @@ namespace exam2m {
 } // exam2m::
 
 void printCollisionHandler(void *param,int nColl,Collision *colls) {
-  std::cout << "Collisions found: " << nColl << std::endl;
-  mainProxy.finalize();
+  transporterProxy.processCollisions(nColl, colls);
 }
 
 //! Charm++ main chare for the exam2m executable.
@@ -78,6 +81,7 @@ class Main : public CBase_Main {
     {
       delete msg;
       mainProxy = thisProxy;
+      transporterProxy = CProxy_Transporter::ckNew( 0 );
       CkStartQD( CkCallback( CkIndex_Main::quiescence(), thisProxy ) );
       // Fire up an asynchronous execute object, which when created at some
       // future point in time will call back to this->execute(). This is
@@ -119,6 +123,7 @@ class Main : public CBase_Main {
     void quiescence() {
       try {
         std::cout << "Quiescence detected\n";
+        CkExit();
       } catch (...) { tk::processExceptionCharm(); }
     }
 

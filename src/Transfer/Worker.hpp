@@ -75,6 +75,14 @@ class Worker : public CBase_Worker {
     //! Contribute tet information to the collision detection library
     void collideTets() const;
 
+    void processCollisions( int nColls,
+                            Collision* colls,
+                            std::size_t nchare,
+                            std::size_t offset,
+                            CProxy_Worker proxy );
+
+    void checkPoints( int nPoints, std::pair<CkVector3d, int>* points );
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function
@@ -106,7 +114,7 @@ class Worker : public CBase_Worker {
   private:
     //! Mesh ID
     std::size_t m_meshid;
-    //! First chunk ID for collision detection
+    //! Mesh ID
     std::size_t m_firstchunk;
     //! Charm++ callbacks associated to compile-time tags for Worker
     tk::WorkerCallback m_cbw;

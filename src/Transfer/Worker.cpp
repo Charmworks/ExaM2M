@@ -13,6 +13,8 @@
 
 #include "collidecharm.h"
 
+PUPbytes(Collision);
+
 extern CollideHandle collideHandle;
 
 using exam2m::Worker;
@@ -140,12 +142,15 @@ Worker::collideVertices() const
 {
   int nBoxes = m_coord[0].size();
   bbox3d* boxes = new bbox3d[nBoxes];
+  int* prio = new int[nBoxes];
   for (int i = 0; i < nBoxes; i++) {
     boxes[i].empty();
     boxes[i].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
+    prio[i] = m_firstchunk;
   }
-  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, NULL);
+  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
   delete[] boxes;
+  delete[] prio;
 }
 
 void
@@ -156,8 +161,10 @@ Worker::collideTets() const
 {
   int nBoxes = m_inpoel.size() / 4;
   bbox3d* boxes = new bbox3d[nBoxes];
+  int* prio = new int[nBoxes];
   for (int i = 0; i < nBoxes; i++) {
     boxes[i].empty();
+    prio[i] = m_firstchunk;
     for (int j = 0; j < 4; j++) {
       // Get index of the jth point of the ith tet
       int p = m_inpoel[i * 4 + j];
@@ -165,8 +172,61 @@ Worker::collideTets() const
       boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
     }
   }
-  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, NULL);
+  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
   delete[] boxes;
+  delete[] prio;
+}
+
+void
+Worker::processCollisions(
+    int nColl,
+    Collision* colls,
+    std::size_t numchares,
+    std::size_t chunkoffset,
+    CProxy_Worker proxy )
+// *****************************************************************************
+//
+// *****************************************************************************
+{
+  int mychunk = thisIndex + m_firstchunk;
+  CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
+
+  std::vector<std::pair<CkVector3d, int>>* separated
+      = new std::vector<std::pair<CkVector3d, int>>[numchares];
+  for (int i = 0; i < nColl; i++) {
+    int theirindex;
+    int theirpoint;
+    int mypoint;
+    if (colls[i].A.chunk == mychunk) {
+      theirindex = colls[i].B.chunk - chunkoffset;
+      theirpoint = colls[i].B.number;
+      mypoint = colls[i].A.number;
+    } else {
+      theirindex = colls[i].A.chunk - chunkoffset;
+      theirpoint = colls[i].A.number;
+      mypoint = colls[i].B.number;
+    }
+    separated[theirindex].push_back(std::make_pair(
+        CkVector3d(m_coord[0][mypoint], m_coord[1][mypoint], m_coord[2][mypoint]),
+        theirpoint));
+  }
+
+  for (int i = 0; i < numchares; i++) {
+    proxy[i].checkPoints(separated[i].size(), separated[i].data());
+  }
+  delete[] separated;
+}
+
+void
+Worker::checkPoints(
+    int nPoints,
+    std::pair<CkVector3d, int>* points )
+// *****************************************************************************
+//
+// *****************************************************************************
+{
+  CkPrintf("[%i]: Received data for %i potential collisions with my tets\n",
+      CkMyPe(), nPoints);
 }
 
 tk::UnsMesh::Coords

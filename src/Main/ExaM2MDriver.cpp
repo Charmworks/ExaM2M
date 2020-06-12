@@ -15,6 +15,9 @@
 #include "NoWarning/transporter.decl.h"
 
 using exam2m::ExaM2MDriver;
+using exam2m::CProxy_Transporter;
+
+extern CProxy_Transporter transporterProxy;
 
 ExaM2MDriver::ExaM2MDriver( int argc, char** argv )
 // *****************************************************************************
@@ -46,6 +49,6 @@ ExaM2MDriver::execute() const
   if ( m_argv.size() < 2 ) Throw( "The first two arguments must be exodus filenames");
   CProxy_Transporter t = CProxy_Transporter::ckNew( 0 );
   // TODO: This is not synchronized in the Transporter
-  t.addMesh(m_argv[0]);
-  t.addMesh(m_argv[1]);
+  transporterProxy.addMesh(m_argv[0]);
+  transporterProxy.addMesh(m_argv[1]);
 }

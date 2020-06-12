@@ -17,6 +17,7 @@ mainmodule exam2m {
 
   readonly CProxy_Main mainProxy;
   readonly CollideHandle collideHandle;
+  readonly exam2m::CProxy_Transporter transporterProxy;
 
   namespace exam2m {
 

@@ -12,6 +12,8 @@ module transporter {
 
   extern module worker;
 
+  include "collidecharm.h";
+
   namespace exam2m {
 
     chare [migratable] Transporter {
@@ -25,6 +27,7 @@ module transporter {
       entry [reductiontarget] void workinserted( std::size_t meshid );
       entry [reductiontarget] void workcreated( std::size_t meshid );
       entry [reductiontarget] void written();
+      entry void processCollisions( int nColls, Collision colls[nColls] );
     }
 
   } // exam2m::
