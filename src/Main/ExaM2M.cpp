@@ -89,6 +89,7 @@ class Main : public CBase_Main {
       // global-scope data.
       CProxy_execute::ckNew();
 
+      // TODO: Need to make sure this is actually correct
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
       collideHandle = CollideCreate(gridMap,
           CollideSerialClient(printCollisionHandler, 0));
