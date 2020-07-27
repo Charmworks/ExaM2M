@@ -258,11 +258,12 @@ Transporter::processCollisions(int nColl, Collision* colls)
     }
   }
 
-  // TODO: Correct number of chares
   for (int i = 0; i < nchare; i++) {
     CkPrintf("Source mesh chunk %i has %i\n", i, separated[i].size());
     meshes[m_sourcemeshid].m_worker[i].processCollisions(separated[i].size(), separated[i].data(), meshes[m_destmeshid].m_nchare, meshes[m_destmeshid].m_firstchunk, meshes[m_destmeshid].m_worker);
   }
+
+  delete[] separated;
 }
 
 #include "NoWarning/transporter.def.h"
