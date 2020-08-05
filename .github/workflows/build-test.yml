@@ -12,8 +12,8 @@ jobs:
           submodules: 'recursive'
     # Uncomment the lines below to set up a tmate session for debugging.
     # See https://github.com/marketplace/actions/debugging-with-tmate for details.
-    #- name: Tmate session for debugging
-    #  uses: mxschmitt/action-tmate@v2
+    - name: Tmate session for debugging
+      uses: mxschmitt/action-tmate@v2
     - name: prerequisites
       run: sudo apt-get install cmake gcc g++ openmpi-bin libopenmpi-dev libhdf5-dev libhdf5-openmpi-dev #libnetcdf-mpi-dev
     - name: build-exam2m-external
