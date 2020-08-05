@@ -1,0 +1,21 @@
+name: ExaM2M
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
+
+    - name: prerequisistes
+      run: sudo apt-get install cmake gcc g++ openmpi-bin libopenmpi-dev libhdf5-dev libhdf5-openmpi-dev libnetcdf-mpi-dev
+    - name: build-exam2m-external
+      run: mkdir external/build && cd external/build && cmake .. && make && cd -
+    - name: build-exam2m
+      run: mkdir build && cd build && cmake ../src && make
+    - name: test
+      run: ./charmrun +p2 Main/exam2m ../tests/sphere_tetra.0.2.exo ../tests/sphere_tetra.0.2.exo
