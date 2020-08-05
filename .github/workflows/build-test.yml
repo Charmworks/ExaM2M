@@ -21,4 +21,4 @@ jobs:
     - name: build-exam2m
       run: mkdir build && cd build && cmake ../src && make
     - name: test
-      run: ./charmrun +p2 Main/exam2m ../tests/sphere_tetra.0.2.exo ../tests/sphere_tetra.0.2.exo
+      run: make test

@@ -375,3 +375,12 @@ if (NOT BUILD_SHARED_LIBS)
     set_property(TARGET ${exe} PROPERTY LINK_SEARCH_END_STATIC 1)
   endforeach()
 endif()
+
+
+enable_testing()
+
+set(TEST_INPUT1 "../tests/sphere_tetra.0.2.exo")
+set(TEST_INPUT2 "../tests/sphere_tetra.0.2.exo")
+
+add_test(NAME exam2mTest
+  COMMAND ${CHARM_RUN} +p4 ./Main/${EXAM2M_EXECUTABLE} ${TEST_INPUT1} ${TEST_INPUT2})
