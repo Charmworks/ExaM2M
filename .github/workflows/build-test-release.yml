@@ -1,4 +1,4 @@
-name: ExaM2M
+name: ExaM2M-Release
 
 on: [push]
 
@@ -18,7 +18,7 @@ jobs:
       run: sudo apt-get install cmake gcc g++ openmpi-bin libopenmpi-dev libhdf5-dev libhdf5-openmpi-dev #libnetcdf-mpi-dev
     - name: build-exam2m-external
       run: mkdir external/build && cd external/build && cmake .. && make && cd -
-    - name: build-exam2m
+    - name: build-exam2m-release
       run: mkdir build && cd build && cmake ../src && make
     - name: test
       run: cd build && ctest -V #running ctest -V over make test to get verbose output
