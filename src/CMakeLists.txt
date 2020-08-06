@@ -383,4 +383,4 @@ set(TEST_INPUT1 "../tests/sphere_tetra.0.2.exo")
 set(TEST_INPUT2 "../tests/sphere_tetra.0.2.exo")
 
 add_test(NAME exam2mTest
-  COMMAND ${CHARM_RUN} +p4 ./Main/${EXAM2M_EXECUTABLE} ${TEST_INPUT1} ${TEST_INPUT2})
+  COMMAND ${CHARM_RUN} +p2 ./Main/${EXAM2M_EXECUTABLE} ${TEST_INPUT1} ${TEST_INPUT2})
