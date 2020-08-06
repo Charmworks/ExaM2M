@@ -1,0 +1,24 @@
+name: ExaM2M-Debug
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+          submodules: 'recursive'
+    # Uncomment the lines below to set up a tmate session for debugging.
+    # See https://github.com/marketplace/actions/debugging-with-tmate for details.
+    #- name: Tmate session for debugging
+    #  uses: mxschmitt/action-tmate@v2
+    - name: prerequisites
+      run: sudo apt-get install cmake gcc g++ openmpi-bin libopenmpi-dev libhdf5-dev libhdf5-openmpi-dev #libnetcdf-mpi-dev
+    - name: build-exam2m-external
+      run: mkdir external/build && cd external/build && cmake .. && make && cd -
+    - name: build-exam2m-debug
+      run: mkdir build && cd build && cmake ../src -DCMAKE_BUILD_TYPE=Debug && make
+    - name: test
+      run: cd build && ctest -V #running ctest -V over make test to get verbose output
