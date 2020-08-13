@@ -81,7 +81,8 @@ class Worker : public CBase_Worker {
                             std::size_t offset,
                             CProxy_Worker proxy );
 
-    void checkPoints( int nPoints, std::pair<CkVector3d, int>* points );
+    //! Identify actual collisions by calling intet function on all possible collisions
+    void determineActualCollisions( int nPoints, std::pair<CkVector3d, int>* points );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -167,6 +168,11 @@ class Worker : public CBase_Worker {
 
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );
+
+    //! Determine if a point is in a tet
+    bool intet(const CkVector3d &point,
+               std::size_t e,
+               std::array< real, 4 >& N);
 };
 
 } // exam2m::
