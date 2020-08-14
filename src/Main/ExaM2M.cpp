@@ -123,7 +123,8 @@ class Main : public CBase_Main {
     //! Entry method triggered when quiescence is detected
     void quiescence() {
       try {
-        Throw( "Quiescence detected" );
+        std::cout << "Quiescence detected\n";
+        CkExit();
       } catch (...) { tk::processExceptionCharm(); }
     }
 
