@@ -10,6 +10,7 @@
 
 #include "Worker.hpp"
 #include "Reorder.hpp"
+#include "DerivedData.hpp"
 
 #include "collidecharm.h"
 
