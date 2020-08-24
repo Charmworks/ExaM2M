@@ -89,6 +89,8 @@ class Worker : public CBase_Worker {
     //! \brief Pack/Unpack serialize member function
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
     void pup( PUP::er &p ) override {
+      p | m_meshid;
+      p | m_firstchunk;
       p | m_cbw;
       p | m_nchare;
       p | m_it;
@@ -105,6 +107,11 @@ class Worker : public CBase_Worker {
       }
       p | m_coord;
       p | m_nodeCommMap;
+      p | m_edgeCommMap;
+      p | m_bface;
+      p | m_triinpoel;
+      p | m_bnode;
+      p | m_u;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
