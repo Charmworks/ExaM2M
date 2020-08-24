@@ -172,6 +172,8 @@ class Worker : public CBase_Worker {
     std::vector< std::size_t > m_triinpoel;
     //! Boundary node lists mapped to side set ids
     std::map< int, std::vector< std::size_t > > m_bnode;
+    //! Solution in mesh nodes
+    std::vector< tk::real > m_u;
 
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );
