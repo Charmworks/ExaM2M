@@ -89,6 +89,8 @@ class Worker : public CBase_Worker {
     //! \brief Pack/Unpack serialize member function
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
     void pup( PUP::er &p ) override {
+      p | m_meshid;
+      p | m_firstchunk;
       p | m_cbw;
       p | m_nchare;
       p | m_it;
@@ -105,6 +107,11 @@ class Worker : public CBase_Worker {
       }
       p | m_coord;
       p | m_nodeCommMap;
+      p | m_edgeCommMap;
+      p | m_bface;
+      p | m_triinpoel;
+      p | m_bnode;
+      p | m_u;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -165,6 +172,8 @@ class Worker : public CBase_Worker {
     std::vector< std::size_t > m_triinpoel;
     //! Boundary node lists mapped to side set ids
     std::map< int, std::vector< std::size_t > > m_bnode;
+    //! Solution in mesh nodes
+    std::vector< tk::real > m_u;
 
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );

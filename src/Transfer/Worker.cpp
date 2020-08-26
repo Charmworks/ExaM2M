@@ -47,7 +47,8 @@ Worker::Worker(
   m_nodeCommMap(),
   m_bface( bface ),
   m_triinpoel( triinpoel ),
-  m_bnode( bnode )
+  m_bnode( bnode ),
+  m_u()
 // *****************************************************************************
 //  Constructor
 //! \param[in] meshwriter Mesh writer proxy
@@ -72,6 +73,16 @@ Worker::Worker(
   for (const auto& [ c, maps ] : commaps) {
     m_nodeCommMap[c] = maps.get< tag::node >();
     m_edgeCommMap[c] = maps.get< tag::edge >();
+  }
+
+  // Generate initial solution
+  const auto& x = m_coord[0];
+  const auto& y = m_coord[1];
+  const auto& z = m_coord[2];
+  auto npoin = m_coord[0].size();
+  m_u.resize( npoin, 0.0 );
+  for (std::size_t i=0; i<npoin; ++i) {
+    m_u[i] = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
   }
 
   CollideRegister(collideHandle, m_firstchunk + thisIndex);
@@ -100,15 +111,7 @@ Worker::out()
   std::vector< std::vector< tk::real > > nodefields;
 
   nodefieldnames.push_back( "scalar" );
-  const auto& x = m_coord[0];
-  const auto& y = m_coord[1];
-  const auto& z = m_coord[2];
-  auto npoin = m_coord[0].size();
-  std::vector< tk::real > s( npoin, 0.0 );
-  for (std::size_t i=0; i<npoin; ++i) {
-    s[i] = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
-  }
-  nodefields.push_back( s );
+  nodefields.push_back( m_u );
 
   // Surface field data in nodes
   std::vector< std::string > nodesurfnames;
