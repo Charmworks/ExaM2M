@@ -216,13 +216,15 @@ Worker::processCollisions(
   }
 
   for (int i = 0; i < numchares; i++) {
-    proxy[i].determineActualCollisions(separated[i].size(), separated[i].data());
+    proxy[i].determineActualCollisions(thisProxy, thisIndex, separated[i].size(), separated[i].data());
   }
   delete[] separated;
 }
 
 void
 Worker::determineActualCollisions(
+    CProxy_Worker proxy,
+    int index,
     int nPoints,
     std::pair<CkVector3d, int>* points )
 // *****************************************************************************
@@ -235,25 +237,40 @@ Worker::determineActualCollisions(
 
   std::array< real, 4 > N;
   int numInTet = 0;
+  std::vector<std::pair<int, tk::real>> return_data;
 
   // Iterate over my potential collisions and determine if it is intet and the shapefunction
-  for(int i = 0; i < nPoints; i++) {
-    bool val = intet(points[i].first,
-                     points[i].second,
-                     N);
-
-    if(val)
+  for (int i = 0; i < nPoints; i++) {
+    if (intet(points[i].first, points[i].second, N)) {
       numInTet++;
-
-    // TODO: I'm guessing we need the point(points[i]), the tet index(points[i].second), and the shapefunction(N) to be stored from this function for future use?
+      tk::real value = 0;
+      for (int j = 0; j < 4; j++) {
+        value += N[j] * m_u[points[i].second*4 + j];
+      }
+      return_data.push_back(std::make_pair(i, value));
+    }
   }
   CkPrintf("[%i]: %i collisions are actually in my tets out of %i potential collisions\n", CkMyPe(), numInTet, nPoints);
+  proxy[index].transferSolution(return_data.size(), return_data.data());
+}
+
+void
+Worker::transferSolution(
+    int nPoints,
+    std::pair<int, tk::real>* soln )
+{
+  CkPrintf("Dest worker %i received %i solution points\n", thisIndex, nPoints);
+  // TODO: What if we get multiple solns for the same point (For example when a
+  // point in the dest exactly coincides with a point in the source)
+  for (int i = 0; i < nPoints; i++) {
+    m_u[soln[i].first] = soln[i].second;
+  }
 }
 
 bool
 Worker::intet(const CkVector3d &point,
       std::size_t e,
-      std::array< real, 4 >& N)
+      std::array< real, 4 >& N) const
   // *****************************************************************************
   //  Determine if a point is in a tetrahedron and evaluate the shapefunction
   //! \param[in] point Point coordinates

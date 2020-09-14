@@ -206,8 +206,8 @@ Transporter::workcreated( std::size_t meshid )
   m_sourcemeshid = 0;
   m_destmeshid = 1;
   if (completed == meshes.size()) {
-    meshes[m_sourcemeshid].m_worker.collideVertices();
-    meshes[m_destmeshid].m_worker.collideTets();
+    meshes[m_sourcemeshid].m_worker.collideTets();
+    meshes[m_destmeshid].m_worker.collideVertices();
   }
 }
 
@@ -247,8 +247,8 @@ Transporter::processCollisions(int nColl, Collision* colls)
 // *****************************************************************************
 {
   std::cout << "Collisions found: " << nColl << std::endl;
-  std::size_t first = meshes[m_sourcemeshid].m_firstchunk;
-  std::size_t nchare = meshes[m_sourcemeshid].m_nchare;
+  std::size_t first = meshes[m_destmeshid].m_firstchunk;
+  std::size_t nchare = meshes[m_destmeshid].m_nchare;
   std::vector<Collision>* separated = new std::vector<Collision>[nchare];
   for (int i = 0; i < nColl; i++) {
     if (colls[i].A.chunk >= first && colls[i].A.chunk < first + nchare) {
@@ -259,8 +259,8 @@ Transporter::processCollisions(int nColl, Collision* colls)
   }
 
   for (int i = 0; i < nchare; i++) {
-    CkPrintf("Source mesh chunk %i has %i\n", i, separated[i].size());
-    meshes[m_sourcemeshid].m_worker[i].processCollisions(separated[i].size(), separated[i].data(), meshes[m_destmeshid].m_nchare, meshes[m_destmeshid].m_firstchunk, meshes[m_destmeshid].m_worker);
+    CkPrintf("Dest mesh chunk %i has %i\n", i, separated[i].size());
+    meshes[m_destmeshid].m_worker[i].processCollisions(separated[i].size(), separated[i].data(), meshes[m_sourcemeshid].m_nchare, meshes[m_sourcemeshid].m_firstchunk, meshes[m_sourcemeshid].m_worker);
   }
 
   delete[] separated;

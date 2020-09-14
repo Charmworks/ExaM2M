@@ -41,8 +41,12 @@ module worker {
                                     std::size_t nchares,
                                     std::size_t offset,
                                     CProxy_Worker proxy );
-      entry void determineActualCollisions( int nPoints,
+      entry void determineActualCollisions( CProxy_Worker proxy,
+                                            int index,
+                                            int nPoints,
                                             std::pair<CkVector3d,int> points[nPoints] );
+      entry void transferSolution( int nPoints,
+                                   std::pair<int, tk::real> soln[nPoints] );
     }
 
   } // exam2m::

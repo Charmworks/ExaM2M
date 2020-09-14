@@ -82,7 +82,10 @@ class Worker : public CBase_Worker {
                             CProxy_Worker proxy );
 
     //! Identify actual collisions by calling intet function on all possible collisions
-    void determineActualCollisions( int nPoints, std::pair<CkVector3d, int>* points );
+    void determineActualCollisions( CProxy_Worker proxy, int index, int nPoints, std::pair<CkVector3d, int>* points );
+
+    //! Transfer the interpolated solution data back to the points in the dest mesh
+    void transferSolution( int nPoints, std::pair<int, tk::real>* soln );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -181,7 +184,7 @@ class Worker : public CBase_Worker {
     //! Determine if a point is in a tet
     bool intet(const CkVector3d &point,
                std::size_t e,
-               std::array< real, 4 >& N);
+               std::array< real, 4 >& N) const;
 };
 
 } // exam2m::
