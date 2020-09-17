@@ -82,7 +82,11 @@ class Worker : public CBase_Worker {
                             CProxy_Worker proxy );
 
     //! Identify actual collisions by calling intet function on all possible collisions
-    void determineActualCollisions( CProxy_Worker proxy, int index, int nPoints, std::pair<CkVector3d, int>* points );
+    void determineActualCollisions( CProxy_Worker proxy,
+                                    int index,
+                                    int nPoints,
+                                    int* srcIndices,
+                                    std::pair<CkVector3d, int>* points );
 
     //! Transfer the interpolated solution data back to the points in the dest mesh
     void transferSolution( int nPoints, std::pair<int, tk::real>* soln );
