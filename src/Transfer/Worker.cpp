@@ -195,6 +195,7 @@ Worker::processCollisions(
   int mychunk = thisIndex + m_firstchunk;
   CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
+  std::vector<int>* srcIndices = new std::vector<int>[numchares];
   std::vector<std::pair<CkVector3d, int>>* separated
       = new std::vector<std::pair<CkVector3d, int>>[numchares];
   for (int i = 0; i < nColl; i++) {
@@ -210,13 +211,20 @@ Worker::processCollisions(
       theirpoint = colls[i].A.number;
       mypoint = colls[i].B.number;
     }
+    srcIndices[theirindex].push_back(mypoint);
     separated[theirindex].push_back(std::make_pair(
-        CkVector3d(m_coord[0][mypoint], m_coord[1][mypoint], m_coord[2][mypoint]),
+        CkVector3d( m_coord[0][mypoint],
+                    m_coord[1][mypoint],
+                    m_coord[2][mypoint]),
         theirpoint));
   }
 
   for (int i = 0; i < numchares; i++) {
-    proxy[i].determineActualCollisions(thisProxy, thisIndex, separated[i].size(), separated[i].data());
+    proxy[i].determineActualCollisions( thisProxy,
+                                        thisIndex,
+                                        separated[i].size(),
+                                        srcIndices[i].data(),
+                                        separated[i].data() );
   }
   delete[] separated;
 }
@@ -226,6 +234,7 @@ Worker::determineActualCollisions(
     CProxy_Worker proxy,
     int index,
     int nPoints,
+    int* srcIndices,
     std::pair<CkVector3d, int>* points )
 // *****************************************************************************
 //  Identify actual collisions by calling intet function on all possible collisions
@@ -247,7 +256,7 @@ Worker::determineActualCollisions(
       for (int j = 0; j < 4; j++) {
         value += N[j] * m_u[points[i].second*4 + j];
       }
-      return_data.push_back(std::make_pair(i, value));
+      return_data.push_back(std::make_pair(srcIndices[i], value));
     }
   }
   CkPrintf("[%i]: %i collisions are actually in my tets out of %i potential collisions\n", CkMyPe(), numInTet, nPoints);
