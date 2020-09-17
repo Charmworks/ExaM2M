@@ -19,8 +19,7 @@ module mapper {
   namespace exam2m {
 
     array [1D] Mapper {
-      entry Mapper( std::size_t meshid,
-                    const tk::CProxy_MeshWriter& meshwriter,
+      entry Mapper( const tk::CProxy_MeshWriter& meshwriter,
                     const CProxy_Worker& worker,
                     const tk::MapperCallback& cbm,
                     const tk::WorkerCallback& cbw,

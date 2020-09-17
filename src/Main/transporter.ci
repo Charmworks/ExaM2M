@@ -18,16 +18,95 @@ module transporter {
 
     chare [migratable] Transporter {
       entry Transporter();
-      entry void addMesh( const std::string& mesh );
-      entry [reductiontarget] void load( std::size_t meshid, std::size_t nelem );
-      entry [reductiontarget] void distributed( std::size_t meshid );
-      entry [reductiontarget] void mapinserted( std::size_t meshid, std::size_t error );
-      entry [reductiontarget] void queried( std::size_t meshid );
-      entry [reductiontarget] void responded( std::size_t meshid );
-      entry [reductiontarget] void workinserted( std::size_t meshid );
-      entry [reductiontarget] void workcreated( std::size_t meshid );
+      entry void addMesh( const std::string& meshfile );
+      entry [reductiontarget] void loaded( std::size_t nelem );
+      entry [reductiontarget] void distributed();
+      entry [reductiontarget] void mapinserted( std::size_t error );
+      entry [reductiontarget] void queried();
+      entry [reductiontarget] void responded();
+      entry [reductiontarget] void workinserted();
+      entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
       entry void processCollisions( int nColls, Collision colls[nColls] );
+      entry void solutionFound();
+
+      entry void run() {
+        forall [m_meshid] (0:1,1) {
+          when addMesh( const std::string& meshfile ) {
+            // Create initial MeshData struct, and begin mesh loading
+            serial { initMeshData( meshfile ); }
+
+            // Once loaded, update number of elements and partition
+            when loaded[m_meshid]( std::size_t nelem ) serial {
+              updatenelems(m_meshid, nelem);
+
+              meshes[m_meshid].m_partitioner.partition( meshes[m_meshid].m_nchare );
+            }
+            when distributed[m_meshid]() serial {
+              meshes[m_meshid].m_partitioner.map();
+            }
+            when mapinserted[m_meshid]( std::size_t error ) serial {
+              if (error) {
+                CkAbort("\n>>> ERROR: A Mapper chare was not assigned any mesh "
+                  "elements. This can happen in SMP-mode with a large +ppn "
+                  "parameter (number of worker threads per logical node) and is "
+                  "most likely the fault of the mesh partitioning algorithm not "
+                  "tolerating the case when it is asked to divide the "
+                  "computational domain into a number of partitions different "
+                  "than the number of ranks it is called on, i.e., in case of "
+                  "overdecomposition and/or calling the partitioner in SMP mode "
+                  "with +ppn larger than 1. Solution 1: Try a different "
+                  "partitioning algorithm (e.g., rcb instead of mj). Solution 2: "
+                  "Decrease +ppn.\n");
+              } else {
+                 meshes[m_meshid].m_mapper.doneInserting();
+                 meshes[m_meshid].m_mapper.setup( meshes[m_meshid].m_npoin,
+                                                  meshes[m_meshid].m_firstchunk );
+              }
+            }
+            when queried[m_meshid]() serial {
+              meshes[m_meshid].m_mapper.response();
+            }
+            when responded[m_meshid]() serial {
+              meshes[m_meshid].m_mapper.create();
+            }
+            when workinserted[m_meshid]() serial {
+              meshes[m_meshid].m_worker.doneInserting();
+            }
+            when workcreated[m_meshid]() serial {
+              std::cout << "Number of tetrahedra for mesh " << m_meshid << ": "
+                  << meshes[m_meshid].m_nelem << '\n';;
+              std::cout << "Number of points for mesh " << m_meshid << ": "
+                  << meshes[m_meshid].m_npoin << '\n';
+            }
+          }
+        }
+
+        // Both meshes are fully loaded on worker chares, so now we can test
+        // for collisions.
+        serial {
+          m_sourcemeshid = 0;
+          m_destmeshid = 1;
+          meshes[m_sourcemeshid].m_worker.collideTets();
+          meshes[m_destmeshid].m_worker.collideVertices();
+          CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
+        }
+        // Collision detection library found collisions, now distribute them to
+        // the workers for further checking and solution transfer.
+        when processCollisions(int nColls, Collision colls[nColls]) serial {
+          distributeCollisions(nColls, colls);
+        }
+
+        // Solution has been transferred from source to destination, write out
+        // meshes and exit.
+        when solutionFound() {
+          forall [m_meshid] (0:1,1) {
+            serial { meshes[m_meshid].m_worker.out(); }
+            when written[m_meshid]() {}
+          }
+        }
+        serial { CkPrintf("done\n"); CkExit(); }
+      };
     }
 
   } // exam2m::

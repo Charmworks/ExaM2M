@@ -82,7 +82,7 @@ class Main : public CBase_Main {
       delete msg;
       mainProxy = thisProxy;
       transporterProxy = CProxy_Transporter::ckNew( 0 );
-      CkStartQD( CkCallback( CkIndex_Main::quiescence(), thisProxy ) );
+      transporterProxy.run();
       // Fire up an asynchronous execute object, which when created at some
       // future point in time will call back to this->execute(). This is
       // necessary so that this->execute() can access already migrated
