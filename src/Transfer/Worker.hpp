@@ -26,7 +26,6 @@ class Worker : public CBase_Worker {
     //! Constructor
     explicit
       Worker(
-        std::size_t meshid,
         std::size_t firstchunk,
         const tk::CProxy_MeshWriter& meshwriter,
         const tk::WorkerCallback& cbw,
@@ -96,7 +95,6 @@ class Worker : public CBase_Worker {
     //! \brief Pack/Unpack serialize member function
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
     void pup( PUP::er &p ) override {
-      p | m_meshid;
       p | m_firstchunk;
       p | m_cbw;
       p | m_nchare;
@@ -127,9 +125,6 @@ class Worker : public CBase_Worker {
     //@}
 
   private:
-    //! Mesh ID
-    std::size_t m_meshid;
-    //! Mesh ID
     std::size_t m_firstchunk;
     //! Charm++ callbacks associated to compile-time tags for Worker
     tk::WorkerCallback m_cbw;

@@ -22,42 +22,13 @@ namespace exam2m{
 
 //! Transporter drives time integration
 class Transporter : public CBase_Transporter {
-
+Transporter_SDAG_CODE;
   public:
     //! Constructor
     explicit Transporter();
 
     //! Migrate constructor: returning from a checkpoint
     explicit Transporter( CkMigrateMessage* m );
-
-    //! Add mesh by filename
-    void addMesh( const std::string& file );
-
-    //! Reduction target: the mesh has been read from file on all PEs
-    void load( std::size_t meshid, std::size_t nelem );
-
-    //! Reduction target: all PEs have distrbuted their mesh after partitioning
-    void distributed( std::size_t meshid );
-
-    //! Reduction target: all PEs have created their Mappers
-    void mapinserted( std::size_t meshid, std::size_t error );
-
-    //! Reduction target: all Mapper chares have queried their boundary nodes
-    void queried( std::size_t meshid );
-    //! \brief Reduction target: all Mapper chares have responded with their
-    //!   boundary nodes
-    void responded( std::size_t meshid );
-
-    ///! Reduction target: all Workers have been created
-    void workinserted( std::size_t meshid );
-
-    //! Reduction target: all Worker constructors have been called
-    void workcreated( std::size_t meshid );
-
-    //! Reduction target: all Workers have written out mesh/field data
-    void written();
-
-    void processCollisions( int nColl, Collision* colls );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -78,6 +49,17 @@ class Transporter : public CBase_Transporter {
 
   private:
 
+    //! Add mesh by filename
+    void initMeshData( const std::string& file );
+
+    //! Once partitioner returns initial partitioning info, update the
+    //! number of elements and number of chares in the associated mesh
+    void updatenelems( std::size_t meshid, std::size_t nelems );
+
+    //! Take collision list and distribute it to the destination mesh
+    //! to start testing for actual collisions
+    void distributeCollisions( int nColl, Collision* colls );
+
     struct MeshData {
       int m_nchare;                        //!< Number of worker chares
       int m_firstchunk;                    //!< First chunk ID (for collision)
@@ -88,14 +70,16 @@ class Transporter : public CBase_Transporter {
       std::size_t m_nelem;                 //!< Total number of elements in mesh
       std::size_t m_npoin;                 //!< Total number of nodes in mesh
     };
+    //! Mesh Data for all meshes
     std::vector<MeshData> meshes;
+    //! Chunk counter for ensuring unique chunk number for each mesh
     std::size_t m_currentchunk;
+    //! ID of the source mesh
     std::size_t m_sourcemeshid;
+    //! ID of the dest mesh
     std::size_t m_destmeshid;
-    int completed;
-
-    //! Normal finish of time stepping
-    void finish();
+    //! SDAG variable for mesh ID, used as a refnum in iteration
+    std::size_t m_meshid;
 };
 
 } // exam2m::

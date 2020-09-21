@@ -21,7 +21,6 @@ extern CollideHandle collideHandle;
 using exam2m::Worker;
 
 Worker::Worker(
-  std::size_t meshid,
   std::size_t firstchunk,
   const tk::CProxy_MeshWriter& meshwriter,
   const tk::WorkerCallback& cbw,
@@ -32,7 +31,6 @@ Worker::Worker(
   const std::vector< std::size_t >& triinpoel,
   const std::map< int, std::vector< std::size_t > >& bnode,
   int nc ) :
-  m_meshid( meshid ),
   m_firstchunk( firstchunk ),
   m_cbw( cbw ),
   m_nchare( nc ),
@@ -89,8 +87,7 @@ Worker::Worker(
 
   // Tell the RTS that the Worker chares have been created and compute
   // the total number of mesh points across whole problem
-  contribute( sizeof( std::size_t ), &meshid, CkReduction::nop,
-      m_cbw.get< tag::workcreated >() );
+  contribute( m_cbw.get< tag::workcreated >() );
 }
 
 void
