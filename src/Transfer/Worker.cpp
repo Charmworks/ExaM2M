@@ -141,17 +141,15 @@ Worker::collideVertices() const
 // Pass vertex information to the collision detection library
 // *****************************************************************************
 {
-  int nBoxes = m_coord[0].size();
-  bbox3d* boxes = new bbox3d[nBoxes];
-  int* prio = new int[nBoxes];
+  const int nBoxes = m_coord[0].size();
+  bbox3d boxes[nBoxes];
+  int prio[nBoxes];
   for (int i = 0; i < nBoxes; i++) {
     boxes[i].empty();
     boxes[i].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[i] = m_firstchunk;
   }
   CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
-  delete[] boxes;
-  delete[] prio;
 }
 
 void
@@ -160,9 +158,9 @@ Worker::collideTets() const
 // Pass tet information to the collision detection library
 // *****************************************************************************
 {
-  int nBoxes = m_inpoel.size() / 4;
-  bbox3d* boxes = new bbox3d[nBoxes];
-  int* prio = new int[nBoxes];
+  const int nBoxes = m_inpoel.size() / 4;
+  bbox3d boxes[nBoxes];
+  int prio[nBoxes];
   for (int i = 0; i < nBoxes; i++) {
     boxes[i].empty();
     prio[i] = m_firstchunk;
@@ -174,102 +172,116 @@ Worker::collideTets() const
     }
   }
   CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
-  delete[] boxes;
-  delete[] prio;
 }
 
 void
 Worker::processCollisions(
-    int nColl,
-    Collision* colls,
+    CProxy_Worker proxy,
     std::size_t numchares,
     std::size_t chunkoffset,
-    CProxy_Worker proxy )
+    int nColl,
+    Collision* colls ) const
 // *****************************************************************************
-//
+//  Process potential collisions by sending my points to the source mesh chares
+//  that they potentially collide with.
+//! \param[in] proxy Proxy for the source mesh chares
+//! \param[in] numchares Number of chares in the source mesh chare array
+//! \param[in] chunkoffset First chunk ID of the source mesh
+//! \param[in] nColl Number of potential collisions to process
+//! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
   int mychunk = thisIndex + m_firstchunk;
   CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
-  std::vector<int>* srcIndices = new std::vector<int>[numchares];
-  std::vector<std::pair<CkVector3d, int>>* separated
-      = new std::vector<std::pair<CkVector3d, int>>[numchares];
+  std::vector<PotentialCollision> pColls[numchares];
+  // Separate potential collisions into lists based on the source mesh chare
+  // that is involved in the potential collision
   for (int i = 0; i < nColl; i++) {
-    int theirindex;
-    int theirpoint;
-    int mypoint;
+    int chareindex;
+    PotentialCollision pColl;
     if (colls[i].A.chunk == mychunk) {
-      theirindex = colls[i].B.chunk - chunkoffset;
-      theirpoint = colls[i].B.number;
-      mypoint = colls[i].A.number;
+      chareindex = colls[i].B.chunk - chunkoffset;
+      pColl.dest_index = colls[i].A.number;
+      pColl.source_index = colls[i].B.number;
     } else {
-      theirindex = colls[i].A.chunk - chunkoffset;
-      theirpoint = colls[i].A.number;
-      mypoint = colls[i].B.number;
+      chareindex = colls[i].A.chunk - chunkoffset;
+      pColl.dest_index = colls[i].B.number;
+      pColl.source_index = colls[i].A.number;
     }
-    srcIndices[theirindex].push_back(mypoint);
-    separated[theirindex].push_back(std::make_pair(
-        CkVector3d( m_coord[0][mypoint],
-                    m_coord[1][mypoint],
-                    m_coord[2][mypoint]),
-        theirpoint));
+    pColl.point = CkVector3d( m_coord[0][pColl.dest_index],
+                              m_coord[1][pColl.dest_index],
+                              m_coord[2][pColl.dest_index] );
+    pColls[chareindex].push_back(pColl);
   }
 
+  // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
     proxy[i].determineActualCollisions( thisProxy,
                                         thisIndex,
-                                        separated[i].size(),
-                                        srcIndices[i].data(),
-                                        separated[i].data() );
+                                        pColls[i].size(),
+                                        pColls[i].data() );
   }
-  delete[] separated;
 }
 
 void
 Worker::determineActualCollisions(
     CProxy_Worker proxy,
     int index,
-    int nPoints,
-    int* srcIndices,
-    std::pair<CkVector3d, int>* points )
+    int nColls,
+    PotentialCollision* colls ) const
 // *****************************************************************************
-//  Identify actual collisions by calling intet function on all possible collisions
-//! \param[in] nPoints Number of points to be checked
-//! \param[in] points Pairs of point and tet indices
+//  Identify actual collisions by calling intet on all possible collisions, and
+//  interpolate solution values to send back to the destination mesh.
+//! \param[in] proxy The proxy of the destination mesh chare array
+//! \param[in] index The index in proxy to return the solution data to
+//! \param[in] nColls Number of collisions to be checked
+//! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
-  CkPrintf("[%i]: Received data for %i potential collisions with my tets\n", CkMyPe(), nPoints);
+  CkPrintf("Source chare %i received data for %i potential collisions\n",
+      thisIndex, nColls);
 
   std::array< real, 4 > N;
   int numInTet = 0;
-  std::vector<std::pair<int, tk::real>> return_data;
+  std::vector<SolutionData> return_data;
 
-  // Iterate over my potential collisions and determine if it is intet and the shapefunction
-  for (int i = 0; i < nPoints; i++) {
-    if (intet(points[i].first, points[i].second, N)) {
+  // Iterate over my potential collisions and determine call intet to determine
+  // if an actual collision occurred, and if so what is the shape function
+  for (int i = 0; i < nColls; i++) {
+    if (intet(colls[i].point, colls[i].source_index, N)) {
       numInTet++;
-      tk::real value = 0;
+      SolutionData data;
+      data.dest_index = colls[i].dest_index;
+      data.solution = 0.0;
       for (int j = 0; j < 4; j++) {
-        value += N[j] * m_u[points[i].second*4 + j];
+        data.solution += N[j] * m_u[colls[i].source_index*4 + j];
       }
-      return_data.push_back(std::make_pair(srcIndices[i], value));
+      return_data.push_back(data);
     }
   }
-  CkPrintf("[%i]: %i collisions are actually in my tets out of %i potential collisions\n", CkMyPe(), numInTet, nPoints);
+  CkPrintf("Source chare %i found %i/%i actual collisions\n",
+      thisIndex, numInTet, nColls);
+  // Send the solution data for the actual collisions back to the dest mesh
   proxy[index].transferSolution(return_data.size(), return_data.data());
 }
 
 void
 Worker::transferSolution(
     int nPoints,
-    std::pair<int, tk::real>* soln )
+    SolutionData* soln )
+// *****************************************************************************
+//  Receive the solution data for destination mesh points that collided with the
+//  source mesh tetrahedrons
+//! \param[in] nPoints Number of solutions found
+//! \param[in] colls List of solutions
+// *****************************************************************************
 {
   CkPrintf("Dest worker %i received %i solution points\n", thisIndex, nPoints);
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
   for (int i = 0; i < nPoints; i++) {
-    m_u[soln[i].first] = soln[i].second;
+    m_u[soln[i].dest_index] = soln[i].solution;
   }
 }
 
