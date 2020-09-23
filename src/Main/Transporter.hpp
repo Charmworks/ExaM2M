@@ -78,8 +78,6 @@ Transporter_SDAG_CODE;
     std::size_t m_sourcemeshid;
     //! ID of the dest mesh
     std::size_t m_destmeshid;
-    //! SDAG variable for mesh ID, used as a refnum in iteration
-    std::size_t m_meshid;
 };
 
 } // exam2m::
