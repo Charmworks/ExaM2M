@@ -203,6 +203,9 @@ class Worker : public CBase_Worker {
     bool intet(const CkVector3d &point,
                std::size_t e,
                std::array< real, 4 >& N) const;
+
+    //! Returns true if we are the owner of the vertex
+    bool owner( std::size_t index ) const;
 };
 
 } // exam2m::
