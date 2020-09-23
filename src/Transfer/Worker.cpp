@@ -141,15 +141,20 @@ Worker::collideVertices() const
 // Pass vertex information to the collision detection library
 // *****************************************************************************
 {
-  const int nBoxes = m_coord[0].size();
-  bbox3d boxes[nBoxes];
-  int prio[nBoxes];
-  for (int i = 0; i < nBoxes; i++) {
-    boxes[i].empty();
-    boxes[i].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
-    prio[i] = m_firstchunk;
+  const int nVertices = m_coord[0].size();
+  int nBoxes = 0;
+  bbox3d boxes[nVertices];
+  int prio[nVertices];
+  for (int i = 0; i < nVertices; i++) {
+    if (!owner(i)) continue;
+    boxes[nBoxes].empty();
+    boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
+    prio[nBoxes] = m_firstchunk;
+    nBoxes++;
   }
   CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
+  CkPrintf("Dest chare %i(%lu) contributed %i points\n",
+      thisIndex, m_firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -172,6 +177,8 @@ Worker::collideTets() const
     }
   }
   CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
+  CkPrintf("Source chare %i(%lu) contributed %i tets\n",
+      thisIndex, m_firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -369,6 +376,22 @@ Worker::intet(const CkVector3d &point,
   } else {
     return false;
   }
+}
+
+bool Worker::owner( std::size_t index ) const
+// *****************************************************************************
+//  Returns true if we own the vertex locally indexed by 'index'. Currently we
+//  own the vertex if we are the lowest indexed chare that has this point.
+//! \param[in] index Local index of the vertex to check
+// *****************************************************************************
+{
+  std::size_t gid = m_gid[index];
+  // Check to see if the point is owned by a chare with a smaller index
+  for (int i = 0; i < thisIndex; i++) {
+    auto iter = m_nodeCommMap.find(i);
+    if ( iter->second.count(gid)) return false;
+  }
+  return true;
 }
 
 tk::UnsMesh::Coords
