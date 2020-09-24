@@ -19,6 +19,18 @@
 
 namespace exam2m {
 
+struct PotentialCollision {
+  std::size_t source_index, dest_index;
+  CkVector3d point;
+  void pup(PUP::er& p) { p | source_index; p | dest_index; p | point; }
+};
+
+struct SolutionData {
+  std::size_t dest_index;
+  tk::real solution;
+  void pup(PUP::er& p) { p | dest_index; p | solution; }
+};
+
 //! Worker chare array holding part of a mesh
 class Worker : public CBase_Worker {
 
@@ -74,21 +86,21 @@ class Worker : public CBase_Worker {
     //! Contribute tet information to the collision detection library
     void collideTets() const;
 
-    void processCollisions( int nColls,
-                            Collision* colls,
+    //! Process potential collisions in the destination mesh
+    void processCollisions( CProxy_Worker proxy,
                             std::size_t nchare,
                             std::size_t offset,
-                            CProxy_Worker proxy );
+                            int nColls,
+                            Collision* colls ) const;
 
-    //! Identify actual collisions by calling intet function on all possible collisions
+    //! Identify actual collisions in the source mesh
     void determineActualCollisions( CProxy_Worker proxy,
                                     int index,
-                                    int nPoints,
-                                    int* srcIndices,
-                                    std::pair<CkVector3d, int>* points );
+                                    int nColls,
+                                    PotentialCollision* colls ) const;
 
-    //! Transfer the interpolated solution data back to the points in the dest mesh
-    void transferSolution( int nPoints, std::pair<int, tk::real>* soln );
+    //! Transfer the interpolated solution data back to destination mesh
+    void transferSolution( int nPoints, SolutionData* soln );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -125,6 +137,7 @@ class Worker : public CBase_Worker {
     //@}
 
   private:
+    //! The ID of my first chunk (used for collision detection library)
     std::size_t m_firstchunk;
     //! Charm++ callbacks associated to compile-time tags for Worker
     tk::WorkerCallback m_cbw;

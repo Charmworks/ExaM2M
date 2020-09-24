@@ -103,27 +103,29 @@ void
 Transporter::updatenelems( std::size_t meshid, std::size_t nelem )
 // *****************************************************************************
 // Reduction target: the mesh has been read from file on all PEs
+//! \param[in] meshid The mesh ID of the mesh that has been read
 //! \param[in] nelem Total number of mesh elements (summed across all nodes)
 // *****************************************************************************
 {
+  MeshData& mesh = meshes[meshid];
   tk::real virtualization = 0.0;
-  meshes[meshid].m_nelem = nelem;
+  mesh.m_nelem = nelem;
 
   // Compute load distribution given total work (nelem) and virtualization
   uint64_t chunksize, remainder;
-  meshes[meshid].m_nchare = static_cast< int >(
+  mesh.m_nchare = static_cast< int >(
                tk::linearLoadDistributor( virtualization,
                  nelem, CkNumPes(), chunksize, remainder ) );
-  meshes[meshid].m_firstchunk = m_currentchunk;
-  m_currentchunk += meshes[meshid].m_nchare;
+  mesh.m_firstchunk = m_currentchunk;
+  m_currentchunk += mesh.m_nchare;
 
   // Print out info on load distribution
   std::cout << "Initial load distribution for mesh " << meshid << "\n";
   std::cout << "Virtualization [0.0...1.0]: " << virtualization << '\n';
-  std::cout << "Number of work units: " << meshes[meshid].m_nchare << '\n';
+  std::cout << "Number of work units: " << mesh.m_nchare << '\n';
 
   // Tell the meshwriter the total number of chares
-  meshes[meshid].m_meshwriter.nchare( meshes[meshid].m_nchare );
+  mesh.m_meshwriter.nchare( mesh.m_nchare );
 }
 
 Transporter::Transporter( CkMigrateMessage* m ) : CBase_Transporter( m )
@@ -138,13 +140,19 @@ Transporter::Transporter( CkMigrateMessage* m ) : CBase_Transporter( m )
 void
 Transporter::distributeCollisions(int nColl, Collision* colls)
 // *****************************************************************************
-// Normal finish of time stepping
+//  Called when all potential collisions have been found, and now need to be
+//  destributed to the chares in the destination mesh to determine actual
+//  collisions.
+//! \param[in] nColl Number of potential collisions found
+//! \param[in] colls The list of potential collisions
 // *****************************************************************************
 {
   std::cout << "Collisions found: " << nColl << std::endl;
   std::size_t first = meshes[m_destmeshid].m_firstchunk;
   std::size_t nchare = meshes[m_destmeshid].m_nchare;
-  std::vector<Collision>* separated = new std::vector<Collision>[nchare];
+  std::vector<Collision> separated[nchare];
+
+  // Separate collisions based on the destination mesh chare they belong to
   for (int i = 0; i < nColl; i++) {
     if (colls[i].A.chunk >= first && colls[i].A.chunk < first + nchare) {
       separated[colls[i].A.chunk - first].push_back(colls[i]);
@@ -153,12 +161,16 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
     }
   }
 
+  // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
     CkPrintf("Dest mesh chunk %i has %i\n", i, separated[i].size());
-    meshes[m_destmeshid].m_worker[i].processCollisions(separated[i].size(), separated[i].data(), meshes[m_sourcemeshid].m_nchare, meshes[m_sourcemeshid].m_firstchunk, meshes[m_sourcemeshid].m_worker);
+    meshes[m_destmeshid].m_worker[i].processCollisions(
+        meshes[m_sourcemeshid].m_worker,
+        meshes[m_sourcemeshid].m_nchare,
+        meshes[m_sourcemeshid].m_firstchunk,
+        separated[i].size(),
+        separated[i].data() );
   }
-
-  delete[] separated;
 }
 
 #include "NoWarning/transporter.def.h"

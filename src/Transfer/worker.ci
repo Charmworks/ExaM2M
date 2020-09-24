@@ -20,6 +20,9 @@ module worker {
 
   namespace exam2m {
 
+    class PotentialCollision;
+    class SolutionData;
+
     array [1D] Worker {
       entry Worker( std::size_t firstchunk,
                     const tk::CProxy_MeshWriter& meshwriter,
@@ -35,18 +38,17 @@ module worker {
       entry void written();
       entry void collideVertices();
       entry void collideTets();
-      entry void processCollisions( int nColls,
-                                    Collision colls[nColls],
+      entry void processCollisions( CProxy_Worker proxy,
                                     std::size_t nchares,
                                     std::size_t offset,
-                                    CProxy_Worker proxy );
+                                    int nColls,
+                                    Collision colls[nColls] );
       entry void determineActualCollisions( CProxy_Worker proxy,
                                             int index,
-                                            int nPoints,
-                                            int srcIndices[nPoints],
-                                            std::pair<CkVector3d,int> points[nPoints] );
+                                            int nColls,
+                                            PotentialCollision colls[nColls] );
       entry void transferSolution( int nPoints,
-                                   std::pair<int, tk::real> soln[nPoints] );
+                                   SolutionData soln[nPoints] );
     }
 
   } // exam2m::
