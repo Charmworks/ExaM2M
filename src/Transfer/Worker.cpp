@@ -91,9 +91,10 @@ Worker::Worker(
 }
 
 void
-Worker::out()
+Worker::out( int meshid )
 // *****************************************************************************
 // Write out some field data to file(s)
+//! \param[in] meshid Mesh id
 // *****************************************************************************
 {
   // Volume elem field data
@@ -120,7 +121,7 @@ Worker::out()
   // debugging.
 
   // Send mesh and fields data for output to file
-  write( m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
+  write( meshid, m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
          m_triinpoel, elemfieldnames, nodefieldnames, nodesurfnames,
          elemfields, nodefields, nodesurfs,
          CkCallback(CkIndex_Worker::written(), thisProxy[thisIndex]) );
@@ -397,6 +398,7 @@ Worker::setCoord( const tk::UnsMesh::CoordMap& coordmap )
 
 void
 Worker::write(
+  int meshid,
   const std::vector< std::size_t >& inpoel,
   const tk::UnsMesh::Coords& coord,
   const std::map< int, std::vector< std::size_t > >& bface,
@@ -411,6 +413,7 @@ Worker::write(
   CkCallback c )
 // *****************************************************************************
 //  Output mesh and fields data (solution dump) to file(s)
+//! \param[in] meshid Mesh id
 //! \param[in] inpoel Mesh connectivity for the mesh chunk to be written
 //! \param[in] coord Node coordinates of the mesh chunk to be written
 //! \param[in] bface Map of boundary-face lists mapped to corresponding side set
@@ -457,7 +460,7 @@ Worker::write(
 
   m_meshwriter[ CkNodeFirst( CkMyNode() ) ].
     write( meshoutput, fieldoutput, m_itr, m_itf, m_t, thisIndex,
-           "out",       // output basefilename
+           "out." + std::to_string(meshid),       // output basefilename
            inpoel, coord, bface, bnode, triinpoel, elemfieldnames,
            nodefieldnames, nodesurfnames, elemfields, nodefields, nodesurfs,
            {},  // no surface output for now (even if passed in nodesurf)

@@ -34,7 +34,7 @@ module worker {
                     const std::vector< std::size_t >& triinpoel,
                     const std::map< int, std::vector< std::size_t > >& bnode,
                     int nchare );
-      entry void out();
+      entry void out( int meshid );
       entry void written();
       entry void collideVertices();
       entry void collideTets();
