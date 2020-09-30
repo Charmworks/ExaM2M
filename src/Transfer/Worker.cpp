@@ -8,6 +8,8 @@
 */
 // *****************************************************************************
 
+#include <iostream>     // NOT NEEDED WHEN DEBUGGED
+
 #include "Worker.hpp"
 #include "Reorder.hpp"
 #include "DerivedData.hpp"
@@ -147,7 +149,7 @@ Worker::collideVertices() const
   bbox3d boxes[nVertices];
   int prio[nVertices];
   for (int i = 0; i < nVertices; i++) {
-    if (!owner(i)) continue;
+    //if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[nBoxes] = m_firstchunk;
@@ -261,10 +263,12 @@ Worker::determineActualCollisions(
       numInTet++;
       SolutionData data;
       data.dest_index = colls[i].dest_index;
-      data.solution = 0.0;
-      for (int j = 0; j < 4; j++) {
-        data.solution += N[j] * m_u[colls[i].source_index*4 + j];
-      }
+      auto e = colls[i].source_index;
+      const auto A = m_inpoel[e*4+0];
+      const auto B = m_inpoel[e*4+1];
+      const auto C = m_inpoel[e*4+2];
+      const auto D = m_inpoel[e*4+3];
+      data.solution = N[0]*m_u[A] + N[1]*m_u[B] + N[2]*m_u[C] + N[3]*m_u[D];
       return_data.push_back(data);
     }
   }
@@ -286,8 +290,13 @@ Worker::transferSolution(
 // *****************************************************************************
 {
   CkPrintf("Dest worker %i received %i solution points\n", thisIndex, nPoints);
+
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
+
+  // Initialize dest mesh solution
+  for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
+
   for (int i = 0; i < nPoints; i++) {
     m_u[soln[i].dest_index] = soln[i].solution;
   }
