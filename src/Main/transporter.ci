@@ -101,7 +101,7 @@ module transporter {
         // meshes and exit.
         when solutionFound() {
           forall [meshid] (0:1,1) {
-            serial { meshes[meshid].m_worker.out(); }
+            serial { meshes[meshid].m_worker.out(meshid); }
             when written[meshid]() {}
           }
         }
