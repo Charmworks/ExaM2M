@@ -139,6 +139,16 @@ Worker::written()
 }
 
 void
+Worker::background()
+// *****************************************************************************
+// Initialize dest mesh solution with background data
+//! \details This is useful to see what points did not receive solution.
+// *****************************************************************************
+{
+  for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
+}
+
+void
 Worker::collideVertices() const
 // *****************************************************************************
 // Pass vertex information to the collision detection library
@@ -149,7 +159,7 @@ Worker::collideVertices() const
   bbox3d boxes[nVertices];
   int prio[nVertices];
   for (int i = 0; i < nVertices; i++) {
-    if (!owner(i)) continue;
+    //if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[nBoxes] = m_firstchunk;
@@ -256,6 +266,11 @@ Worker::determineActualCollisions(
   int numInTet = 0;
   std::vector<SolutionData> return_data;
 
+  // Tetrahedron node coordinates
+  const auto& x = m_coord[0];
+  const auto& y = m_coord[1];
+  const auto& z = m_coord[2];
+
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
   for (int i = 0; i < nColls; i++) {
@@ -293,10 +308,6 @@ Worker::transferSolution(
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
-
-  // Initialize dest mesh solution
-  for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
-
   for (int i = 0; i < nPoints; i++) {
     m_u[soln[i].dest_index] = soln[i].solution;
   }
