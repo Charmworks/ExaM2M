@@ -22,7 +22,7 @@ mainmodule exam2m {
   namespace exam2m {
 
     // Order important: must be the same as in Main/ExaM2M.cpp
-    // readonly ...
+    readonly tk::real g_virtualization;
 
   } // exam2m::
 

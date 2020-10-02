@@ -11,6 +11,7 @@
 // *****************************************************************************
 
 #include <iostream>
+#include <cstdlib>
 
 #include "ExaM2MDriver.hpp"
 #include "ProcessException.hpp"
@@ -55,7 +56,7 @@ namespace exam2m {
 #endif
 
 // Global scope data
-// ..
+tk::real g_virtualization = 0.0;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -79,6 +80,9 @@ class Main : public CBase_Main {
       m_mesh_complete( 0 ),
       m_driver( msg->argc, msg->argv )
     {
+      if (msg->argc > 3) {
+        exam2m::g_virtualization = std::atof( msg->argv[3] );
+      }
       delete msg;
       mainProxy = thisProxy;
       transporterProxy = CProxy_Transporter::ckNew( 0 );
