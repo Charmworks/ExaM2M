@@ -81,6 +81,9 @@ class Worker : public CBase_Worker {
     //! Mesh and field data written to file(s)
     void written();
 
+    //! Initialize dest mesh solution with background data
+    void background();
+
     //! Contribute vertex information to the collsion detection library
     void collideVertices() const;
 

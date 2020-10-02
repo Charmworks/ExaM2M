@@ -32,3 +32,17 @@ add_regression_test(sphere2box ${EXAM2M_EXECUTABLE}
                     BIN_RESULT out.0.e-s.0.1.0
                                out.1.e-s.0.1.0
                     BIN_DIFF_PROG_CONF exodiff.cfg)
+
+add_regression_test(sphere2box ${EXAM2M_EXECUTABLE}
+                    NUMPES 2
+                    INPUTFILES meshes/sphere_full.exo meshes/unitcube_94K.exo
+                    ARGS sphere_full.exo unitcube_94K.exo
+                    BIN_BASELINE sphere2box_pe2.src.std.exo.0
+                                 sphere2box_pe2.src.std.exo.1
+                                 sphere2box_pe2.dst.std.exo.0
+                                 sphere2box_pe2.dst.std.exo.1
+                    BIN_RESULT out.0.e-s.0.2.0
+                               out.0.e-s.0.2.1
+                               out.1.e-s.0.2.0
+                               out.1.e-s.0.2.1
+                    BIN_DIFF_PROG_CONF exodiff.cfg)
