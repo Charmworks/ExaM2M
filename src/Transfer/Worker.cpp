@@ -266,11 +266,6 @@ Worker::determineActualCollisions(
   int numInTet = 0;
   std::vector<SolutionData> return_data;
 
-  // Tetrahedron node coordinates
-  const auto& x = m_coord[0];
-  const auto& y = m_coord[1];
-  const auto& z = m_coord[2];
-
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
   for (int i = 0; i < nColls; i++) {

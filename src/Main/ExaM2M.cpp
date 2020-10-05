@@ -64,8 +64,11 @@ tk::real g_virtualization = 0.0;
 
 } // exam2m::
 
-void printCollisionHandler(void *param,int nColl,Collision *colls) {
-  transporterProxy.processCollisions(nColl, colls);
+void printCollisionHandler( [[maybe_unused]] void *param,
+                            int nColl,
+                            Collision *colls )
+{
+  transporterProxy.processCollisions( nColl, colls );
 }
 
 //! Charm++ main chare for the exam2m executable.

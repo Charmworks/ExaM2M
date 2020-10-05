@@ -47,7 +47,7 @@ void Transporter::initMeshData( const std::string& file )
   std::map< int, std::vector< std::size_t > > bnode;
 
   MeshData mesh;
-  int meshid = meshes.size();
+  int meshid = m_meshes.size();
 
   // Create ExodusII mesh file reader
   tk::ExodusIIMeshReader mr( file );
@@ -102,7 +102,7 @@ void Transporter::initMeshData( const std::string& file )
     CProxy_Partitioner::ckNew( file, cbp, cbm, cbw,
        mesh.m_meshwriter, mesh.m_mapper, mesh.m_worker, bface, faces, bnode );
 
-  meshes.push_back(mesh);
+  m_meshes.push_back(mesh);
 }
 
 void
@@ -113,7 +113,7 @@ Transporter::updatenelems( std::size_t meshid, std::size_t nelem )
 //! \param[in] nelem Total number of mesh elements (summed across all nodes)
 // *****************************************************************************
 {
-  MeshData& mesh = meshes[meshid];
+  MeshData& mesh = m_meshes[meshid];
   mesh.m_nelem = nelem;
 
   // Compute load distribution given total work (nelem) and virtualization
@@ -153,8 +153,8 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
 // *****************************************************************************
 {
   std::cout << "Collisions found: " << nColl << std::endl;
-  std::size_t first = meshes[m_destmeshid].m_firstchunk;
-  std::size_t nchare = meshes[m_destmeshid].m_nchare;
+  auto first = m_meshes[m_destmeshid].m_firstchunk;
+  auto nchare = m_meshes[m_destmeshid].m_nchare;
   std::vector<Collision> separated[nchare];
 
   // Separate collisions based on the destination mesh chare they belong to
@@ -168,11 +168,11 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
 
   // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
-    CkPrintf("Dest mesh chunk %i has %i\n", i, separated[i].size());
-    meshes[m_destmeshid].m_worker[i].processCollisions(
-        meshes[m_sourcemeshid].m_worker,
-        meshes[m_sourcemeshid].m_nchare,
-        meshes[m_sourcemeshid].m_firstchunk,
+    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[i].size());
+    m_meshes[m_destmeshid].m_worker[i].processCollisions(
+        m_meshes[m_sourcemeshid].m_worker,
+        m_meshes[m_sourcemeshid].m_nchare,
+        m_meshes[m_sourcemeshid].m_firstchunk,
         separated[i].size(),
         separated[i].data() );
   }
