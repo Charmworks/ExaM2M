@@ -21,4 +21,4 @@ jobs:
     - name: build-exam2m-debug
       run: mkdir build && cd build && cmake ../src -DCMAKE_BUILD_TYPE=Debug && make
     - name: test
-      run: cd build && ctest -V #running ctest -V over make test to get verbose output
+      run: cd build && ctest -j2 #running ctest -V over make test to get verbose output

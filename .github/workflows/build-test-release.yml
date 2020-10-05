@@ -21,4 +21,4 @@ jobs:
     - name: build-exam2m-release
       run: mkdir build && cd build && cmake ../src && make
     - name: test
-      run: cd build && ctest -V #running ctest -V over make test to get verbose output
+      run: cd build && ctest -j2 #running ctest -V over make test to get verbose output
