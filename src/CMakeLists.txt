@@ -44,6 +44,9 @@ endif()
 # Convert CMAKE_BUILD_TYPE
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 
+# Query regression tests directory
+get_filename_component(REGRESSION_DIR "${PROJECT_SOURCE_DIR}/../tests" ABSOLUTE)
+
 # Query target architecture
 include(TargetArch)
 target_architecture(ARCH)
@@ -75,6 +78,11 @@ message(STATUS "Third-party library dir: " ${TPL_DIR})
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
     CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   include(DetectCompilerVersion)
+endif()
+
+set(ENABLE_TESTS true CACHE BOOL "Enable regression tests.")
+if (NOT ENABLE_TESTS)
+  message(STATUS "Tests disabled.")
 endif()
 
 # Include third-party libraries configuration
@@ -318,6 +326,39 @@ else()
 
 endif()
 
+# Set runner configuration. This is used when generating code coverage and
+# running regression tests using ctest. Note that ninja puts chamrun to <build>
+# while make puts it into <build>/Main, but after any executable target we copy
+# <build>/Main/charmrun to <build> for non-ninja builds. See also
+# cmake/ConfigExecutable.cmake.
+
+# Defaults for runner, used to run regression tests
+set(RUNNER_REQUIRED false)
+set(RUNNER "${CHARM_RUN}" CACHE STRING
+    "Parallel/serial job runner, used to run regression tests")
+set(RUNNER_NCPUS_ARG "+p" CACHE STRING
+    "The argument used to specify the number of PEs for the runner")
+set(RUNNER_ARGS "" CACHE STRING
+    "Arguments to pass to the parallel/serial job runner, e.g., to mpirun.")
+set(POSTFIX_RUNNER_ARGS "" CACHE STRING
+    "Arguments to pass to the parallel/serial job runner at the end of the command line.")
+
+# Host-, and/or architecture-specifc runner configuration
+if (DEFINED ENV{NERSC_HOST})
+
+  set(RUNNER "srun")
+  set(RUNNER_NCPUS_ARG "-n")
+  set(RUNNER_REQUIRED true)
+
+elseif(DEFINED ENV{CRAY_PRGENVPGI} OR
+       DEFINED ENV{CRAY_PRGENVGNU} OR
+       DEFINED ENV{CRAY_PRGENVCRAY} OR
+       DEFINED ENV{CRAY_PRGENVINTEL})
+
+  set(RUNNER_ARGS "")
+
+endif()
+
 # Echo compiler flags
 message(STATUS "C compiler flags: '${CMAKE_C_FLAGS}'")
 message(STATUS "C++ compiler flags: '${CMAKE_CXX_FLAGS}'")
@@ -379,8 +420,9 @@ endif()
 
 enable_testing()
 
-set(TEST_INPUT1 "../tests/sphere_tetra.0.2.exo")
-set(TEST_INPUT2 "../tests/sphere_tetra.0.2.exo")
-
-add_test(NAME exam2mTest
-  COMMAND ${CHARM_RUN} +p2 ./Main/${EXAM2M_EXECUTABLE} ${TEST_INPUT1} ${TEST_INPUT2})
+# Include cmake code common to all regression tests
+if (ENABLE_TESTS)
+  add_subdirectory(${REGRESSION_DIR}
+                   ${CMAKE_BINARY_DIR}/tests
+                   EXCLUDE_FROM_ALL)
+endif()
