@@ -8,6 +8,8 @@
 */
 // *****************************************************************************
 
+#include <iostream>     // NOT NEEDED WHEN DEBUGGED
+
 #include "Worker.hpp"
 #include "Reorder.hpp"
 #include "DerivedData.hpp"
@@ -91,9 +93,10 @@ Worker::Worker(
 }
 
 void
-Worker::out()
+Worker::out( int meshid )
 // *****************************************************************************
 // Write out some field data to file(s)
+//! \param[in] meshid Mesh id
 // *****************************************************************************
 {
   // Volume elem field data
@@ -120,7 +123,7 @@ Worker::out()
   // debugging.
 
   // Send mesh and fields data for output to file
-  write( m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
+  write( meshid, m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
          m_triinpoel, elemfieldnames, nodefieldnames, nodesurfnames,
          elemfields, nodefields, nodesurfs,
          CkCallback(CkIndex_Worker::written(), thisProxy[thisIndex]) );
@@ -253,10 +256,12 @@ Worker::determineActualCollisions(
       numInTet++;
       SolutionData data;
       data.dest_index = colls[i].dest_index;
-      data.solution = 0.0;
-      for (int j = 0; j < 4; j++) {
-        data.solution += N[j] * m_u[colls[i].source_index*4 + j];
-      }
+      auto e = colls[i].source_index;
+      const auto A = m_inpoel[e*4+0];
+      const auto B = m_inpoel[e*4+1];
+      const auto C = m_inpoel[e*4+2];
+      const auto D = m_inpoel[e*4+3];
+      data.solution = N[0]*m_u[A] + N[1]*m_u[B] + N[2]*m_u[C] + N[3]*m_u[D];
       return_data.push_back(data);
     }
   }
@@ -278,8 +283,13 @@ Worker::transferSolution(
 // *****************************************************************************
 {
   CkPrintf("Dest worker %i received %i solution points\n", thisIndex, nPoints);
+
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
+
+  // Initialize dest mesh solution
+  for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
+
   for (int i = 0; i < nPoints; i++) {
     m_u[soln[i].dest_index] = soln[i].solution;
   }
@@ -397,6 +407,7 @@ Worker::setCoord( const tk::UnsMesh::CoordMap& coordmap )
 
 void
 Worker::write(
+  int meshid,
   const std::vector< std::size_t >& inpoel,
   const tk::UnsMesh::Coords& coord,
   const std::map< int, std::vector< std::size_t > >& bface,
@@ -411,6 +422,7 @@ Worker::write(
   CkCallback c )
 // *****************************************************************************
 //  Output mesh and fields data (solution dump) to file(s)
+//! \param[in] meshid Mesh id
 //! \param[in] inpoel Mesh connectivity for the mesh chunk to be written
 //! \param[in] coord Node coordinates of the mesh chunk to be written
 //! \param[in] bface Map of boundary-face lists mapped to corresponding side set
@@ -457,7 +469,7 @@ Worker::write(
 
   m_meshwriter[ CkNodeFirst( CkMyNode() ) ].
     write( meshoutput, fieldoutput, m_itr, m_itf, m_t, thisIndex,
-           "out",       // output basefilename
+           "out." + std::to_string(meshid),       // output basefilename
            inpoel, coord, bface, bnode, triinpoel, elemfieldnames,
            nodefieldnames, nodesurfnames, elemfields, nodefields, nodesurfs,
            {},  // no surface output for now (even if passed in nodesurf)
