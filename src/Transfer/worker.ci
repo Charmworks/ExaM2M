@@ -36,6 +36,7 @@ module worker {
                     int nchare );
       entry void out( int meshid );
       entry void written();
+      entry void background();
       entry void collideVertices();
       entry void collideTets();
       entry void processCollisions( CProxy_Worker proxy,
