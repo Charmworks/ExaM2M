@@ -61,7 +61,8 @@ class Worker : public CBase_Worker {
     #endif
 
     //! Output mesh and fields data (solution dump) to file(s)
-    void write( const std::vector< std::size_t >& inpoel,
+    void write( int meshid,
+                const std::vector< std::size_t >& inpoel,
                 const tk::UnsMesh::Coords& coord,
                 const std::map< int, std::vector< std::size_t > >& bface,
                 const std::map< int, std::vector< std::size_t > >& bnode,
@@ -75,10 +76,13 @@ class Worker : public CBase_Worker {
                 CkCallback c );
 
     //! Write out some field data to file(s)
-    void out();
+    void out( int meshid );
 
     //! Mesh and field data written to file(s)
     void written();
+
+    //! Initialize dest mesh solution with background data
+    void background();
 
     //! Contribute vertex information to the collsion detection library
     void collideVertices() const;

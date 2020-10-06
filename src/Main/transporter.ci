@@ -87,6 +87,7 @@ module transporter {
         serial {
           m_sourcemeshid = 0;
           m_destmeshid = 1;
+          meshes[m_destmeshid].m_worker.background();
           meshes[m_sourcemeshid].m_worker.collideTets();
           meshes[m_destmeshid].m_worker.collideVertices();
           CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
@@ -101,7 +102,7 @@ module transporter {
         // meshes and exit.
         when solutionFound() {
           forall [meshid] (0:1,1) {
-            serial { meshes[meshid].m_worker.out(); }
+            serial { meshes[meshid].m_worker.out(meshid); }
             when written[meshid]() {}
           }
         }
