@@ -87,7 +87,7 @@ class Worker : public CBase_Worker {
     void background();
 
     //! Contribute vertex information to the collsion detection library
-    void collideVertices() const;
+    void collideVertices();
 
     //! Contribute tet information to the collision detection library
     void collideTets() const;
@@ -135,6 +135,7 @@ class Worker : public CBase_Worker {
       p | m_triinpoel;
       p | m_bnode;
       p | m_u;
+      p | m_vertexMap;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -198,6 +199,19 @@ class Worker : public CBase_Worker {
 
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );
+
+    //! Maps collision detection index with actual vertex index
+    std::vector< std::size_t > m_vertexMap;
+
+    //! \brief Retrieve previously stored actual vertex index from the
+    //!   collision detection index
+    std::size_t getActualIndex(int collideIndex) const {
+      auto ci = static_cast<std::size_t>(collideIndex);
+      if(m_vertexMap.size() == 0) // mesh using tets
+        return ci;
+      else
+        return m_vertexMap[ ci ];
+    }
 
     //! Determine if a point is in a tet
     bool intet(const CkVector3d &point,
