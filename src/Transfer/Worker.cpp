@@ -149,7 +149,7 @@ Worker::background()
 }
 
 void
-Worker::collideVertices() const
+Worker::collideVertices()
 // *****************************************************************************
 // Pass vertex information to the collision detection library
 // *****************************************************************************
@@ -158,16 +158,22 @@ Worker::collideVertices() const
   int nBoxes = 0;
   bbox3d boxes[nVertices];
   int prio[nVertices];
+
+  m_vertexMap.resize(nVertices);
+
   for (int i = 0; i < nVertices; i++) {
     //if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[nBoxes] = m_firstchunk;
-    nBoxes++;
+
+    // Store the real index of the vertex at the collideIndex position
+    // This is used to extract the real vertex after finding collisions
+    m_vertexMap[nBoxes++] = i;
   }
   CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
-  CkPrintf("Dest chare %i(%lu) contributed %i points\n",
-      thisIndex, m_firstchunk + thisIndex, nBoxes);
+  CkPrintf("Dest chare %i(%lu) contributed %i bboxes out of %i vertices\n",
+      thisIndex, m_firstchunk + thisIndex, nBoxes, nVertices);
 }
 
 void
@@ -222,11 +228,11 @@ Worker::processCollisions(
     PotentialCollision pColl;
     if (colls[i].A.chunk == mychunk) {
       chareindex = colls[i].B.chunk - chunkoffset;
-      pColl.dest_index = colls[i].A.number;
+      pColl.dest_index = getActualIndex(colls[i].A.number);
       pColl.source_index = colls[i].B.number;
     } else {
       chareindex = colls[i].A.chunk - chunkoffset;
-      pColl.dest_index = colls[i].B.number;
+      pColl.dest_index = getActualIndex(colls[i].B.number);
       pColl.source_index = colls[i].A.number;
     }
     pColl.point = CkVector3d( m_coord[0][pColl.dest_index],
@@ -269,6 +275,7 @@ Worker::determineActualCollisions(
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
   for (int i = 0; i < nColls; i++) {
+    colls[i].source_index = getActualIndex(colls[i].source_index);
     if (intet(colls[i].point, colls[i].source_index, N)) {
       numInTet++;
       SolutionData data;
