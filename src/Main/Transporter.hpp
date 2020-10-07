@@ -29,7 +29,7 @@ class Transporter : public CBase_Transporter {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
   #endif
-  Transporter_SDAG_CODE;
+  Transporter_SDAG_CODE
   #if defined(__clang__)
     #pragma clang diagnostic pop
   #elif defined(STRICT_GNUC)
@@ -75,7 +75,7 @@ class Transporter : public CBase_Transporter {
 
     struct MeshData {
       int m_nchare;                        //!< Number of worker chares
-      int m_firstchunk;                    //!< First chunk ID (for collision)
+      std::size_t m_firstchunk;            //!< First chunk ID (for collision)
       CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy
       tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
       CProxy_Mapper m_mapper;              //!< Mapper array proxy

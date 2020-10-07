@@ -207,6 +207,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")  # clang-specific settings
   add_compiler_flag("-Wno-disabled-macro-expansion")
   add_compiler_flag("-Wno-reserved-id-macro")
   add_compiler_flag("-Wno-unknown-warning-option")
+  add_compiler_flag("-Wno-missing-noreturn")
 
   # Linker flags for clang
   set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)      # clear link flags

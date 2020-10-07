@@ -24,7 +24,7 @@ module worker {
     class SolutionData;
 
     array [1D] Worker {
-      entry Worker( std::size_t firstchunk,
+      entry Worker( int firstchunk,
                     const tk::CProxy_MeshWriter& meshwriter,
                     const tk::WorkerCallback& cbw,
                     const std::vector< std::size_t >& ginpoel,
@@ -40,15 +40,15 @@ module worker {
       entry void collideVertices();
       entry void collideTets();
       entry void processCollisions( CProxy_Worker proxy,
-                                    std::size_t nchares,
-                                    std::size_t offset,
+                                    int nchares,
+                                    int offset,
                                     int nColls,
                                     Collision colls[nColls] );
       entry void determineActualCollisions( CProxy_Worker proxy,
                                             int index,
                                             int nColls,
                                             PotentialCollision colls[nColls] );
-      entry void transferSolution( int nPoints,
+      entry void transferSolution( std::size_t nPoints,
                                    SolutionData soln[nPoints] );
     }
 

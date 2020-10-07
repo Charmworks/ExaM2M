@@ -16,14 +16,23 @@
 
 #include "collidecharm.h"
 
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wold-style-cast"
+#endif
+
 PUPbytes(Collision);
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
 
 extern CollideHandle collideHandle;
 
 using exam2m::Worker;
 
 Worker::Worker(
-  std::size_t firstchunk,
+  int firstchunk,
   const tk::CProxy_MeshWriter& meshwriter,
   const tk::WorkerCallback& cbw,
   const std::vector< std::size_t >& ginpoel,
@@ -154,20 +163,22 @@ Worker::collideVertices() const
 // Pass vertex information to the collision detection library
 // *****************************************************************************
 {
-  const int nVertices = m_coord[0].size();
-  int nBoxes = 0;
-  bbox3d boxes[nVertices];
-  int prio[nVertices];
-  for (int i = 0; i < nVertices; i++) {
+  auto nVertices = m_coord[0].size();
+  std::size_t nBoxes = 0;
+  std::vector< bbox3d > boxes( nVertices );
+  std::vector< int > prio( nVertices );
+  auto firstchunk = static_cast< int >( m_firstchunk );
+  for (std::size_t i=0; i<nVertices; ++i) {
     //if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
-    prio[nBoxes] = m_firstchunk;
+    prio[nBoxes] = firstchunk;
     nBoxes++;
   }
-  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
-  CkPrintf("Dest chare %i(%lu) contributed %i points\n",
-      thisIndex, m_firstchunk + thisIndex, nBoxes);
+  CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
+                    static_cast<int>(nBoxes), boxes.data(), prio.data() );
+  CkPrintf("Dest chare %i(%i) contributed %lu points\n",
+      thisIndex, firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -176,29 +187,30 @@ Worker::collideTets() const
 // Pass tet information to the collision detection library
 // *****************************************************************************
 {
-  const int nBoxes = m_inpoel.size() / 4;
-  bbox3d boxes[nBoxes];
-  int prio[nBoxes];
-  for (int i = 0; i < nBoxes; i++) {
+  auto nBoxes = m_inpoel.size() / 4;
+  std::vector< bbox3d > boxes( nBoxes );
+  std::vector< int > prio( nBoxes );
+  for (std::size_t i=0; i<nBoxes; ++i) {
     boxes[i].empty();
     prio[i] = m_firstchunk;
-    for (int j = 0; j < 4; j++) {
+    for (std::size_t j=0; j<4; ++j) {
       // Get index of the jth point of the ith tet
-      int p = m_inpoel[i * 4 + j];
+      auto p = m_inpoel[i * 4 + j];
       // Add that point to the tets bounding box
       boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
     }
   }
-  CollideBoxesPrio(collideHandle, m_firstchunk + thisIndex, nBoxes, boxes, prio);
-  CkPrintf("Source chare %i(%lu) contributed %i tets\n",
+  CollideBoxesPrio( collideHandle, m_firstchunk + thisIndex,
+                    static_cast<int>(nBoxes), boxes.data(), prio.data() );
+  CkPrintf("Source chare %i(%i) contributed %lu tets\n",
       thisIndex, m_firstchunk + thisIndex, nBoxes);
 }
 
 void
 Worker::processCollisions(
     CProxy_Worker proxy,
-    std::size_t numchares,
-    std::size_t chunkoffset,
+    int numchares,
+    int chunkoffset,
     int nColl,
     Collision* colls ) const
 // *****************************************************************************
@@ -214,7 +226,8 @@ Worker::processCollisions(
   int mychunk = thisIndex + m_firstchunk;
   CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
-  std::vector<PotentialCollision> pColls[numchares];
+  std::vector< std::vector< PotentialCollision > >
+    pColls( static_cast<std::size_t>(numchares) );
   // Separate potential collisions into lists based on the source mesh chare
   // that is involved in the potential collision
   for (int i = 0; i < nColl; i++) {
@@ -222,25 +235,26 @@ Worker::processCollisions(
     PotentialCollision pColl;
     if (colls[i].A.chunk == mychunk) {
       chareindex = colls[i].B.chunk - chunkoffset;
-      pColl.dest_index = colls[i].A.number;
-      pColl.source_index = colls[i].B.number;
+      pColl.dest_index = static_cast<std::size_t>(colls[i].A.number);
+      pColl.source_index = static_cast<std::size_t>(colls[i].B.number);
     } else {
       chareindex = colls[i].A.chunk - chunkoffset;
-      pColl.dest_index = colls[i].B.number;
-      pColl.source_index = colls[i].A.number;
+      pColl.dest_index = static_cast<std::size_t>(colls[i].B.number);
+      pColl.source_index = static_cast<std::size_t>(colls[i].A.number);
     }
     pColl.point = CkVector3d( m_coord[0][pColl.dest_index],
                               m_coord[1][pColl.dest_index],
                               m_coord[2][pColl.dest_index] );
-    pColls[chareindex].push_back(pColl);
+    pColls[ static_cast<std::size_t>(chareindex) ].push_back( pColl );
   }
 
   // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
+    auto I = static_cast< std::size_t >( i );
     proxy[i].determineActualCollisions( thisProxy,
                                         thisIndex,
-                                        pColls[i].size(),
-                                        pColls[i].data() );
+                                        static_cast<int>(pColls[I].size()),
+                                        pColls[I].data() );
   }
 }
 
@@ -290,7 +304,7 @@ Worker::determineActualCollisions(
 
 void
 Worker::transferSolution(
-    int nPoints,
+    std::size_t nPoints,
     SolutionData* soln )
 // *****************************************************************************
 //  Receive the solution data for destination mesh points that collided with the
@@ -299,11 +313,11 @@ Worker::transferSolution(
 //! \param[in] colls List of solutions
 // *****************************************************************************
 {
-  CkPrintf("Dest worker %i received %i solution points\n", thisIndex, nPoints);
+  CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
-  for (int i = 0; i < nPoints; i++) {
+  for (int i = 0; i < static_cast<int>(nPoints); i++) {
     m_u[soln[i].dest_index] = soln[i].solution;
   }
 }

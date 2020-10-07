@@ -64,12 +64,27 @@ tk::real g_virtualization = 0.0;
 
 } // exam2m::
 
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 void printCollisionHandler( [[maybe_unused]] void *param,
                             int nColl,
                             Collision *colls )
 {
   transporterProxy.processCollisions( nColl, colls );
 }
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
+
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+  #pragma clang diagnostic ignored "-Wunused-private-field"
+#endif
 
 //! Charm++ main chare for the exam2m executable.
 class Main : public CBase_Main {
@@ -166,5 +181,9 @@ class execute : public CBase_execute {
     //! Migrate constructor
     explicit execute( CkMigrateMessage* m ) : CBase_execute( m ) {}
 };
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
 
 #include "NoWarning/exam2m.def.h"

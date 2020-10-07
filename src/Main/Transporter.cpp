@@ -18,7 +18,16 @@
 
 #include "NoWarning/exam2m.decl.h"
 
+#if defined(__clang__)
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wold-style-cast"
+#endif
+
 PUPbytes(Collision);
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
 
 extern CProxy_Main mainProxy;
 
@@ -47,7 +56,7 @@ void Transporter::initMeshData( const std::string& file )
   std::map< int, std::vector< std::size_t > > bnode;
 
   MeshData mesh;
-  int meshid = m_meshes.size();
+  auto meshid = static_cast< unsigned short >( m_meshes.size() );
 
   // Create ExodusII mesh file reader
   tk::ExodusIIMeshReader mr( file );
@@ -122,7 +131,7 @@ Transporter::updatenelems( std::size_t meshid, std::size_t nelem )
                tk::linearLoadDistributor( g_virtualization,
                  nelem, CkNumPes(), chunksize, remainder ) );
   mesh.m_firstchunk = m_currentchunk;
-  m_currentchunk += mesh.m_nchare;
+  m_currentchunk += static_cast< std::size_t >( mesh.m_nchare );
 
   // Print out info on load distribution
   std::cout << "Initial load distribution for mesh " << meshid << "\n";
@@ -154,27 +163,30 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
 {
   std::cout << "Collisions found: " << nColl << std::endl;
   auto first = m_meshes[m_destmeshid].m_firstchunk;
-  auto nchare = m_meshes[m_destmeshid].m_nchare;
-  std::vector<Collision> separated[nchare];
+  auto nchare = static_cast< std::size_t >( m_meshes[m_destmeshid].m_nchare );
+  std::vector< std::vector< Collision > > separated( nchare );
 
   // Separate collisions based on the destination mesh chare they belong to
   for (int i = 0; i < nColl; i++) {
-    if (colls[i].A.chunk >= first && colls[i].A.chunk < first + nchare) {
-      separated[colls[i].A.chunk - first].push_back(colls[i]);
+    auto a = static_cast< std::size_t >( colls[i].A.chunk );
+    if (a >= first && a < first + nchare) {
+      separated[a-first].push_back( colls[i] );
     } else {
-      separated[colls[i].B.chunk - first].push_back(colls[i]);
+      auto b = static_cast< std::size_t >( colls[i].B.chunk );
+      separated[b-first].push_back( colls[i] );
     }
   }
 
   // Send out each list to the destination chares for further processing
-  for (int i = 0; i < nchare; i++) {
-    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[i].size());
+  for (int i=0; i<static_cast<int>(nchare); ++i) {
+    auto I = static_cast< std::size_t >( i );
+    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[I].size());
     m_meshes[m_destmeshid].m_worker[i].processCollisions(
         m_meshes[m_sourcemeshid].m_worker,
         m_meshes[m_sourcemeshid].m_nchare,
-        m_meshes[m_sourcemeshid].m_firstchunk,
-        separated[i].size(),
-        separated[i].data() );
+        static_cast<int>(m_meshes[m_sourcemeshid].m_firstchunk),
+        static_cast<int>(separated[I].size()),
+        separated[I].data() );
   }
 }
 
