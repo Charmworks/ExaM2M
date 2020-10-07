@@ -162,7 +162,7 @@ Worker::collideVertices()
   m_vertexMap.resize(nVertices);
 
   for (int i = 0; i < nVertices; i++) {
-    //if (!owner(i)) continue;
+    if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[nBoxes] = m_firstchunk;
