@@ -201,7 +201,8 @@ class Worker : public CBase_Worker {
     //! Maps collision detection index with actual vertex index
     std::vector< std::size_t > m_vertexMap;
 
-    //! Retrieve previously stored actual vertex index from the collision detection index
+    //! \brief Retrieve previously stored actual vertex index from the
+    //!   collision detection index
     int getActualIndex(const int &collideIndex) const {
       if(m_vertexMap.size() == 0) // mesh using tets
         return collideIndex;
