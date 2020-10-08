@@ -241,9 +241,9 @@ Worker::processCollisions(
       pColl.dest_index = static_cast<std::size_t>(colls[i].B.number);
       pColl.source_index = static_cast<std::size_t>(colls[i].A.number);
     }
-    pColl.point = CkVector3d( m_coord[0][pColl.dest_index],
-                              m_coord[1][pColl.dest_index],
-                              m_coord[2][pColl.dest_index] );
+    pColl.point = { m_coord[0][pColl.dest_index],
+                    m_coord[1][pColl.dest_index],
+                    m_coord[2][pColl.dest_index] };
     pColls[ static_cast<std::size_t>(chareindex) ].push_back( pColl );
   }
 

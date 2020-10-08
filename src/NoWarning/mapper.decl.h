@@ -22,6 +22,7 @@
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wunused-parameter"
   #pragma GCC diagnostic ignored "-Wshadow"
+  #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #endif
 
 #include "../Main/mapper.decl.h"
