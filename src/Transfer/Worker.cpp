@@ -412,7 +412,8 @@ bool Worker::owner( std::size_t index ) const
   // Check to see if the point is owned by a chare with a smaller index
   for (int i = 0; i < thisIndex; i++) {
     auto iter = m_nodeCommMap.find(i);
-    if ( iter->second.count(gid)) return false;
+    if( iter != m_nodeCommMap.end()) // found
+      if ( iter->second.count(gid)) return false;
   }
   return true;
 }
