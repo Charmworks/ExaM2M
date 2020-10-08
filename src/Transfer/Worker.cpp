@@ -241,9 +241,18 @@ Worker::processCollisions(
       pColl.dest_index = static_cast<std::size_t>(colls[i].B.number);
       pColl.source_index = static_cast<std::size_t>(colls[i].A.number);
     }
+
+    #if defined(STRICT_GNUC)
+      #pragma GCC diagnostic push
+      #pragma GCC diagnostic ignored "-Wdeprecated-copy"
+    #endif
     pColl.point = { m_coord[0][pColl.dest_index],
                     m_coord[1][pColl.dest_index],
                     m_coord[2][pColl.dest_index] };
+    #if defined(STRICT_GNUC)
+      #pragma GCC diagnostic pop
+    #endif
+
     pColls[ static_cast<std::size_t>(chareindex) ].push_back( pColl );
   }
 
