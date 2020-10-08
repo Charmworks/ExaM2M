@@ -38,15 +38,18 @@ module transporter {
 
             // Once loaded, update number of elements and partition
             when loaded[meshid]( std::size_t nelem ) serial {
+              CkPrintf("ExaM2M> Loaded mesh %i\n", meshid);
               updatenelems(meshid, nelem);
 
               m_meshes[meshid].m_partitioner.partition(
                 m_meshes[meshid].m_nchare );
             }
             when distributed[meshid]() serial {
+              CkPrintf("ExaM2M> Distributed mesh %i\n", meshid);
               m_meshes[meshid].m_partitioner.map();
             }
             when mapinserted[meshid]( std::size_t error ) serial {
+              CkPrintf("ExaM2M> Created mapper for mesh %i\n", meshid);
               if (error) {
                 CkAbort("\n>>> ERROR: A Mapper chare was not assigned any mesh "
                   "elements. This can happen in SMP-mode with a large +ppn "
@@ -75,10 +78,10 @@ module transporter {
               m_meshes[meshid].m_worker.doneInserting();
             }
             when workcreated[meshid]() serial {
-              std::cout << "Number of tetrahedra for mesh " << meshid << ": "
-                  << m_meshes[meshid].m_nelem << '\n';;
-              std::cout << "Number of points for mesh " << meshid << ": "
-                  << m_meshes[meshid].m_npoin << '\n';
+              CkPrintf("ExaM2M> Created worker for mesh %i\n", meshid);
+              std::cout << "ExaM2M> Mesh " << meshid << " nelem: "
+                        << m_meshes[meshid].m_nelem << ", npoin: "
+                        << m_meshes[meshid].m_npoin << '\n';
             }
           }
         }
@@ -86,6 +89,8 @@ module transporter {
         // Both meshes are fully loaded on worker chares, so now we can test
         // for collisions.
         serial {
+          CkPrintf("ExaM2M> Prepared all meshes, "
+                   "starting mesh-to-mesh transfer\n");
           m_sourcemeshid = 0;
           m_destmeshid = 1;
           m_meshes[m_destmeshid].m_worker.background();
@@ -104,7 +109,9 @@ module transporter {
         when solutionFound() {
           forall [meshid] (0:1,1) {
             serial { m_meshes[meshid].m_worker.out(meshid); }
-            when written[meshid]() {}
+            when written[meshid]() serial {
+              CkPrintf("ExaM2M> Written field output for mesh %i\n", meshid);
+            }
           }
         }
         serial { CkPrintf("done\n"); CkExit(); }
