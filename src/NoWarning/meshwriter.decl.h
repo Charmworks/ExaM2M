@@ -34,7 +34,6 @@
   #pragma clang diagnostic ignored "-Wcovered-switch-default"
   #pragma clang diagnostic ignored "-Wswitch-enum"
   #pragma clang diagnostic ignored "-Wdeprecated"
-  #pragma clang diagnostic ignored "-Wdeprecated-copy"
   #pragma clang diagnostic ignored "-Wundefined-func-template"
   #pragma clang diagnostic ignored "-Wcast-qual"
   #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -50,6 +49,7 @@
   #pragma GCC diagnostic ignored "-Wredundant-decls"
   #pragma GCC diagnostic ignored "-Wextra"
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+  #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #elif defined(__INTEL_COMPILER)
   #pragma warning( push )
   #pragma warning( disable: 181 )
