@@ -176,8 +176,8 @@ Worker::collideVertices()
   }
   CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
                     static_cast<int>(nBoxes), boxes.data(), prio.data() );
-  CkPrintf("Dest chare %i(%i) contributed %lu points\n",
-      thisIndex, firstchunk + thisIndex, nBoxes);
+  //CkPrintf("Dest chare %i(%i) contributed %lu points\n",
+  //    thisIndex, firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -201,8 +201,8 @@ Worker::collideTets() const
   }
   CollideBoxesPrio( collideHandle, m_firstchunk + thisIndex,
                     static_cast<int>(nBoxes), boxes.data(), prio.data() );
-  CkPrintf("Source chare %i(%i) contributed %lu tets\n",
-      thisIndex, m_firstchunk + thisIndex, nBoxes);
+  //CkPrintf("Source chare %i(%i) contributed %lu tets\n",
+  //    thisIndex, m_firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -223,7 +223,7 @@ Worker::processCollisions(
 // *****************************************************************************
 {
   int mychunk = thisIndex + m_firstchunk;
-  CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
+  //CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
   std::vector< std::vector< PotentialCollision > >
     pColls( static_cast<std::size_t>(numchares) );
@@ -281,8 +281,8 @@ Worker::determineActualCollisions(
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
-  CkPrintf("Source chare %i received data for %i potential collisions\n",
-      thisIndex, nColls);
+  //CkPrintf("Source chare %i received data for %i potential collisions\n",
+  //    thisIndex, nColls);
 
   std::array< real, 4 > N;
   int numInTet = 0;
@@ -304,8 +304,8 @@ Worker::determineActualCollisions(
       return_data.push_back(data);
     }
   }
-  CkPrintf("Source chare %i found %i/%i actual collisions\n",
-      thisIndex, numInTet, nColls);
+  //CkPrintf("Source chare %i found %i/%i actual collisions\n",
+  //    thisIndex, numInTet, nColls);
   // Send the solution data for the actual collisions back to the dest mesh
   proxy[index].transferSolution(return_data.size(), return_data.data());
 }
@@ -321,7 +321,7 @@ Worker::transferSolution(
 //! \param[in] colls List of solutions
 // *****************************************************************************
 {
-  CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
+  //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)

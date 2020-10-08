@@ -134,9 +134,9 @@ Transporter::updatenelems( std::size_t meshid, std::size_t nelem )
   m_currentchunk += static_cast< std::size_t >( mesh.m_nchare );
 
   // Print out info on load distribution
-  std::cout << "Initial load distribution for mesh " << meshid << "\n";
-  std::cout << "Virtualization [0.0...1.0]: " << g_virtualization << '\n';
-  std::cout << "Number of work units: " << mesh.m_nchare << '\n';
+  std::cout << "ExaM2M> Virtualization [0.0...1.0]: "
+            << g_virtualization << '\n';
+  std::cout << "ExaM2M> Number of work units: " << mesh.m_nchare << '\n';
 
   // Tell the meshwriter the total number of chares
   mesh.m_meshwriter.nchare( mesh.m_nchare );
@@ -180,7 +180,7 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
   // Send out each list to the destination chares for further processing
   for (int i=0; i<static_cast<int>(nchare); ++i) {
     auto I = static_cast< std::size_t >( i );
-    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[I].size());
+    //CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[I].size());
     m_meshes[m_destmeshid].m_worker[i].processCollisions(
         m_meshes[m_sourcemeshid].m_worker,
         m_meshes[m_sourcemeshid].m_nchare,
