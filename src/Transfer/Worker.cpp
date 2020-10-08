@@ -168,15 +168,11 @@ Worker::collideVertices()
   std::vector< bbox3d > boxes( nVertices );
   std::vector< int > prio( nVertices );
   auto firstchunk = static_cast< int >( m_firstchunk );
-  m_vertexMap.resize(nVertices);
   for (std::size_t i=0; i<nVertices; ++i) {
-    if (!owner(i)) continue;
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
     prio[nBoxes] = firstchunk;
-    // Store the real index of the vertex at the collideIndex position
-    // This is used to extract the real vertex after finding collisions
-    m_vertexMap[nBoxes++] = i;
+    ++nBoxes;
   }
   CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
                     static_cast<int>(nBoxes), boxes.data(), prio.data() );
@@ -238,11 +234,11 @@ Worker::processCollisions(
     PotentialCollision pColl;
     if (colls[i].A.chunk == mychunk) {
       chareindex = colls[i].B.chunk - chunkoffset;
-      pColl.dest_index = getActualIndex(colls[i].A.number);
+      pColl.dest_index = static_cast<std::size_t>(colls[i].A.number);
       pColl.source_index = static_cast<std::size_t>(colls[i].B.number);
     } else {
       chareindex = colls[i].A.chunk - chunkoffset;
-      pColl.dest_index = getActualIndex(colls[i].B.number);
+      pColl.dest_index = static_cast<std::size_t>(colls[i].B.number);
       pColl.source_index = static_cast<std::size_t>(colls[i].A.number);
     }
     pColl.point = CkVector3d( m_coord[0][pColl.dest_index],
@@ -286,8 +282,6 @@ Worker::determineActualCollisions(
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
   for (int i = 0; i < nColls; i++) {
-    colls[i].source_index =
-      getActualIndex( static_cast<int>(colls[i].source_index) );
     if (intet(colls[i].point, colls[i].source_index, N)) {
       numInTet++;
       SolutionData data;
@@ -411,22 +405,6 @@ Worker::intet(const CkVector3d &point,
   } else {
     return false;
   }
-}
-
-bool Worker::owner( std::size_t index ) const
-// *****************************************************************************
-//  Returns true if we own the vertex locally indexed by 'index'. Currently we
-//  own the vertex if we are the lowest indexed chare that has this point.
-//! \param[in] index Local index of the vertex to check
-// *****************************************************************************
-{
-  std::size_t gid = m_gid[index];
-  // Check to see if the point is owned by a chare with a smaller index
-  for (int i = 0; i < thisIndex; i++) {
-    auto iter = m_nodeCommMap.find(i);
-    if ( iter->second.count(gid)) return false;
-  }
-  return true;
 }
 
 tk::UnsMesh::Coords
