@@ -35,6 +35,7 @@ add_regression_test(sphere2box ${EXAM2M_EXECUTABLE}
 
 add_regression_test(sphere2box ${EXAM2M_EXECUTABLE}
                     NUMPES 2
+                    PPN 1
                     INPUTFILES meshes/sphere_full.exo meshes/unitcube_94K.exo
                     ARGS sphere_full.exo unitcube_94K.exo
                     BIN_BASELINE sphere2box_pe2.src.std.exo.0
@@ -49,6 +50,7 @@ add_regression_test(sphere2box ${EXAM2M_EXECUTABLE}
 
 add_regression_test(sphere2box_u0.8 ${EXAM2M_EXECUTABLE}
                     NUMPES 2
+                    PPN 1
                     INPUTFILES meshes/sphere_full.exo meshes/unitcube_94K.exo
                     ARGS sphere_full.exo unitcube_94K.exo 0.8
                     BIN_BASELINE sphere2box_u0.8_pe2.src.std.exo.0
