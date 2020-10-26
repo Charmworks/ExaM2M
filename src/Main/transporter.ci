@@ -91,6 +91,7 @@ module transporter {
         serial {
           CkPrintf("ExaM2M> Prepared all meshes, "
                    "starting mesh-to-mesh transfer\n");
+          m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
           m_meshes[m_destmeshid].m_worker.background();
@@ -114,7 +115,10 @@ module transporter {
             }
           }
         }
-        serial { CkPrintf("done\n"); CkExit(); }
+        serial {
+          CkPrintf("Done. Transfer time: %f sec\n", m_timer[0].dsec());
+          CkExit();
+        }
       };
     }
 
