@@ -108,6 +108,10 @@ module transporter {
         // Solution has been transferred from source to destination, write out
         // meshes and exit.
         when solutionFound() {
+          serial {
+          CkPrintf( "Transfer time: %f sec\nWriting solution ... ",
+                    m_timer[0].dsec() );
+          }
           forall [meshid] (0:1,1) {
             serial { m_meshes[meshid].m_worker.out(meshid); }
             when written[meshid]() serial {
@@ -115,10 +119,7 @@ module transporter {
             }
           }
         }
-        serial {
-          CkPrintf("Done. Transfer time: %f sec\n", m_timer[0].dsec());
-          CkExit();
-        }
+        serial { CkPrintf("done."); CkExit(); }
       };
     }
 
