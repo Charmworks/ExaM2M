@@ -14,6 +14,7 @@ mainmodule exam2m {
 
   extern module transporter;
   extern module partitioner;
+  extern module driver;
 
   readonly CProxy_Main mainProxy;
   readonly CollideHandle collideHandle;

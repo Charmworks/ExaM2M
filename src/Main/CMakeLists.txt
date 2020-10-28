@@ -21,6 +21,7 @@ add_executable(${EXAM2M_EXECUTABLE}
                Mapper.cpp
                Partitioner.cpp
                Transporter.cpp
+               Driver.cpp
                ExaM2MDriver.cpp
                ExaM2M.cpp)
 
@@ -51,4 +52,5 @@ target_link_libraries(${EXAM2M_EXECUTABLE}
 addCharmModule( "mapper" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "partitioner" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "transporter" "${EXAM2M_EXECUTABLE}" )
+addCharmModule( "driver" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "exam2m" "${EXAM2M_EXECUTABLE}" )

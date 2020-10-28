@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.8.5)
 include(charm)
 
 add_library(Worker
-            Worker.cpp)
+            Worker.cpp
+            Controller.cpp)
 
 target_include_directories(Worker PUBLIC
                            ${PROJECT_SOURCE_DIR}
@@ -27,3 +28,4 @@ INSTALL(TARGETS Worker
 )
 
 addCharmModule( "worker" "Worker" )
+addCharmModule( "controller" "Worker" )
