@@ -74,6 +74,7 @@ if (EXISTS ${TPL_DIR}/include)
 endif()
 message(STATUS "Third-party library dir: " ${TPL_DIR})
 
+
 # Detect compiler version
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
     CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -120,7 +121,7 @@ else()
   MESSAGE(STATUS "AMPIrun: " ${AMPI_RUN})
 endif()
 
-set(EXTRA_LINK_ARGS "-module collidecharm")
+set(EXTRA_LINK_ARGS "-module collidecharm -L${TPL_DIR}/lib -lhdf5_hl -lhdf5")
 
 MESSAGE(STATUS "MPI C compiler: " ${MPI_C_COMPILER})
 MESSAGE(STATUS "MPI C++ compiler: " ${MPI_CXX_COMPILER})
@@ -131,7 +132,7 @@ MESSAGE(STATUS "Charmrun: " ${CHARM_RUN})
 MESSAGE(STATUS "Linker compiler: " ${LINKER_COMPILER})
 
 if (EXTRA_LINK_ARGS)
-  MESSAGE(STATUS "Extra linker args (EXTRA_LINK_ARGS): ${EXTRA_LINK_ARGS}")
+  MESSAGE(STATUS "******** Extra linker args (EXTRA_LINK_ARGS): ${EXTRA_LINK_ARGS}")
 endif()
 
 add_definitions(-DEXAM2M_CONFIG_MPI_ENABLED)
@@ -403,8 +404,8 @@ set(EXAM2M_EXECUTABLE exam2m)
 if (CHARM_FOUND AND BRIGAND_FOUND AND SEACASExodus_FOUND AND EXODIFF_FOUND AND
     HDF5_FOUND AND BRIGAND_FOUND AND HIGHWAYHASH_FOUND)
   add_subdirectory(Base)
-  add_subdirectory(IO)
   add_subdirectory(Mesh)
+  add_subdirectory(IO)
   add_subdirectory(Transfer)
   add_subdirectory(Main)
 endif()

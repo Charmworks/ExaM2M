@@ -38,10 +38,10 @@ target_include_directories(${EXAM2M_EXECUTABLE} PUBLIC
                            ${HIGHWAYHASH_INCLUDE_DIRS})
 
 target_link_libraries(${EXAM2M_EXECUTABLE}
-                      Base
                       Mesh
-                      ExodusIIMeshIO
+                      Base
                       MeshWriter
+                      ExodusIIMeshIO
                       Worker
                       ${SEACASExodus_LIBRARIES}
                       ${Zoltan2_LIBRARIES}
