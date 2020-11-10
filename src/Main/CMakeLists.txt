@@ -20,8 +20,8 @@ include(ConfigExecutable)
 add_executable(${EXAM2M_EXECUTABLE}
                Mapper.cpp
                Partitioner.cpp
-               Transporter.cpp
                Driver.cpp
+               MeshArray.cpp
                ExaM2MDriver.cpp
                ExaM2M.cpp)
 
@@ -31,6 +31,7 @@ target_include_directories(${EXAM2M_EXECUTABLE} PUBLIC
                            ${PROJECT_SOURCE_DIR}
                            ${PROJECT_SOURCE_DIR}/IO
                            ${PROJECT_SOURCE_DIR}/Mesh
+                           ${PROJECT_SOURCE_DIR}/Transfer
                            ${PROJECT_SOURCE_DIR}/Main
                            ${PROJECT_BINARY_DIR}/IO
                            ${PROJECT_BINARY_DIR}/Main
@@ -51,6 +52,6 @@ target_link_libraries(${EXAM2M_EXECUTABLE}
 
 addCharmModule( "mapper" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "partitioner" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "transporter" "${EXAM2M_EXECUTABLE}" )
+addCharmModule( "mesharray" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "driver" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "exam2m" "${EXAM2M_EXECUTABLE}" )

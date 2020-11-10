@@ -27,124 +27,44 @@ PUPbytes(Collision);
   #pragma clang diagnostic pop
 #endif
 
+namespace exam2m {
 extern CollideHandle collideHandle;
+}
 
 using exam2m::Worker;
 
-Worker::Worker(
-  int firstchunk,
-  const tk::CProxy_MeshWriter& meshwriter,
-  const tk::WorkerCallback& cbw,
-  const std::vector< std::size_t >& ginpoel,
-  const tk::UnsMesh::CoordMap& coordmap,
-  const tk::CommMaps& commaps,
-  const std::map< int, std::vector< std::size_t > >& bface,
-  const std::vector< std::size_t >& triinpoel,
-  const std::map< int, std::vector< std::size_t > >& bnode,
-  int nc ) :
-  m_firstchunk( firstchunk ),
-  m_cbw( cbw ),
-  m_nchare( nc ),
-  m_it( 0 ),
-  m_itr( 0 ),
-  m_itf( 0 ),
-  m_t( 0.0 ),
-  m_lastDumpTime( -std::numeric_limits< tk::real >::max() ),  
-  m_meshwriter( meshwriter ),
-  m_el( tk::global2local( ginpoel ) ),     // fills m_inpoel, m_gid, m_lid
-  m_coord( setCoord( coordmap ) ),
-  m_nodeCommMap(),
-  m_bface( bface ),
-  m_triinpoel( triinpoel ),
-  m_bnode( bnode ),
-  m_u()
+Worker::Worker( int firstchunk, CkCallback cb ) : m_firstchunk(firstchunk)
 // *****************************************************************************
 //  Constructor
-//! \param[in] meshwriter Mesh writer proxy
-//! \param[in] cbw Charm++ callbacks for Worker
-//! \param[in] ginpoel Vector of mesh element connectivity owned (global IDs)
-//! \param[in] coordmap Coordinates of mesh nodes and their global IDs
-//! \param[in] commaps Communication maps associated to chare IDs bordering the
-//!   mesh chunk we operate on
-//! \param[in] bface Boundary face lists mapped to side set ids
-//! \param[in] triinpoel Triangle element connectivity
-//! \param[in] bnode Boundary node lists mapped to side set ids
-//! \param[in] nc Total number of Worker chares
+//! \param[in] cb Callback to inform application that the library is ready
 // *****************************************************************************
 {
-  Assert( !ginpoel.empty(), "No elements assigned to Worker chare" );
-  Assert( tk::positiveJacobians( m_inpoel, m_coord ),
-          "Jacobian in input mesh to Worker non-positive" );
-  Assert( tk::conforming( m_inpoel, m_coord ),
-          "Input mesh to Worker not conforming" );
-
-  // Store communication maps
-  for (const auto& [ c, maps ] : commaps) {
-    m_nodeCommMap[c] = maps.get< tag::node >();
-    m_edgeCommMap[c] = maps.get< tag::edge >();
-  }
-
-  // Generate initial solution
-  const auto& x = m_coord[0];
-  const auto& y = m_coord[1];
-  const auto& z = m_coord[2];
-  auto npoin = m_coord[0].size();
-  m_u.resize( npoin, 0.0 );
-  for (std::size_t i=0; i<npoin; ++i) {
-    m_u[i] = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
-  }
-
   CollideRegister(collideHandle, m_firstchunk + thisIndex);
-
-  // Tell the RTS that the Worker chares have been created and compute
-  // the total number of mesh points across whole problem
-  contribute( m_cbw.get< tag::workcreated >() );
+  CkPrintf("Worker %i created on %i\n", thisIndex, CkMyPe());
+  contribute(cb);
 }
 
 void
-Worker::out( int meshid )
-// *****************************************************************************
-// Write out some field data to file(s)
-//! \param[in] meshid Mesh id
-// *****************************************************************************
+Worker::setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u )
 {
-  // Volume elem field data
-  std::vector< std::string > elemfieldnames;
-  std::vector< std::vector< tk::real > > elemfields;
-
-  // Empty elem field data for now (but the writer should be able write those
-  // fine too, and may be useful for debugging later.
-
-  // Volume node field data (this is what we care about mostly at first)
-  std::vector< std::string > nodefieldnames;
-  std::vector< std::vector< tk::real > > nodefields;
-
-  nodefieldnames.push_back( "scalar" );
-  nodefields.push_back( m_u );
-
-  // Surface field data in nodes
-  std::vector< std::string > nodesurfnames;
-  std::vector< std::vector< tk::real > > nodesurfs;
-
-  // Surface field output should also work fine, but empty for now. This may be
-  // used for outputing data along side sets, which is usually orders of
-  // magnitude smaller then volume field data. Could also be useful for
-  // debugging.
-
-  // Send mesh and fields data for output to file
-  write( meshid, m_inpoel, m_coord, m_bface, tk::remap( m_bnode, m_lid ),
-         m_triinpoel, elemfieldnames, nodefieldnames, nodesurfnames,
-         elemfields, nodefields, nodesurfs,
-         CkCallback(CkIndex_Worker::written(), thisProxy[thisIndex]) );
+  CkPrintf("Source mesh index %i\n", thisIndex);
+  m_coord = coords;
+  m_u = u;
+  m_inpoel = inpoel;
+  collideTets();
 }
 
 void
-Worker::written()
-// *****************************************************************************
-// Mesh and field data written to file(s)
-// *****************************************************************************
+Worker::setDestPoints( tk::UnsMesh::Coords* coords, std::vector< tk::real >* u, CkCallback cb )
 {
-  contribute( m_cbw.get< tag::written >() );
+  CkPrintf("Dest mesh index %i\n", thisIndex);
+  m_coord = coords;
+  m_u = u;
+  doneCB = cb;
+  numSent = 0;
+  numReceived = 0;
+  background();
+  collideVertices();
 }
 
 void
@@ -154,6 +74,7 @@ Worker::background()
 //! \details This is useful to see what points did not receive solution.
 // *****************************************************************************
 {
+  std::vector< tk::real >& m_u = *(this->m_u);
   for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
 }
 
@@ -163,6 +84,7 @@ Worker::collideVertices()
 // Pass vertex information to the collision detection library
 // *****************************************************************************
 {
+  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
   auto nVertices = m_coord[0].size();
   std::size_t nBoxes = 0;
   std::vector< bbox3d > boxes( nVertices );
@@ -186,6 +108,8 @@ Worker::collideTets() const
 // Pass tet information to the collision detection library
 // *****************************************************************************
 {
+  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
+  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
   auto nBoxes = m_inpoel.size() / 4;
   std::vector< bbox3d > boxes( nBoxes );
   std::vector< int > prio( nBoxes );
@@ -211,7 +135,7 @@ Worker::processCollisions(
     int numchares,
     int chunkoffset,
     int nColl,
-    Collision* colls ) const
+    Collision* colls )
 // *****************************************************************************
 //  Process potential collisions by sending my points to the source mesh chares
 //  that they potentially collide with.
@@ -222,6 +146,8 @@ Worker::processCollisions(
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
+  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
+  std::vector< tk::real >& m_u = *(this->m_u);
   int mychunk = thisIndex + m_firstchunk;
   //CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
@@ -259,6 +185,7 @@ Worker::processCollisions(
   // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
     auto I = static_cast< std::size_t >( i );
+    numSent++;
     proxy[i].determineActualCollisions( thisProxy,
                                         thisIndex,
                                         static_cast<int>(pColls[I].size()),
@@ -281,6 +208,9 @@ Worker::determineActualCollisions(
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
+  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
+  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
+  std::vector< tk::real >& m_u = *(this->m_u);
   //CkPrintf("Source chare %i received data for %i potential collisions\n",
   //    thisIndex, nColls);
 
@@ -321,12 +251,18 @@ Worker::transferSolution(
 //! \param[in] colls List of solutions
 // *****************************************************************************
 {
+  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
+  std::vector< tk::real >& m_u = *(this->m_u);
   //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
   for (int i = 0; i < static_cast<int>(nPoints); i++) {
     m_u[soln[i].dest_index] = soln[i].solution;
+  }
+  numReceived++;
+  if (numReceived == numSent) {
+    doneCB.send();
   }
 }
 
@@ -343,6 +279,7 @@ Worker::intet(const CkVector3d &point,
   //! \see Lohner, An Introduction to Applied CFD Techniques, Wiley, 2008
   // *****************************************************************************
 {
+  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
   // Tetrahedron node indices
   const auto A = m_inpoel[e*4+0];
   const auto B = m_inpoel[e*4+1];
@@ -350,9 +287,9 @@ Worker::intet(const CkVector3d &point,
   const auto D = m_inpoel[e*4+3];
 
   // Tetrahedron node coordinates
-  const auto& x = m_coord[0];
-  const auto& y = m_coord[1];
-  const auto& z = m_coord[2];
+  const auto& x = (*m_coord)[0];
+  const auto& y = (*m_coord)[1];
+  const auto& z = (*m_coord)[2];
 
   // Point coordinates
   const auto& xp = point.x;
@@ -414,101 +351,6 @@ Worker::intet(const CkVector3d &point,
   } else {
     return false;
   }
-}
-
-tk::UnsMesh::Coords
-Worker::setCoord( const tk::UnsMesh::CoordMap& coordmap )
-// *****************************************************************************
-// Set mesh coordinates based on coordinates map
-// *****************************************************************************
-{
-  Assert( coordmap.size() == m_gid.size(), "Size mismatch" );
-  Assert( coordmap.size() == m_lid.size(), "Size mismatch" );
-
-  tk::UnsMesh::Coords coord;
-  coord[0].resize( coordmap.size() );
-  coord[1].resize( coordmap.size() );
-  coord[2].resize( coordmap.size() );
-
-  for (const auto& [ gid, coords ] : coordmap) {
-    auto i = tk::cref_find( m_lid, gid );
-    coord[0][i] = coords[0];
-    coord[1][i] = coords[1];
-    coord[2][i] = coords[2];
-  }
-
-  return coord;
-}
-
-void
-Worker::write(
-  int meshid,
-  const std::vector< std::size_t >& inpoel,
-  const tk::UnsMesh::Coords& coord,
-  const std::map< int, std::vector< std::size_t > >& bface,
-  const std::map< int, std::vector< std::size_t > >& bnode,
-  const std::vector< std::size_t >& triinpoel,
-  const std::vector< std::string>& elemfieldnames,
-  const std::vector< std::string>& nodefieldnames,
-  const std::vector< std::string>& nodesurfnames,
-  const std::vector< std::vector< tk::real > >& elemfields,
-  const std::vector< std::vector< tk::real > >& nodefields,
-  const std::vector< std::vector< tk::real > >& nodesurfs,
-  CkCallback c )
-// *****************************************************************************
-//  Output mesh and fields data (solution dump) to file(s)
-//! \param[in] meshid Mesh id
-//! \param[in] inpoel Mesh connectivity for the mesh chunk to be written
-//! \param[in] coord Node coordinates of the mesh chunk to be written
-//! \param[in] bface Map of boundary-face lists mapped to corresponding side set
-//!   ids for this mesh chunk
-//! \param[in] bnode Map of boundary-node lists mapped to corresponding side set
-//!   ids for this mesh chunk
-//! \param[in] triinpoel Interconnectivity of points and boundary-face in this
-//!   mesh chunk
-//! \param[in] elemfieldnames Names of element fields to be output to file
-//! \param[in] nodefieldnames Names of node fields to be output to file
-//! \param[in] nodesurfnames Names of node surface fields to be output to file
-//! \param[in] elemfields Field data in mesh elements to output to file
-//! \param[in] nodefields Field data in mesh nodes to output to file
-//! \param[in] nodesurfs Surface field data in mesh nodes to output to file
-//! \param[in] c Function to continue with after the write
-//! \details Since m_meshwriter is a Charm++ chare group, it never migrates and
-//!   an instance is guaranteed on every PE. We index the first PE on every
-//!   logical compute node. In Charm++'s non-SMP mode, a node is the same as a
-//!   PE, so the index is the same as CkMyPe(). In SMP mode the index is the
-//!   first PE on every logical node. In non-SMP mode this yields one or more
-//!   output files per PE with zero or non-zero virtualization, respectively. If
-//!   there are multiple chares on a PE, the writes are serialized per PE, since
-//!   only a single entry method call can be executed at any given time. In SMP
-//!   mode, still the same number of files are output (one per chare), but the
-//!   output is serialized through the first PE of each compute node. In SMP
-//!   mode, channeling multiple files via a single PE on each node is required
-//!   by NetCDF and HDF5, as well as ExodusII, since none of these libraries are
-//!   thread-safe.
-// *****************************************************************************
-{
-  // If the previous iteration refined (or moved) the mesh or this is called
-  // before the first time step, we also output the mesh.
-  bool meshoutput = m_itf == 0 ? true : false;
-
-  auto eps = std::numeric_limits< tk::real >::epsilon();
-  bool fieldoutput = false;
-
-  // Output field data only if there is no dump at this physical time yet
-  if (std::abs(m_lastDumpTime - m_t) > eps ) {
-    m_lastDumpTime = m_t;
-    ++m_itf;
-    fieldoutput = true;
-  }
-
-  m_meshwriter[ CkNodeFirst( CkMyNode() ) ].
-    write( meshoutput, fieldoutput, m_itr, m_itf, m_t, thisIndex,
-           "out." + std::to_string(meshid),       // output basefilename
-           inpoel, coord, bface, bnode, triinpoel, elemfieldnames,
-           nodefieldnames, nodesurfnames, elemfields, nodefields, nodesurfs,
-           {},  // no surface output for now (even if passed in nodesurf)
-           c );
 }
 
 #include "NoWarning/worker.def.h"

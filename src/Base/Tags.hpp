@@ -17,6 +17,7 @@ struct distributed {};
 struct mapinserted {};
 struct workinserted {};
 struct workcreated {};
+struct solutionfound {};
 struct load {};
 struct node {};
 struct edge {};

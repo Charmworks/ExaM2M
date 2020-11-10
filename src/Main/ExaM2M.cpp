@@ -18,9 +18,7 @@
 
 #include "NoWarning/exam2m.decl.h"
 
-#include "collidecharm.h"
-
-using exam2m::CProxy_Transporter;
+using exam2m::CProxy_Driver;
 
 #if defined(__clang__)
   #pragma clang diagnostic push
@@ -31,10 +29,7 @@ using exam2m::CProxy_Transporter;
 //!    etc., must be in global scope.
 CProxy_Main mainProxy;
 
-//! \brief Charm handle to the collision detection library instance
-CollideHandle collideHandle;
-
-CProxy_Transporter transporterProxy;
+CProxy_Driver driverProxy;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -64,28 +59,6 @@ tk::real g_virtualization = 0.0;
 
 } // exam2m::
 
-#if defined(__clang__)
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wmissing-prototypes"
-#endif
-
-void printCollisionHandler( [[maybe_unused]] void *param,
-                            int nColl,
-                            Collision *colls )
-{
-  transporterProxy.processCollisions( nColl, colls );
-}
-
-#if defined(__clang__)
-  #pragma clang diagnostic pop
-#endif
-
-#if defined(__clang__)
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
-  #pragma clang diagnostic ignored "-Wunused-private-field"
-#endif
-
 //! Charm++ main chare for the exam2m executable.
 class Main : public CBase_Main {
 
@@ -103,19 +76,13 @@ class Main : public CBase_Main {
       }
       delete msg;
       mainProxy = thisProxy;
-      transporterProxy = CProxy_Transporter::ckNew( 0 );
-      transporterProxy.run();
+      driverProxy = CProxy_Driver::ckNew( 0 );
+      driverProxy.run();
       // Fire up an asynchronous execute object, which when created at some
       // future point in time will call back to this->execute(). This is
       // necessary so that this->execute() can access already migrated
       // global-scope data.
       CProxy_execute::ckNew();
-
-      // TODO: Need to make sure this is actually correct
-      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
-      collideHandle = CollideCreate(gridMap,
-          CollideSerialClient(printCollisionHandler, 0));
-
     } catch (...) { tk::processExceptionCharm(); }
 
     //! Migrate constructor: returning from a checkpoint

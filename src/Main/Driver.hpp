@@ -14,6 +14,7 @@
 #include <string>
 
 #include "Partitioner.hpp"
+#include "Timer.hpp"
 
 #include "NoWarning/driver.decl.h"
 #include "NoWarning/mapper.decl.h"
@@ -22,7 +23,20 @@ namespace exam2m{
 
 //! Driver drives time integration
 class Driver : public CBase_Driver {
-Driver_SDAG_CODE;
+  #if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunused-parameter"
+  #elif defined(STRICT_GNUC)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+  #endif
+  Driver_SDAG_CODE;
+  #if defined(__clang__)
+    #pragma clang diagnostic pop
+  #elif defined(STRICT_GNUC)
+    #pragma GCC diagnostic pop
+  #endif
+
   public:
     //! Constructor
     explicit Driver();
@@ -37,9 +51,9 @@ Driver_SDAG_CODE;
     //! \note This is a Charm++ mainchare, pup() is thus only for
     //!    checkpoint/restart.
     void pup( PUP::er& p ) override {
-      //p | m_nchare;
-      //p | m_partitioner;
-      //p | m_meshwriter;
+      p | m_meshes;
+      p | m_sourcemeshid;
+      p | m_destmeshid;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -56,28 +70,34 @@ Driver_SDAG_CODE;
     //! number of elements and number of chares in the associated mesh
     void updatenelems( std::size_t meshid, std::size_t nelems );
 
-    //! Take collision list and distribute it to the destination mesh
-    //! to start testing for actual collisions
-    void distributeCollisions( int nColl, Collision* colls );
-
     struct MeshData {
       int m_nchare;                        //!< Number of worker chares
-      int m_firstchunk;                    //!< First chunk ID (for collision)
       CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy
       tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
       CProxy_Mapper m_mapper;              //!< Mapper array proxy
-      CProxy_Worker m_worker;              //!< Worker array proxy
+      CProxy_MeshArray m_mesharray;        //!< Mesh array proxy
       std::size_t m_nelem;                 //!< Total number of elements in mesh
       std::size_t m_npoin;                 //!< Total number of nodes in mesh
+      void pup( PUP::er& p ) {
+        p | m_nchare;
+        p | m_partitioner;
+        p | m_meshwriter;
+        p | m_mapper;
+        p | m_mesharray;
+        p | m_nelem;
+        p | m_npoin;
+      }
+      friend void operator|( PUP::er& p, MeshData& t ) { t.pup(p); }
     };
+
     //! Mesh Data for all meshes
-    std::vector<MeshData> meshes;
-    //! Chunk counter for ensuring unique chunk number for each mesh
-    std::size_t m_currentchunk;
+    std::vector<MeshData> m_meshes;
     //! ID of the source mesh
-    std::size_t m_sourcemeshid;
+    int m_sourcemeshid;
     //! ID of the dest mesh
-    std::size_t m_destmeshid;
+    int m_destmeshid;
+    //! Timers
+    std::vector< tk::Timer > m_timer;
 };
 
 } // exam2m::

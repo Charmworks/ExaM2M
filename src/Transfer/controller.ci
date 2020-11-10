@@ -1,2 +1,44 @@
 module controller {
+
+  extern module worker;
+
+  namespace exam2m {
+
+    readonly CProxy_Controller controllerProxy;
+    readonly CollideHandle collideHandle;
+
+    class MeshData;
+
+    mainchare LibMain {
+      entry LibMain(CkArgMsg* msg);
+    };
+
+    group Controller {
+      entry Controller();
+      entry [reductiontarget] void workersCreated();
+      entry void broadcastMesh(CkArrayID p, MeshData d, CkCallback cb);
+
+      entry void addMesh(CkArrayID p, int elem, CkCallback cb) {
+        serial {
+          if (proxyMap.count(CkGroupID(p).idx) == 0) {
+            CkArrayOptions opts;
+            opts.bindTo(p);
+            opts.setNumInitial(elem);
+            MeshData mesh;
+            CkCallback createdCB(CkReductionTarget(Controller, workersCreated), thisProxy[0]);
+            mesh.m_nchare = elem;
+            mesh.m_firstchunk = current_chunk;
+            mesh.m_proxy = CProxy_Worker::ckNew(mesh.m_firstchunk, createdCB, opts);
+            proxyMap[CkGroupID(p).idx] = mesh;
+            current_chunk += elem;
+          } else {
+            CkAbort("Uhoh...\n");
+          }
+        }
+        when workersCreated() serial {
+          thisProxy.broadcastMesh(p, proxyMap[CkGroupID(p).idx], cb);
+        }
+      };
+    };
+  }
 };

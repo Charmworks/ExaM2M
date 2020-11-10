@@ -10,9 +10,10 @@
 
 module driver {
 
-  extern module worker;
+  extern module mesharray;
 
   include "collidecharm.h";
+  include "Controller.hpp";
 
   namespace exam2m {
 
@@ -27,8 +28,7 @@ module driver {
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
-      entry void processCollisions( int nColls, Collision colls[nColls] );
-      entry void solutionFound();
+      entry [reductiontarget] void solutionfound();
 
       entry void run() {
         forall [meshid] (0:1,1) {
@@ -40,10 +40,11 @@ module driver {
             when loaded[meshid]( std::size_t nelem ) serial {
               updatenelems(meshid, nelem);
 
-              meshes[meshid].m_partitioner.partition( meshes[meshid].m_nchare );
+              m_meshes[meshid].m_partitioner.partition(
+                  m_meshes[meshid].m_nchare );
             }
             when distributed[meshid]() serial {
-              meshes[meshid].m_partitioner.map();
+              m_meshes[meshid].m_partitioner.map();
             }
             when mapinserted[meshid]( std::size_t error ) serial {
               if (error) {
@@ -59,41 +60,57 @@ module driver {
                   "partitioning algorithm (e.g., rcb instead of mj). Solution 2: "
                   "Decrease +ppn.\n");
               } else {
-                 meshes[meshid].m_mapper.doneInserting();
-                 meshes[meshid].m_mapper.setup( meshes[meshid].m_npoin,
-                                                  meshes[meshid].m_firstchunk );
+                 m_meshes[meshid].m_mapper.doneInserting();
+                 m_meshes[meshid].m_mapper.setup( m_meshes[meshid].m_npoin );
               }
             }
             when queried[meshid]() serial {
-              meshes[meshid].m_mapper.response();
+              m_meshes[meshid].m_mapper.response();
             }
             when responded[meshid]() serial {
-              meshes[meshid].m_mapper.create();
+              m_meshes[meshid].m_mapper.create();
             }
             when workinserted[meshid]() serial {
-              meshes[meshid].m_worker.doneInserting();
+              m_meshes[meshid].m_mesharray.doneInserting();
             }
             when workcreated[meshid]() serial {
-              std::cout << "Number of tetrahedra for mesh " << meshid << ": "
-                  << meshes[meshid].m_nelem << '\n';;
-              std::cout << "Number of points for mesh " << meshid << ": "
-                  << meshes[meshid].m_npoin << '\n';
+              CkPrintf("ExaM2M> Created worker for mesh %i\n", meshid);
+              std::cout << "ExaM2M> Mesh " << meshid << " nelem: "
+                        << m_meshes[meshid].m_nelem << ", npoin: "
+                        << m_meshes[meshid].m_npoin << '\n';
             }
           }
         }
 
         serial {
+          CkPrintf("ExaM2M> Prepared all meshes, "
+                   "starting mesh-to-mesh transfer\n");
+          m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
-          meshes[m_sourcemeshid].m_worker.collideTets();
-          meshes[m_destmeshid].m_worker.collideVertices();
+          exam2m::addMesh(
+              m_meshes[m_sourcemeshid].m_mesharray,
+              m_meshes[m_sourcemeshid].m_nchare,
+              CkCallback(
+                  CkIndex_MeshArray::transferSource(),
+                  m_meshes[m_sourcemeshid].m_mesharray));
+          exam2m::addMesh(
+              m_meshes[m_destmeshid].m_mesharray,
+              m_meshes[m_destmeshid].m_nchare,
+              CkCallback(
+                  CkIndex_MeshArray::transferDest(),
+                  m_meshes[m_destmeshid].m_mesharray));
         }
 
         // Solution has been transferred from source to destination, write out
         // meshes and exit.
-        when solutionFound() {
+        when solutionfound() {
+          serial {
+            CkPrintf("ExaM2M> Library execution completed in: %f sec\n",
+                m_timer[0].dsec());
+          }
           forall [meshid] (0:1,1) {
-            serial { meshes[meshid].m_worker.out(meshid); }
+            serial { m_meshes[meshid].m_mesharray.out(meshid); }
             when written[meshid]() {}
           }
         }

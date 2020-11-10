@@ -31,9 +31,10 @@ using MapperCallback =
     , tag::workinserted,   CkCallback
   > >;
 
-using WorkerCallback =
+using MeshCallback =
   tk::TaggedTuple< brigand::list<
       tag::workcreated,   CkCallback
+    , tag::solutionfound, CkCallback
     , tag::written,       CkCallback
   > >;
 

@@ -12,13 +12,12 @@
 
 mainmodule exam2m {
 
-  extern module transporter;
   extern module partitioner;
   extern module driver;
+  extern module controller;
 
   readonly CProxy_Main mainProxy;
-  readonly CollideHandle collideHandle;
-  readonly exam2m::CProxy_Transporter transporterProxy;
+  readonly exam2m::CProxy_Driver driverProxy;
 
   namespace exam2m {
 

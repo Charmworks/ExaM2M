@@ -12,12 +12,12 @@
 
 #include "ExaM2MDriver.hpp"
 
-#include "NoWarning/transporter.decl.h"
+#include "NoWarning/driver.decl.h"
 
 using exam2m::ExaM2MDriver;
-using exam2m::CProxy_Transporter;
+using exam2m::CProxy_Driver;
 
-extern CProxy_Transporter transporterProxy;
+extern CProxy_Driver driverProxy;
 
 ExaM2MDriver::ExaM2MDriver( int argc, char** argv )
 // *****************************************************************************
@@ -51,6 +51,6 @@ ExaM2MDriver::execute() const
   CkPrintf("ExaM2M> Preparing meshes (read, partition, distribute)\n");
 
   // TODO: This is not synchronized in the Transporter
-  transporterProxy.addMesh(m_argv[0]);
-  transporterProxy.addMesh(m_argv[1]);
+  driverProxy.addMesh(m_argv[0]);
+  driverProxy.addMesh(m_argv[1]);
 }

@@ -41,10 +41,10 @@ class Partitioner : public CBase_Partitioner {
     Partitioner( const std::string& meshfilename,
                  const tk::PartitionerCallback& cbp,
                  const tk::MapperCallback& cbm,
-                 const tk::WorkerCallback& cbw,
+                 const tk::MeshCallback& cbw,
                  const tk::CProxy_MeshWriter& meshwriter,
                  const CProxy_Mapper& mapper,
-                 const CProxy_Worker& w,
+                 const CProxy_MeshArray& mesharray,
                  const std::map< int, std::vector< std::size_t > >& bface,
                  const std::map< int, std::vector< std::size_t > >& faces,
                  const std::map< int, std::vector< std::size_t > >& bnode );
@@ -118,13 +118,13 @@ class Partitioner : public CBase_Partitioner {
     //! Charm++ callbacks associated to compile-time tags for Mapper
     tk::MapperCallback m_cbm;
     //! Charm++ callbacks associated to compile-time tags for Worker
-    tk::WorkerCallback m_cbw;
+    tk::MeshCallback m_cbw;
     //! Mesh writer proxy
     tk::CProxy_MeshWriter m_meshwriter;
     //! Mapper proxy
     CProxy_Mapper m_mapper;
-    //! Worker proxy
-    CProxy_Worker m_worker;
+    //! MeshArray proxy
+    CProxy_MeshArray m_mesharray;
     //! Element connectivity of this compute node's mesh chunk (global ids)
     std::vector< std::size_t > m_ginpoel;
     //! Coordinates of mesh nodes of this compute node's mesh chunk

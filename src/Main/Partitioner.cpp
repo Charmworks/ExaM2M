@@ -24,10 +24,10 @@ Partitioner::Partitioner(
   const std::string& meshfilename,
   const tk::PartitionerCallback& cbp,
   const tk::MapperCallback& cbm,
-  const tk::WorkerCallback& cbw,
+  const tk::MeshCallback& cbw,
   const tk::CProxy_MeshWriter& meshwriter,
   const CProxy_Mapper& mapper,
-  const CProxy_Worker& worker,
+  const CProxy_MeshArray& mesharray,
   const std::map< int, std::vector< std::size_t > >& bface,
   const std::map< int, std::vector< std::size_t > >& faces,
   const std::map< int, std::vector< std::size_t > >& bnode ) :
@@ -36,7 +36,7 @@ Partitioner::Partitioner(
   m_cbw( cbw ),
   m_meshwriter( meshwriter ),
   m_mapper( mapper ),
-  m_worker( worker ),
+  m_mesharray( mesharray ),
   m_ginpoel(),
   m_coord(),
   m_inpoel(),
@@ -511,7 +511,7 @@ Partitioner::map()
       auto cid = CkMyNode() * dist[0] + c;
       // create Mapper Charm++ chare array elements
       m_mapper[ cid ].insert( m_meshwriter,
-                              m_worker,
+                              m_mesharray,
                               m_cbm,
                               m_cbw,
                               tk::cref_find(m_chinpoel,cid),
