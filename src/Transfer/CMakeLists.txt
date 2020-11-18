@@ -18,13 +18,14 @@ target_include_directories(Worker PUBLIC
                            ${HIGHWAYHASH_INCLUDE_DIRS}
 )
 
-set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME
-                      exam2m_worker)
+set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME exam2m_worker
+                      PUBLIC_HEADER "Controller.hpp")
 
 INSTALL(TARGETS Worker
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 addCharmModule( "worker" "Worker" )
