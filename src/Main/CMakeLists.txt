@@ -45,6 +45,12 @@ target_link_libraries(${EXAM2M_EXECUTABLE}
                       Worker
                       ${SEACASExodus_LIBRARIES}
                       ${Zoltan2_LIBRARIES}
+                      ${LAPACKE_LIBRARIES}    # only if MKL not found
+                      ${MKL_INTERFACE_LIBRARY}
+                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
+                      ${MKL_CORE_LIBRARY}
+                      ${MKL_INTERFACE_LIBRARY}
+                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
                       ${LIBCXX_LIBRARIES}     # only for static link with libc++
                       ${LIBCXXABI_LIBRARIES}) # only for static link with libc++
 
