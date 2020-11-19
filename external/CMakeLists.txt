@@ -557,6 +557,33 @@ if (netcdf)
   )
 endif()
 
+#### lapack ####################################################################
+# http://www.netlib.org/lapack
+if(BUILD_SHARED_LIBS AND NOT ENABLE_AMPI)
+  set(LAPACK_BUILD_SHARED_LIBS on)
+elseif()
+  set(LAPACK_BUILD_SHARED_LIBS off)
+endif()
+if (lapack)
+  ExternalProject_Add(
+    lapack
+    PREFIX lapack
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/lapack
+    CMAKE_ARGS -D CMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+               -D CMAKE_Fortran_COMPILER:PATH=${UNDERLYING_Fortran_COMPILER}
+               -D CMAKE_Fortran_FLAGS:STRING=${FFLAGS}
+               -D BUILD_TESTING:BOOL=OFF
+               -D BUILD_SHARED_LIBS:BOOL=${LAPACK_BUILD_SHARED_LIBS}
+               -D LAPACKE:BOOL=ON
+               -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+               ${MACOSX_RPATH}
+    DOWNLOAD_COMMAND ""
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    LOG_INSTALL 1
+  )
+endif()
+
 ##### Trilinos #################################################################
 ## http://trilinos.sandia.gov
 if(BUILD_SHARED_LIBS AND NOT ENABLE_AMPI)
@@ -661,32 +688,5 @@ if (highwayhash)
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     DOWNLOAD_COMMAND ""
-  )
-endif()
-
-#### lapack ####################################################################
-# http://www.netlib.org/lapack
-if(BUILD_SHARED_LIBS AND NOT ENABLE_AMPI)
-  set(LAPACK_BUILD_SHARED_LIBS on)
-elseif()
-  set(LAPACK_BUILD_SHARED_LIBS off)
-endif()
-if (lapack)
-  ExternalProject_Add(
-    lapack
-    PREFIX lapack
-    SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/lapack
-    CMAKE_ARGS -D CMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-               -D CMAKE_Fortran_COMPILER:PATH=${UNDERLYING_Fortran_COMPILER}
-               -D CMAKE_Fortran_FLAGS:STRING=${FFLAGS}
-               -D BUILD_TESTING:BOOL=OFF
-               -D BUILD_SHARED_LIBS:BOOL=${LAPACK_BUILD_SHARED_LIBS}
-               -D LAPACKE:BOOL=ON
-               -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
-               ${MACOSX_RPATH}
-    DOWNLOAD_COMMAND ""
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
   )
 endif()
