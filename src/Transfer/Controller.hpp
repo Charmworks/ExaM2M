@@ -15,11 +15,12 @@ public:
   LibMain(CkArgMsg* msg);
 };
 
-struct MeshData {
+class MeshData {
+  public:
   CProxy_Worker m_proxy;
   int m_firstchunk;
   int m_nchare;
-  virtual void pup(PUP::er& p) {
+  void pup(PUP::er& p) {
     p | m_proxy;
     p | m_firstchunk;
     p | m_nchare;
@@ -27,7 +28,7 @@ struct MeshData {
 };
 
 class Controller : public CBase_Controller {
-Controller_SDAG_CODE;
+Controller_SDAG_CODE
 private:
   std::unordered_map<CmiUInt8, MeshData> proxyMap;
   int current_chunk;

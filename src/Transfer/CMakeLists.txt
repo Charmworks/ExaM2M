@@ -18,15 +18,29 @@ target_include_directories(Worker PUBLIC
                            ${HIGHWAYHASH_INCLUDE_DIRS}
 )
 
-set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME exam2m_worker
-                      PUBLIC_HEADER "Controller.hpp")
+set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME exam2m_worker)
 
 INSTALL(TARGETS Worker
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development)
+
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/Transfer/"
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "Controller.hpp")
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/NoWarning/"
+        DESTINATION "include/NoWarning/"
+        FILES_MATCHING PATTERN "controller.de*.h")
+INSTALL(DIRECTORY "${PROJECT_SOURCE_DIR}/NoWarning/"
+        DESTINATION "include/NoWarning/"
+        FILES_MATCHING PATTERN "worker.de*.h")
+
+INSTALL(DIRECTORY "${PROJECT_BINARY_DIR}/Transfer/"
+        DESTINATION "include/Transfer/"
+        FILES_MATCHING PATTERN "controller.de*.h")
+INSTALL(DIRECTORY "${PROJECT_BINARY_DIR}/Transfer/"
+        DESTINATION "include/Transfer/"
+        FILES_MATCHING PATTERN "worker.de*.h")
 
 addCharmModule( "worker" "Worker" )
 addCharmModule( "controller" "Worker" )
