@@ -1,6 +1,6 @@
 // *****************************************************************************
 /*!
-  \file      src/Transfer/mesharray.ci
+  \file      src/Main/mesharray.ci
   \copyright 2020 Charmworks, Inc.
              All rights reserved. See the LICENSE file for details.
   \brief     Charm++ module interface file for mesharrays holding part of a mesh

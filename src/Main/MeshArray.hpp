@@ -1,6 +1,6 @@
 // *****************************************************************************
 /*!
-  \file      src/Transfer/MeshArray.hpp
+  \file      src/Main/MeshArray.hpp
   \copyright 2020 Charmworks, Inc.
              All rights reserved. See the LICENSE file for details.
   \brief     Chare class declaration for mesharrays holding part of a mesh
@@ -14,6 +14,7 @@
 #include "PUPUtil.hpp"
 #include "UnsMesh.hpp"
 #include "CommMap.hpp"
+#include "Fields.hpp"
 
 #include "NoWarning/mesharray.decl.h"
 
@@ -155,7 +156,7 @@ class MeshArray : public CBase_MeshArray {
     //! Boundary node lists mapped to side set ids
     std::map< int, std::vector< std::size_t > > m_bnode;
     //! Solution in mesh nodes
-    std::vector< tk::real > m_u;
+    tk::Fields m_u;
 
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );

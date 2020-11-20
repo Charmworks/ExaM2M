@@ -45,21 +45,21 @@ Worker::Worker( int firstchunk, CkCallback cb ) : m_firstchunk(firstchunk)
 }
 
 void
-Worker::setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u )
+Worker::setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u )
 {
   CkPrintf("Source mesh index %i\n", thisIndex);
   m_coord = coords;
-  m_u = u;
+  m_u = const_cast< tk::Fields* >( &u );
   m_inpoel = inpoel;
   collideTets();
 }
 
 void
-Worker::setDestPoints( tk::UnsMesh::Coords* coords, std::vector< tk::real >* u, CkCallback cb )
+Worker::setDestPoints( tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb )
 {
   CkPrintf("Dest mesh index %i\n", thisIndex);
   m_coord = coords;
-  m_u = u;
+  m_u = const_cast< tk::Fields* >( &u );
   doneCB = cb;
   numSent = 0;
   numReceived = 0;
@@ -74,8 +74,8 @@ Worker::background()
 //! \details This is useful to see what points did not receive solution.
 // *****************************************************************************
 {
-  std::vector< tk::real >& m_u = *(this->m_u);
-  for (std::size_t i=0; i<m_u.size(); ++i) m_u[i] = -1.0;
+  tk::Fields& m_u = *(this->m_u);
+  for (std::size_t i=0; i<m_u.nunk(); ++i) m_u(i,0,0) = -1.0;
 }
 
 void
@@ -147,7 +147,7 @@ Worker::processCollisions(
 // *****************************************************************************
 {
   const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  std::vector< tk::real >& m_u = *(this->m_u);
+  tk::Fields& m_u = *(this->m_u);
   int mychunk = thisIndex + m_firstchunk;
   //CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
@@ -210,7 +210,7 @@ Worker::determineActualCollisions(
 {
   std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
   const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  std::vector< tk::real >& m_u = *(this->m_u);
+  tk::Fields& m_u = *(this->m_u);
   //CkPrintf("Source chare %i received data for %i potential collisions\n",
   //    thisIndex, nColls);
 
@@ -230,7 +230,7 @@ Worker::determineActualCollisions(
       const auto B = m_inpoel[e*4+1];
       const auto C = m_inpoel[e*4+2];
       const auto D = m_inpoel[e*4+3];
-      data.solution = N[0]*m_u[A] + N[1]*m_u[B] + N[2]*m_u[C] + N[3]*m_u[D];
+      data.solution = N[0]*m_u(A,0,0) + N[1]*m_u(B,0,0) + N[2]*m_u(C,0,0) + N[3]*m_u(D,0,0);
       return_data.push_back(data);
     }
   }
@@ -252,13 +252,13 @@ Worker::transferSolution(
 // *****************************************************************************
 {
   const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  std::vector< tk::real >& m_u = *(this->m_u);
+  tk::Fields& m_u = *(this->m_u);
   //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
   for (int i = 0; i < static_cast<int>(nPoints); i++) {
-    m_u[soln[i].dest_index] = soln[i].solution;
+    m_u(soln[i].dest_index,0,0) = soln[i].solution;
   }
   numReceived++;
   if (numReceived == numSent) {

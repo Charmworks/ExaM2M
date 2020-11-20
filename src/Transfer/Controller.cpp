@@ -36,11 +36,11 @@ void addMesh(CkArrayID p, int elem, CkCallback cb) {
   controllerProxy[0].addMesh(p, elem, cb);
 }
 
-void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u) {
+void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u) {
   controllerProxy.ckLocalBranch()->setSourceTets(p, index, inpoel, coords, u);
 }
 
-void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u, CkCallback cb) {
+void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {
   controllerProxy.ckLocalBranch()->setDestPoints(p, index, coords, u, cb);
 }
 
@@ -61,14 +61,14 @@ void Controller::broadcastMesh(CkArrayID p, MeshData d, CkCallback cb) {
   contribute(cb);
 }
 
-void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u, CkCallback cb) {
+void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {
   m_destmesh = CkGroupID(p).idx;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
   Assert(w);
   w->setDestPoints(coords, u, cb);
 }
 
-void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u) {
+void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u) {
   m_sourcemesh = CkGroupID(p).idx;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
   Assert(w);

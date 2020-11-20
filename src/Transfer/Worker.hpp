@@ -14,6 +14,7 @@
 #include "PUPUtil.hpp"
 #include "UnsMesh.hpp"
 #include "CommMap.hpp"
+#include "Fields.hpp"
 
 #include "NoWarning/worker.decl.h"
 
@@ -51,8 +52,8 @@ class Worker : public CBase_Worker {
       #pragma clang diagnostic pop
     #endif
 
-    void setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, std::vector< tk::real >* u);
-    void setDestPoints( tk::UnsMesh::Coords* coords, std::vector< tk::real >* u, CkCallback cb );
+    void setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u);
+    void setDestPoints( tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb );
 
     //! Initialize dest mesh solution with background data
     void background();
@@ -100,7 +101,7 @@ class Worker : public CBase_Worker {
     //! Mesh point coordinates
     tk::UnsMesh::Coords* m_coord;
     //! Solution in mesh nodes
-    std::vector< tk::real >* m_u;
+    tk::Fields* m_u;
 
     int numSent, numReceived;
     CkCallback doneCB;

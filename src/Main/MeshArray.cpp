@@ -1,6 +1,6 @@
 // *****************************************************************************
 /*!
-  \file      src/Transfer/MeshArray.cpp
+  \file      src/Main/MeshArray.cpp
   \copyright 2020 Charmworks, Inc.
              All rights reserved. See the LICENSE file for details.
   \brief     Chare class declaration for mesharrays holding part of a mesh
@@ -45,7 +45,7 @@ MeshArray::MeshArray(
   m_bface( bface ),
   m_triinpoel( triinpoel ),
   m_bnode( bnode ),
-  m_u()
+  m_u( m_coord[0].size(), 1 )
 // *****************************************************************************
 //  Constructor
 //! \param[in] meshwriter Mesh writer proxy
@@ -77,9 +77,8 @@ MeshArray::MeshArray(
   const auto& y = m_coord[1];
   const auto& z = m_coord[2];
   auto npoin = m_coord[0].size();
-  m_u.resize( npoin, 0.0 );
   for (std::size_t i=0; i<npoin; ++i) {
-    m_u[i] = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
+    m_u(i,0,0) = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
   }
 
   // Tell the RTS that the MeshArray chares have been created and compute
@@ -107,7 +106,7 @@ MeshArray::out( int meshid )
   std::vector< std::vector< tk::real > > nodefields;
 
   nodefieldnames.push_back( "scalar" );
-  nodefields.push_back( m_u );
+  nodefields.push_back( m_u.extract(0, 0) );
 
   // Surface field data in nodes
   std::vector< std::string > nodesurfnames;
@@ -234,7 +233,7 @@ void MeshArray::transferSource()
 //  Pass Mesh Data to m2m transfer library
 // *****************************************************************************
 {
-  exam2m::setSourceTets(thisProxy, thisIndex, &m_inpoel, &m_coord, &m_u);
+  exam2m::setSourceTets(thisProxy, thisIndex, &m_inpoel, &m_coord, m_u);
 }
 
 void MeshArray::transferDest()
@@ -242,7 +241,7 @@ void MeshArray::transferDest()
 //  Pass Mesh Data to m2m transfer library
 // *****************************************************************************
 {
-  exam2m::setDestPoints(thisProxy, thisIndex, &m_coord, &m_u, CkCallback(CkIndex_MeshArray::solutionFound(), thisProxy[thisIndex]));
+  exam2m::setDestPoints(thisProxy, thisIndex, &m_coord, m_u, CkCallback(CkIndex_MeshArray::solutionFound(), thisProxy[thisIndex]));
 }
 
 void MeshArray::solutionFound() {
