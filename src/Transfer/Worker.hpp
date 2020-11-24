@@ -19,16 +19,18 @@
 
 namespace exam2m {
 
-struct PotentialCollision {
-  std::size_t source_index, dest_index;
-  CkVector3d point;
-  void pup(PUP::er& p) { p | source_index; p | dest_index; p | point; }
+class PotentialCollision {
+  public:
+    std::size_t source_index, dest_index;
+    CkVector3d point;
+    void pup(PUP::er& p) { p | source_index; p | dest_index; p | point; }
 };
 
-struct SolutionData {
-  std::size_t dest_index;
-  tk::real solution;
-  void pup(PUP::er& p) { p | dest_index; p | solution; }
+class SolutionData {
+  public:
+    std::size_t dest_index;
+    tk::real solution;
+    void pup(PUP::er& p) { p | dest_index; p | solution; }
 };
 
 //! Worker chare array holding part of a mesh
@@ -38,7 +40,7 @@ class Worker : public CBase_Worker {
     //! Constructor
     explicit
       Worker(
-        std::size_t firstchunk,
+        int firstchunk,
         const tk::CProxy_MeshWriter& meshwriter,
         const tk::WorkerCallback& cbw,
         const std::vector< std::size_t >& ginpoel,
@@ -92,8 +94,8 @@ class Worker : public CBase_Worker {
 
     //! Process potential collisions in the destination mesh
     void processCollisions( CProxy_Worker proxy,
-                            std::size_t nchare,
-                            std::size_t offset,
+                            int nchare,
+                            int offset,
                             int nColls,
                             Collision* colls ) const;
 
@@ -104,7 +106,7 @@ class Worker : public CBase_Worker {
                                     PotentialCollision* colls ) const;
 
     //! Transfer the interpolated solution data back to destination mesh
-    void transferSolution( int nPoints, SolutionData* soln );
+    void transferSolution( std::size_t nPoints, SolutionData* soln );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
@@ -142,7 +144,7 @@ class Worker : public CBase_Worker {
 
   private:
     //! The ID of my first chunk (used for collision detection library)
-    std::size_t m_firstchunk;
+    int m_firstchunk;
     //! Charm++ callbacks associated to compile-time tags for Worker
     tk::WorkerCallback m_cbw;
     //! Total number of Worker chares

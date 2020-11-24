@@ -22,7 +22,20 @@ namespace exam2m{
 
 //! Transporter drives time integration
 class Transporter : public CBase_Transporter {
-Transporter_SDAG_CODE;
+  #if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunused-parameter"
+  #elif defined(STRICT_GNUC)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
+  #endif
+  Transporter_SDAG_CODE
+  #if defined(__clang__)
+    #pragma clang diagnostic pop
+  #elif defined(STRICT_GNUC)
+    #pragma GCC diagnostic pop
+  #endif
+
   public:
     //! Constructor
     explicit Transporter();
@@ -37,9 +50,10 @@ Transporter_SDAG_CODE;
     //! \note This is a Charm++ mainchare, pup() is thus only for
     //!    checkpoint/restart.
     void pup( PUP::er& p ) override {
-      //p | m_nchare;
-      //p | m_partitioner;
-      //p | m_meshwriter;
+      p | m_meshes;
+      p | m_currentchunk;
+      p | m_sourcemeshid;
+      p | m_destmeshid;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -48,7 +62,6 @@ Transporter_SDAG_CODE;
     //@}
 
   private:
-
     //! Add mesh by filename
     void initMeshData( const std::string& file );
 
@@ -62,16 +75,28 @@ Transporter_SDAG_CODE;
 
     struct MeshData {
       int m_nchare;                        //!< Number of worker chares
-      int m_firstchunk;                    //!< First chunk ID (for collision)
+      std::size_t m_firstchunk;            //!< First chunk ID (for collision)
       CProxy_Partitioner m_partitioner;    //!< Partitioner nodegroup proxy
       tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
       CProxy_Mapper m_mapper;              //!< Mapper array proxy
       CProxy_Worker m_worker;              //!< Worker array proxy
       std::size_t m_nelem;                 //!< Total number of elements in mesh
       std::size_t m_npoin;                 //!< Total number of nodes in mesh
+      void pup( PUP::er& p ) {
+        p | m_nchare;
+        p | m_firstchunk;
+        p | m_partitioner;
+        p | m_meshwriter;
+        p | m_mapper;
+        p | m_worker;
+        p | m_nelem;
+        p | m_npoin;
+      }
+      friend void operator|( PUP::er& p, MeshData& t ) { t.pup(p); }
     };
+
     //! Mesh Data for all meshes
-    std::vector<MeshData> meshes;
+    std::vector< MeshData > m_meshes;
     //! Chunk counter for ensuring unique chunk number for each mesh
     std::size_t m_currentchunk;
     //! ID of the source mesh

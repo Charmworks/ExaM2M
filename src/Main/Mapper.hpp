@@ -53,7 +53,7 @@ class Mapper : public CBase_Mapper {
     #endif
 
     //! Setup chare mesh boundary node communication map
-    void setup( std::size_t npoin, std::size_t firstchunk );
+    void setup( std::size_t npoin, int firstchunk );
     //! \brief Incoming query for a list mesh nodes for which this chare
     //!   compiles communication maps
     void query( int fromch, const tk::AllCommMaps& bnd );
@@ -98,7 +98,7 @@ class Mapper : public CBase_Mapper {
 
   private:
     //! First chunk ID for collision detection
-    std::size_t m_firstchunk;
+    int m_firstchunk;
     //! MeshWriter proxy
     tk::CProxy_MeshWriter m_meshwriter;
     //! Worker proxy

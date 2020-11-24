@@ -65,7 +65,7 @@ Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
 }
 
 void
-Mapper::setup( std::size_t npoin, std::size_t firstchunk )
+Mapper::setup( std::size_t npoin, int firstchunk )
 // *****************************************************************************
 // Setup chare mesh boundary node communication map
 //! \param[in] npoin Total number of mesh points in mesh

@@ -40,10 +40,11 @@ module transporter {
             when loaded[meshid]( std::size_t nelem ) serial {
               updatenelems(meshid, nelem);
 
-              meshes[meshid].m_partitioner.partition( meshes[meshid].m_nchare );
+              m_meshes[meshid].m_partitioner.partition(
+                m_meshes[meshid].m_nchare );
             }
             when distributed[meshid]() serial {
-              meshes[meshid].m_partitioner.map();
+              m_meshes[meshid].m_partitioner.map();
             }
             when mapinserted[meshid]( std::size_t error ) serial {
               if (error) {
@@ -59,25 +60,25 @@ module transporter {
                   "partitioning algorithm (e.g., rcb instead of mj). Solution 2: "
                   "Decrease +ppn.\n");
               } else {
-                 meshes[meshid].m_mapper.doneInserting();
-                 meshes[meshid].m_mapper.setup( meshes[meshid].m_npoin,
-                                                  meshes[meshid].m_firstchunk );
+                 m_meshes[meshid].m_mapper.doneInserting();
+                 m_meshes[meshid].m_mapper.setup(
+                   m_meshes[meshid].m_npoin, m_meshes[meshid].m_firstchunk );
               }
             }
             when queried[meshid]() serial {
-              meshes[meshid].m_mapper.response();
+              m_meshes[meshid].m_mapper.response();
             }
             when responded[meshid]() serial {
-              meshes[meshid].m_mapper.create();
+              m_meshes[meshid].m_mapper.create();
             }
             when workinserted[meshid]() serial {
-              meshes[meshid].m_worker.doneInserting();
+              m_meshes[meshid].m_worker.doneInserting();
             }
             when workcreated[meshid]() serial {
               std::cout << "Number of tetrahedra for mesh " << meshid << ": "
-                  << meshes[meshid].m_nelem << '\n';;
+                  << m_meshes[meshid].m_nelem << '\n';;
               std::cout << "Number of points for mesh " << meshid << ": "
-                  << meshes[meshid].m_npoin << '\n';
+                  << m_meshes[meshid].m_npoin << '\n';
             }
           }
         }
@@ -87,9 +88,9 @@ module transporter {
         serial {
           m_sourcemeshid = 0;
           m_destmeshid = 1;
-          meshes[m_destmeshid].m_worker.background();
-          meshes[m_sourcemeshid].m_worker.collideTets();
-          meshes[m_destmeshid].m_worker.collideVertices();
+          m_meshes[m_destmeshid].m_worker.background();
+          m_meshes[m_sourcemeshid].m_worker.collideTets();
+          m_meshes[m_destmeshid].m_worker.collideVertices();
           CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
         }
         // Collision detection library found collisions, now distribute them to
@@ -102,7 +103,7 @@ module transporter {
         // meshes and exit.
         when solutionFound() {
           forall [meshid] (0:1,1) {
-            serial { meshes[meshid].m_worker.out(meshid); }
+            serial { m_meshes[meshid].m_worker.out(meshid); }
             when written[meshid]() {}
           }
         }
