@@ -38,15 +38,18 @@ module transporter {
 
             // Once loaded, update number of elements and partition
             when loaded[meshid]( std::size_t nelem ) serial {
+              CkPrintf("ExaM2M> Loaded mesh %i\n", meshid);
               updatenelems(meshid, nelem);
 
               m_meshes[meshid].m_partitioner.partition(
                 m_meshes[meshid].m_nchare );
             }
             when distributed[meshid]() serial {
+              CkPrintf("ExaM2M> Distributed mesh %i\n", meshid);
               m_meshes[meshid].m_partitioner.map();
             }
             when mapinserted[meshid]( std::size_t error ) serial {
+              CkPrintf("ExaM2M> Created mapper for mesh %i\n", meshid);
               if (error) {
                 CkAbort("\n>>> ERROR: A Mapper chare was not assigned any mesh "
                   "elements. This can happen in SMP-mode with a large +ppn "
@@ -75,10 +78,10 @@ module transporter {
               m_meshes[meshid].m_worker.doneInserting();
             }
             when workcreated[meshid]() serial {
-              std::cout << "Number of tetrahedra for mesh " << meshid << ": "
-                  << m_meshes[meshid].m_nelem << '\n';;
-              std::cout << "Number of points for mesh " << meshid << ": "
-                  << m_meshes[meshid].m_npoin << '\n';
+              CkPrintf("ExaM2M> Created worker for mesh %i\n", meshid);
+              std::cout << "ExaM2M> Mesh " << meshid << " nelem: "
+                        << m_meshes[meshid].m_nelem << ", npoin: "
+                        << m_meshes[meshid].m_npoin << '\n';
             }
           }
         }
@@ -86,6 +89,9 @@ module transporter {
         // Both meshes are fully loaded on worker chares, so now we can test
         // for collisions.
         serial {
+          CkPrintf("ExaM2M> Prepared all meshes, "
+                   "starting mesh-to-mesh transfer\n");
+          m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
           m_meshes[m_destmeshid].m_worker.background();
@@ -96,18 +102,32 @@ module transporter {
         // Collision detection library found collisions, now distribute them to
         // the workers for further checking and solution transfer.
         when processCollisions(int nColls, Collision colls[nColls]) serial {
+          CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n",
+              m_timer[0].dsec());
+          m_timer.emplace_back();
           distributeCollisions(nColls, colls);
+          CkPrintf("ExaM2M> Serial processing complete in: %f sec\n",
+              m_timer[1].dsec());
+          m_timer[1].zero();
         }
 
         // Solution has been transferred from source to destination, write out
         // meshes and exit.
         when solutionFound() {
+          serial {
+            CkPrintf("Narrow phase detection complete in: %f sec\n",
+                m_timer[1].dsec());
+            CkPrintf("Total transfer time: %f sec\nWriting solution ... ",
+                m_timer[0].dsec());
+          }
           forall [meshid] (0:1,1) {
             serial { m_meshes[meshid].m_worker.out(meshid); }
-            when written[meshid]() {}
+            when written[meshid]() serial {
+              CkPrintf("ExaM2M> Written field output for mesh %i\n", meshid);
+            }
           }
         }
-        serial { CkPrintf("done\n"); CkExit(); }
+        serial { CkPrintf("done."); CkExit(); }
       };
     }
 

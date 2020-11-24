@@ -42,11 +42,13 @@ ExaM2MDriver::execute() const
   // during which there are multiple mesh-to-mesh transfers may be required as
   // a problem evolves in time.
 
-  std::cout << "Args: ";
-  for (const auto& arg : m_argv) std::cout << arg << ' ';
-  std::cout << '\n';
+  CkPrintf("ExaM2M> Args:");
+  for (const auto& arg : m_argv) CkPrintf("%s ", arg.c_str());
+  CkPrintf("\n");
 
   if ( m_argv.size() < 2 ) Throw( "The first two arguments must be exodus filenames");
+
+  CkPrintf("ExaM2M> Preparing meshes (read, partition, distribute)\n");
 
   // TODO: This is not synchronized in the Transporter
   transporterProxy.addMesh(m_argv[0]);

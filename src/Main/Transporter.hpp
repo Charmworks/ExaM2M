@@ -14,6 +14,7 @@
 #include <string>
 
 #include "Partitioner.hpp"
+#include "Timer.hpp"
 
 #include "NoWarning/transporter.decl.h"
 #include "NoWarning/mapper.decl.h"
@@ -54,6 +55,7 @@ class Transporter : public CBase_Transporter {
       p | m_currentchunk;
       p | m_sourcemeshid;
       p | m_destmeshid;
+      p | m_timer;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -103,6 +105,8 @@ class Transporter : public CBase_Transporter {
     std::size_t m_sourcemeshid;
     //! ID of the dest mesh
     std::size_t m_destmeshid;
+    //! Timers
+    std::vector< tk::Timer > m_timer;
 };
 
 } // exam2m::
