@@ -22,6 +22,12 @@ PUPbytes(Collision);
 
 extern CProxy_Main mainProxy;
 
+namespace exam2m {
+
+extern tk::real g_virtualization;
+
+}
+
 using exam2m::Transporter;
 
 Transporter::Transporter() : m_currentchunk(0)
@@ -108,20 +114,19 @@ Transporter::updatenelems( std::size_t meshid, std::size_t nelem )
 // *****************************************************************************
 {
   MeshData& mesh = meshes[meshid];
-  tk::real virtualization = 0.0;
   mesh.m_nelem = nelem;
 
   // Compute load distribution given total work (nelem) and virtualization
   uint64_t chunksize, remainder;
   mesh.m_nchare = static_cast< int >(
-               tk::linearLoadDistributor( virtualization,
+               tk::linearLoadDistributor( g_virtualization,
                  nelem, CkNumPes(), chunksize, remainder ) );
   mesh.m_firstchunk = m_currentchunk;
   m_currentchunk += mesh.m_nchare;
 
   // Print out info on load distribution
   std::cout << "Initial load distribution for mesh " << meshid << "\n";
-  std::cout << "Virtualization [0.0...1.0]: " << virtualization << '\n';
+  std::cout << "Virtualization [0.0...1.0]: " << g_virtualization << '\n';
   std::cout << "Number of work units: " << mesh.m_nchare << '\n';
 
   // Tell the meshwriter the total number of chares
