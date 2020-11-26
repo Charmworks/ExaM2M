@@ -22,7 +22,6 @@ add_executable(${EXAM2M_EXECUTABLE}
                Partitioner.cpp
                Driver.cpp
                MeshArray.cpp
-               ExaM2MDriver.cpp
                ExaM2M.cpp)
 
 config_executable(${EXAM2M_EXECUTABLE})

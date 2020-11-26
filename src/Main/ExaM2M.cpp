@@ -13,7 +13,6 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "ExaM2MDriver.hpp"
 #include "ProcessException.hpp"
 
 #include "NoWarning/exam2m.decl.h"
@@ -28,7 +27,6 @@ using exam2m::CProxy_Driver;
 //! \brief Charm handle to the main proxy, facilitates call-back to finalize,
 //!    etc., must be in global scope.
 CProxy_Main mainProxy;
-
 CProxy_Driver driverProxy;
 
 #if defined(__clang__)
@@ -67,44 +65,42 @@ class Main : public CBase_Main {
     Main( CkArgMsg* msg )
     try :
       // Create driver
-      m_signal( tk::setSignalHandlers() ),
-      m_mesh_complete( 0 ),
-      m_driver( msg->argc, msg->argv )
+      m_signal( tk::setSignalHandlers() )
     {
+      CkPrintf("ExaM2M> Args:");
+      for (int i = 1; i < msg->argc; i++) CkPrintf("%s ", msg->argv[i]);
+      CkPrintf("\n");
+
+      if ( msg->argc < 3 ) {
+        Throw( "The first two arguments must be exodus filenames");
+      }
+
       if (msg->argc > 3) {
         exam2m::g_virtualization = std::atof( msg->argv[3] );
       }
-      delete msg;
+
       mainProxy = thisProxy;
-      driverProxy = CProxy_Driver::ckNew( 0 );
+
+      // Create the driver, add the two meshes, and tell it to run
+      CProxy_Driver driverProxy = CProxy_Driver::ckNew( 0 );
+      driverProxy.addMesh(msg->argv[1]);
+      driverProxy.addMesh(msg->argv[2]);
       driverProxy.run();
-      // Fire up an asynchronous execute object, which when created at some
-      // future point in time will call back to this->execute(). This is
-      // necessary so that this->execute() can access already migrated
-      // global-scope data.
-      CProxy_execute::ckNew();
+
+      delete msg;
     } catch (...) { tk::processExceptionCharm(); }
 
     //! Migrate constructor: returning from a checkpoint
     explicit Main( CkMigrateMessage* msg ) : CBase_Main( msg ),
-      m_signal( tk::setSignalHandlers() ),
-      m_driver( reinterpret_cast<CkArgMsg*>(msg)->argc,
-                reinterpret_cast<CkArgMsg*>(msg)->argv )
+      m_signal( tk::setSignalHandlers() )
     {
-      mainProxy = thisProxy;
       CkStartQD( CkCallback( CkIndex_Main::quiescence(), thisProxy ) );
-    }
-
-    //! Execute driver created and initialized by constructor
-    void execute() {
-      try {
-        m_driver.execute();
-      } catch (...) { tk::processExceptionCharm(); }
     }
 
     //! Towards normal exit but collect chare state first (if any)
     void finalize() {
       try {
+        CkPrintf("ExaM2M> Transfer complete, exiting cleanly\n");
         CkExit();
       } catch (...) { tk::processExceptionCharm(); }
     }
@@ -112,8 +108,7 @@ class Main : public CBase_Main {
     //! Entry method triggered when quiescence is detected
     void quiescence() {
       try {
-        std::cout << "Quiescence detected\n";
-        CkExit();
+        CkAbort("Queiscence detected before tranfser completed\n");
       } catch (...) { tk::processExceptionCharm(); }
     }
 
@@ -133,20 +128,6 @@ class Main : public CBase_Main {
 
   private:
     int m_signal;                       //!< Used to set signal handlers
-    int m_mesh_complete;                //!< Used to delay exit until all done
-    exam2m::ExaM2MDriver m_driver;      //!< Driver
-};
-
-//! \brief Charm++ chare execute
-//! \details By the time this object is constructed, the Charm++ runtime system
-//!    has finished migrating all global-scoped read-only objects which happens
-//!    after the main chare constructor has finished.
-class execute : public CBase_execute {
-  public:
-    //! Constructor
-    execute() { mainProxy.execute(); }
-    //! Migrate constructor
-    explicit execute( CkMigrateMessage* m ) : CBase_execute( m ) {}
 };
 
 #if defined(__clang__)

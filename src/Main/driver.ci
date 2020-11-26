@@ -114,7 +114,7 @@ module driver {
             when written[meshid]() {}
           }
         }
-        serial { CkPrintf("done\n"); CkExit(); }
+        serial { mainProxy.finalize(); }
       };
     }
 

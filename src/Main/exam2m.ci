@@ -17,7 +17,6 @@ mainmodule exam2m {
   extern module controller;
 
   readonly CProxy_Main mainProxy;
-  readonly exam2m::CProxy_Driver driverProxy;
 
   namespace exam2m {
 
@@ -28,11 +27,8 @@ mainmodule exam2m {
 
   mainchare [migratable] Main {
     entry Main( CkArgMsg* msg );
-    entry void execute();
     entry void finalize();
     entry void quiescence();
   }
-
-  chare [migratable] execute { entry execute(); }
 
 }
