@@ -52,17 +52,15 @@ class Worker : public CBase_Worker {
       #pragma clang diagnostic pop
     #endif
 
-    void setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u);
-    void setDestPoints( tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb );
+    //! Set the source mesh data
+    void setSourceTets( std::vector< std::size_t>* inpoel,
+                        tk::UnsMesh::Coords* coords,
+                        const tk::Fields& u );
 
-    //! Initialize dest mesh solution with background data
-    void background();
-
-    //! Contribute vertex information to the collsion detection library
-    void collideVertices();
-
-    //! Contribute tet information to the collision detection library
-    void collideTets() const;
+    //! Set the destination mesh data
+    void setDestPoints( tk::UnsMesh::Coords* coords,
+                        const tk::Fields& u,
+                        CkCallback cb );
 
     //! Process potential collisions in the destination mesh
     void processCollisions( CProxy_Worker proxy,
@@ -96,15 +94,28 @@ class Worker : public CBase_Worker {
   private:
     //! The ID of my first chunk (used for collision detection library)
     std::size_t m_firstchunk;
-    //! Alias to element connectivity
+    //! Pointer to element connectivity
     std::vector< std::size_t >* m_inpoel;
-    //! Mesh point coordinates
+    //! Pointer to point coordinates
     tk::UnsMesh::Coords* m_coord;
-    //! Solution in mesh nodes
+    //! Pointer to solution in mesh nodes
     tk::Fields* m_u;
 
-    int numSent, numReceived;
-    CkCallback doneCB;
+    //! The number of messages sent by the dest mesh
+    int m_numsent;
+    //! The number of messages received by the dest mesh
+    int m_numreceived;
+    //! Called once the transfer is complete (m_numsent == m_numreceived)
+    CkCallback m_donecb;
+
+    //! Initialize dest mesh solution with background data
+    void background();
+
+    //! Contribute vertex information to the collsion detection library
+    void collideVertices();
+
+    //! Contribute tet information to the collision detection library
+    void collideTets() const;
 
     //! Determine if a point is in a tet
     bool intet(const CkVector3d &point,

@@ -36,34 +36,56 @@ using exam2m::Worker;
 Worker::Worker( int firstchunk, CkCallback cb ) : m_firstchunk(firstchunk)
 // *****************************************************************************
 //  Constructor
+//! \param[in] firstchunk Chunk ID used for the collision detection library
 //! \param[in] cb Callback to inform application that the library is ready
 // *****************************************************************************
 {
   CollideRegister(collideHandle, m_firstchunk + thisIndex);
-  CkPrintf("Worker %i created on %i\n", thisIndex, CkMyPe());
   contribute(cb);
 }
 
 void
-Worker::setSourceTets( std::vector< std::size_t>* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u )
+Worker::setSourceTets(
+    std::vector< std::size_t>* inpoel,
+    tk::UnsMesh::Coords* coords,
+    const tk::Fields& u )
+// *****************************************************************************
+//  Set the data for the source tetrahedrons to be collided
+//! \param[in] inpoel Pointer to the connectivity data for the source mesh
+//! \param[in] coords Pointer to the coordinate data for the source mesh
+//! \param[in] u Pointer to the solution data for the source mesh
+// *****************************************************************************
 {
-  CkPrintf("Source mesh index %i\n", thisIndex);
   m_coord = coords;
   m_u = const_cast< tk::Fields* >( &u );
   m_inpoel = inpoel;
+
+  // Send tetrahedron data to the collision detection library
   collideTets();
 }
 
 void
-Worker::setDestPoints( tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb )
+Worker::setDestPoints(
+    tk::UnsMesh::Coords* coords,
+    const tk::Fields& u,
+    CkCallback cb )
+// *****************************************************************************
+//  Set the data for the destination points to be collided
+//! \param[in] coords Pointer to the coordinate data for the destination mesh
+//! \param[in] u Pointer to the solution data for the destination mesh
+//! \param[in] cb Callback to call once this chare received all solution data
+// *****************************************************************************
 {
-  CkPrintf("Dest mesh index %i\n", thisIndex);
   m_coord = coords;
   m_u = const_cast< tk::Fields* >( &u );
-  doneCB = cb;
-  numSent = 0;
-  numReceived = 0;
+  m_donecb = cb;
+
+  // Initialize msg counters, callback, and background solution data
+  m_numsent = 0;
+  m_numreceived = 0;
   background();
+
+  // Send vertex data to the collision detection library
   collideVertices();
 }
 
@@ -74,8 +96,8 @@ Worker::background()
 //! \details This is useful to see what points did not receive solution.
 // *****************************************************************************
 {
-  tk::Fields& m_u = *(this->m_u);
-  for (std::size_t i=0; i<m_u.nunk(); ++i) m_u(i,0,0) = -1.0;
+  tk::Fields& u = *m_u;
+  for (std::size_t i = 0; i < u.nunk(); ++i) u(i,0,0) = -1.0;
 }
 
 void
@@ -84,22 +106,20 @@ Worker::collideVertices()
 // Pass vertex information to the collision detection library
 // *****************************************************************************
 {
-  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  auto nVertices = m_coord[0].size();
+  const tk::UnsMesh::Coords& coord = *m_coord;
+  auto nVertices = coord[0].size();
   std::size_t nBoxes = 0;
   std::vector< bbox3d > boxes( nVertices );
   std::vector< int > prio( nVertices );
   auto firstchunk = static_cast< int >( m_firstchunk );
   for (std::size_t i=0; i<nVertices; ++i) {
     boxes[nBoxes].empty();
-    boxes[nBoxes].add(CkVector3d(m_coord[0][i], m_coord[1][i], m_coord[2][i]));
+    boxes[nBoxes].add(CkVector3d(coord[0][i], coord[1][i], coord[2][i]));
     prio[nBoxes] = firstchunk;
     ++nBoxes;
   }
   CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
                     static_cast<int>(nBoxes), boxes.data(), prio.data() );
-  //CkPrintf("Dest chare %i(%i) contributed %lu points\n",
-  //    thisIndex, firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -108,25 +128,24 @@ Worker::collideTets() const
 // Pass tet information to the collision detection library
 // *****************************************************************************
 {
-  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
-  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  auto nBoxes = m_inpoel.size() / 4;
+  const std::vector< std::size_t >& inpoel = *m_inpoel;
+  const tk::UnsMesh::Coords& coord = *m_coord;
+  auto nBoxes = inpoel.size() / 4;
   std::vector< bbox3d > boxes( nBoxes );
   std::vector< int > prio( nBoxes );
+  auto firstchunk = static_cast< int >( m_firstchunk );
   for (std::size_t i=0; i<nBoxes; ++i) {
     boxes[i].empty();
-    prio[i] = m_firstchunk;
+    prio[i] = firstchunk;
     for (std::size_t j=0; j<4; ++j) {
       // Get index of the jth point of the ith tet
-      auto p = m_inpoel[i * 4 + j];
+      auto p = inpoel[i * 4 + j];
       // Add that point to the tets bounding box
-      boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
+      boxes[i].add(CkVector3d(coord[0][p], coord[1][p], coord[2][p]));
     }
   }
-  CollideBoxesPrio( collideHandle, m_firstchunk + thisIndex,
+  CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
                     static_cast<int>(nBoxes), boxes.data(), prio.data() );
-  //CkPrintf("Source chare %i(%i) contributed %lu tets\n",
-  //    thisIndex, m_firstchunk + thisIndex, nBoxes);
 }
 
 void
@@ -146,13 +165,12 @@ Worker::processCollisions(
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
-  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  tk::Fields& m_u = *(this->m_u);
+  const tk::UnsMesh::Coords& coord = *m_coord;
   int mychunk = thisIndex + m_firstchunk;
-  //CkPrintf("Worker %i received data for %i collisions\n", mychunk, nColl);
 
   std::vector< std::vector< PotentialCollision > >
     pColls( static_cast<std::size_t>(numchares) );
+
   // Separate potential collisions into lists based on the source mesh chare
   // that is involved in the potential collision
   for (int i = 0; i < nColl; i++) {
@@ -172,9 +190,9 @@ Worker::processCollisions(
       #pragma GCC diagnostic push
       #pragma GCC diagnostic ignored "-Wdeprecated-copy"
     #endif
-    pColl.point = { m_coord[0][pColl.dest_index],
-                    m_coord[1][pColl.dest_index],
-                    m_coord[2][pColl.dest_index] };
+    pColl.point = { coord[0][pColl.dest_index],
+                    coord[1][pColl.dest_index],
+                    coord[2][pColl.dest_index] };
     #if defined(STRICT_GNUC)
       #pragma GCC diagnostic pop
     #endif
@@ -185,7 +203,7 @@ Worker::processCollisions(
   // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
     auto I = static_cast< std::size_t >( i );
-    numSent++;
+    m_numsent++;
     proxy[i].determineActualCollisions( thisProxy,
                                         thisIndex,
                                         static_cast<int>(pColls[I].size()),
@@ -208,9 +226,8 @@ Worker::determineActualCollisions(
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
 {
-  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
-  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  tk::Fields& m_u = *(this->m_u);
+  const std::vector< std::size_t >& inpoel = *m_inpoel;
+  tk::Fields& u = *m_u;
   //CkPrintf("Source chare %i received data for %i potential collisions\n",
   //    thisIndex, nColls);
 
@@ -226,11 +243,11 @@ Worker::determineActualCollisions(
       SolutionData data;
       data.dest_index = colls[i].dest_index;
       auto e = colls[i].source_index;
-      const auto A = m_inpoel[e*4+0];
-      const auto B = m_inpoel[e*4+1];
-      const auto C = m_inpoel[e*4+2];
-      const auto D = m_inpoel[e*4+3];
-      data.solution = N[0]*m_u(A,0,0) + N[1]*m_u(B,0,0) + N[2]*m_u(C,0,0) + N[3]*m_u(D,0,0);
+      const auto A = inpoel[e*4+0];
+      const auto B = inpoel[e*4+1];
+      const auto C = inpoel[e*4+2];
+      const auto D = inpoel[e*4+3];
+      data.solution = N[0]*u(A,0,0) + N[1]*u(B,0,0) + N[2]*u(C,0,0) + N[3]*u(D,0,0);
       return_data.push_back(data);
     }
   }
@@ -251,18 +268,19 @@ Worker::transferSolution(
 //! \param[in] colls List of solutions
 // *****************************************************************************
 {
-  const tk::UnsMesh::Coords& m_coord = *(this->m_coord);
-  tk::Fields& m_u = *(this->m_u);
+  tk::Fields& u = *m_u;
   //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
   for (int i = 0; i < static_cast<int>(nPoints); i++) {
-    m_u(soln[i].dest_index,0,0) = soln[i].solution;
+    u(soln[i].dest_index,0,0) = soln[i].solution;
   }
-  numReceived++;
-  if (numReceived == numSent) {
-    doneCB.send();
+
+  // Inform the caller if we've received all solution data
+  m_numreceived++;
+  if (m_numreceived == m_numsent) {
+    m_donecb.send();
   }
 }
 
@@ -279,17 +297,19 @@ Worker::intet(const CkVector3d &point,
   //! \see Lohner, An Introduction to Applied CFD Techniques, Wiley, 2008
   // *****************************************************************************
 {
-  std::vector< std::size_t >& m_inpoel = *(this->m_inpoel);
+  const std::vector< std::size_t >& inpoel = *m_inpoel;
+  const tk::UnsMesh::Coords& coord = *m_coord;
+
   // Tetrahedron node indices
-  const auto A = m_inpoel[e*4+0];
-  const auto B = m_inpoel[e*4+1];
-  const auto C = m_inpoel[e*4+2];
-  const auto D = m_inpoel[e*4+3];
+  const auto A = inpoel[e*4+0];
+  const auto B = inpoel[e*4+1];
+  const auto C = inpoel[e*4+2];
+  const auto D = inpoel[e*4+3];
 
   // Tetrahedron node coordinates
-  const auto& x = (*m_coord)[0];
-  const auto& y = (*m_coord)[1];
-  const auto& z = (*m_coord)[2];
+  const auto& x = coord[0];
+  const auto& y = coord[1];
+  const auto& z = coord[2];
 
   // Point coordinates
   const auto& xp = point.x;

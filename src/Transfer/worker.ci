@@ -25,9 +25,6 @@ module worker {
 
     array [1D] Worker {
       entry Worker( int firstchunk, CkCallback cb );
-      entry void background();
-      entry void collideVertices();
-      entry void collideTets();
       entry void processCollisions( CProxy_Worker proxy,
                                     int nchares,
                                     int offset,
