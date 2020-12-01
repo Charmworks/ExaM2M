@@ -14,20 +14,7 @@
 #include "ExodusIIMeshReader.hpp"
 #include "LoadDistributor.hpp"
 
-#include "collidecharm.h"
-
 #include "NoWarning/exam2m.decl.h"
-
-#if defined(__clang__)
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wold-style-cast"
-#endif
-
-PUPbytes(Collision);
-
-#if defined(__clang__)
-  #pragma clang diagnostic pop
-#endif
 
 extern CProxy_Main mainProxy;
 
@@ -44,6 +31,15 @@ Driver::Driver()
 //  Constructor
 // *****************************************************************************
 {}
+
+Driver::Driver( CkMigrateMessage* m ) : CBase_Driver( m )
+// *****************************************************************************
+//  Migrate constructor: returning from a checkpoint
+//! \param[in] m Charm++ migrate message
+// *****************************************************************************
+{
+  std::cout << "Restarted from checkpoint\n";
+}
 
 void Driver::initMeshData( const std::string& file )
 // *****************************************************************************
@@ -140,15 +136,6 @@ Driver::updatenelems( std::size_t meshid, std::size_t nelem )
 
   // Tell the meshwriter the total number of chares
   mesh.m_meshwriter.nchare( mesh.m_nchare );
-}
-
-Driver::Driver( CkMigrateMessage* m ) : CBase_Driver( m )
-// *****************************************************************************
-//  Migrate constructor: returning from a checkpoint
-//! \param[in] m Charm++ migrate message
-// *****************************************************************************
-{
-  std::cout << "Restarted from checkpoint\n";
 }
 
 #include "NoWarning/driver.def.h"

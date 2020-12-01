@@ -27,7 +27,6 @@ using exam2m::CProxy_Driver;
 //! \brief Charm handle to the main proxy, facilitates call-back to finalize,
 //!    etc., must be in global scope.
 CProxy_Main mainProxy;
-CProxy_Driver driverProxy;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
