@@ -14,11 +14,10 @@ namespace exam2m {
   #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #endif
 
-void printCollisionHandler( [[maybe_unused]] void *param,
-                            int nColl,
-                            Collision *colls )
+void collisionHandler( [[maybe_unused]] void *param,
+                        int nColl,
+                        Collision *colls )
 {
-  Assert(CkMyPe() == 0);
   controllerProxy.ckLocalBranch()->distributeCollisions( nColl, colls );
 }
 
@@ -51,7 +50,7 @@ LibMain::LibMain(CkArgMsg* msg) {
   // TODO: Need to make sure this is actually correct
   CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
   collideHandle = CollideCreate(gridMap,
-      CollideSerialClient(printCollisionHandler, 0));
+      CollideSerialClient(collisionHandler, 0));
 }
 
 Controller::Controller() : current_chunk(0) {}
@@ -101,7 +100,7 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 
   // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
-    CkPrintf("Dest mesh chunk %i has %i\n", i, separated[i].size());
+    CkPrintf("Dest mesh chunk %i has %llu\n", i, separated[i].size());
     proxyMap[m_destmesh].m_proxy[i].processCollisions(
         proxyMap[m_sourcemesh].m_proxy,
         proxyMap[m_sourcemesh].m_nchare,
