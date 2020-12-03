@@ -3,6 +3,8 @@
 #include "Controller.hpp"
 #include "Worker.hpp"
 
+#include <cassert>
+
 namespace exam2m {
 
 /* readonly */ CProxy_Controller controllerProxy;
@@ -63,14 +65,14 @@ void Controller::broadcastMesh(CkArrayID p, MeshData d, CkCallback cb) {
 void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {
   m_destmesh = CkGroupID(p).idx;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
-  Assert(w);
+  assert(w);
   w->setDestPoints(coords, u, cb);
 }
 
 void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u) {
   m_sourcemesh = CkGroupID(p).idx;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
-  Assert(w);
+  assert(w);
   w->setSourceTets(inpoel, coords, u);
 }
 
@@ -100,7 +102,7 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 
   // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
-    CkPrintf("Dest mesh chunk %i has %llu\n", i, separated[i].size());
+    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[i].size());
     proxyMap[m_destmesh].m_proxy[i].processCollisions(
         proxyMap[m_sourcemesh].m_proxy,
         proxyMap[m_sourcemesh].m_nchare,
