@@ -29,7 +29,16 @@ class MeshData {
 };
 
 class Controller : public CBase_Controller {
+
+#if defined(STRICT_GNUC)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
 Controller_SDAG_CODE
+#if defined(STRICT_GNUC)
+  #pragma GCC diagnostic pop
+#endif
+
 private:
   std::unordered_map<CmiUInt8, MeshData> proxyMap;
   int current_chunk;
