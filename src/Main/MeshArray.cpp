@@ -14,7 +14,6 @@
 #include "Reorder.hpp"
 #include "DerivedData.hpp"
 
-#include "collidecharm.h"
 #include "Controller.hpp"
 
 PUPbytes(Collision);
