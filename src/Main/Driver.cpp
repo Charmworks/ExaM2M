@@ -52,7 +52,7 @@ void Driver::initMeshData( const std::string& file )
   std::map< int, std::vector< std::size_t > > bnode;
 
   MeshData mesh;
-  int meshid = m_meshes.size();
+  auto meshid = static_cast< unsigned short > ( m_meshes.size() );
 
   // Create ExodusII mesh file reader
   tk::ExodusIIMeshReader mr( file );

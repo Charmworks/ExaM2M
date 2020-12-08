@@ -7,14 +7,15 @@
 
 namespace exam2m {
 
-/* readonly */ CProxy_Controller controllerProxy;
-//! \brief Charm handle to the collision detection library instance
-/* readonly */ CollideHandle collideHandle;
-
 #if defined(__clang__)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wmissing-prototypes"
+  #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #endif
+
+/* readonly */ static CProxy_Controller controllerProxy;
+//! \brief Charm handle to the collision detection library instance
+/* readonly */ CollideHandle collideHandle;
 
 void collisionHandler( [[maybe_unused]] void *param,
                         int nColl,
@@ -31,6 +32,8 @@ void collisionHandler( [[maybe_unused]] void *param,
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
   #pragma clang diagnostic ignored "-Wunused-private-field"
+  #pragma clang diagnostic ignored "-Wvla"
+  #pragma clang diagnostic ignored "-Wvla-extension"
 #endif
 
 void addMesh(CkArrayID p, int elem, CkCallback cb) {
@@ -58,20 +61,20 @@ LibMain::LibMain(CkArgMsg* msg) {
 Controller::Controller() : current_chunk(0) {}
 
 void Controller::broadcastMesh(CkArrayID p, MeshData d, CkCallback cb) {
-  proxyMap[CkGroupID(p).idx] = d;
+  proxyMap[static_cast<std::size_t>(CkGroupID(p).idx)] = d;
   contribute(cb);
 }
 
 void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {
-  m_destmesh = CkGroupID(p).idx;
-  Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
+  m_destmesh = static_cast<std::size_t>(CkGroupID(p).idx);
+  Worker* w = proxyMap[m_destmesh].m_proxy[index].ckLocal();
   assert(w);
   w->setDestPoints(coords, u, cb);
 }
 
 void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u) {
-  m_sourcemesh = CkGroupID(p).idx;
-  Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
+  m_sourcemesh = static_cast<std::size_t>(CkGroupID(p).idx);
+  Worker* w = proxyMap[m_sourcemesh].m_proxy[index].ckLocal();
   assert(w);
   w->setSourceTets(inpoel, coords, u);
 }
@@ -87,16 +90,16 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 // *****************************************************************************
 {
   CkPrintf("Collisions found: %i\n", nColl);
-  std::size_t first = proxyMap[m_destmesh].m_firstchunk;
-  std::size_t nchare = proxyMap[m_destmesh].m_nchare;
+  auto first = static_cast<int>(proxyMap[m_destmesh].m_firstchunk);
+  auto nchare = static_cast<int>(proxyMap[m_destmesh].m_nchare);
   std::vector<Collision> separated[nchare];
 
   // Separate collisions based on the destination mesh chare they belong to
   for (int i = 0; i < nColl; i++) {
     if (colls[i].A.chunk >= first && colls[i].A.chunk < first + nchare) {
-      separated[colls[i].A.chunk - first].push_back(colls[i]);
+      separated[static_cast<std::size_t>(colls[i].A.chunk - first)].push_back(colls[i]);
     } else {
-      separated[colls[i].B.chunk - first].push_back(colls[i]);
+      separated[static_cast<std::size_t>(colls[i].B.chunk - first)].push_back(colls[i]);
     }
   }
 
@@ -107,11 +110,15 @@ Controller::distributeCollisions(int nColl, Collision* colls)
         proxyMap[m_sourcemesh].m_proxy,
         proxyMap[m_sourcemesh].m_nchare,
         proxyMap[m_sourcemesh].m_firstchunk,
-        separated[i].size(),
+        static_cast<int>(separated[i].size()),
         separated[i].data() );
   }
 }
 
-}
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif
+
+} // exam2m::
 
 #include "NoWarning/controller.def.h"

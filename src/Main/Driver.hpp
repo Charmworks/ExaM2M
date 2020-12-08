@@ -30,7 +30,7 @@ class Driver : public CBase_Driver {
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
   #endif
-  Driver_SDAG_CODE;
+  Driver_SDAG_CODE
   #if defined(__clang__)
     #pragma clang diagnostic pop
   #elif defined(STRICT_GNUC)

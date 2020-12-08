@@ -93,7 +93,7 @@ class Worker : public CBase_Worker {
 
   private:
     //! The ID of my first chunk (used for collision detection library)
-    std::size_t m_firstchunk;
+    int m_firstchunk;
     //! Pointer to element connectivity
     std::vector< std::size_t >* m_inpoel;
     //! Pointer to point coordinates
