@@ -50,6 +50,15 @@ class Controller : public CBase_Controller {
 
   public:
     Controller();
+    #if defined(__clang__)
+      #pragma clang diagnostic push
+      #pragma clang diagnostic ignored "-Wundefined-func-template"
+    #endif
+    explicit Controller( CkMigrateMessage* ) {}
+    #if defined(__clang__)
+      #pragma clang diagnostic pop
+    #endif
+
     void broadcastMesh(CkArrayID p, MeshData d, CkCallback cb);
     void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel,
                        tk::UnsMesh::Coords* coords, const tk::Fields& u);
