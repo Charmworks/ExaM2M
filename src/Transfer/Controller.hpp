@@ -29,27 +29,13 @@ class MeshData {
 };
 
 class Controller : public CBase_Controller {
-  #if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wunused-parameter"
-  #elif defined(STRICT_GNUC)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wunused-parameter"
-  #endif
-  Controller_SDAG_CODE
-  #if defined(__clang__)
-    #pragma clang diagnostic pop
-  #elif defined(STRICT_GNUC)
-    #pragma GCC diagnostic pop
-  #endif
+private:
+  std::unordered_map<CmiUInt8, MeshData> proxyMap;
+  int current_chunk;
+  CmiUInt8 m_sourcemesh, m_destmesh;
 
-  private:
-    std::unordered_map<CmiUInt8, MeshData> proxyMap;
-    int current_chunk;
-    CmiUInt8 m_sourcemesh, m_destmesh;
-
-  public:
-    Controller();
+public:
+  Controller();
     #if defined(__clang__)
       #pragma clang diagnostic push
       #pragma clang diagnostic ignored "-Wundefined-func-template"
@@ -58,13 +44,11 @@ class Controller : public CBase_Controller {
     #if defined(__clang__)
       #pragma clang diagnostic pop
     #endif
-
-    void broadcastMesh(CkArrayID p, MeshData d, CkCallback cb);
-    void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel,
-                       tk::UnsMesh::Coords* coords, const tk::Fields& u);
-    void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
-                       const tk::Fields& u, CkCallback cb);
-    void distributeCollisions(int nColl, Collision* colls);
+  void addMesh(CkArrayID p, int elem, CkCallback cb);
+  void setMesh(CkArrayID p, MeshData d);
+  void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u);
+  void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb);
+  void distributeCollisions(int nColl, Collision* colls);
 };
 
 }

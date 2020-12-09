@@ -60,9 +60,23 @@ LibMain::LibMain(CkArgMsg* msg) {
 
 Controller::Controller() : current_chunk(0) {}
 
-void Controller::broadcastMesh(CkArrayID p, MeshData d, CkCallback cb) {
+void Controller::addMesh(CkArrayID p, int elem, CkCallback cb) {
+  if (proxyMap.count(CkGroupID(p).idx) == 0) {
+    CkArrayOptions opts;
+    opts.bindTo(p);
+    opts.setNumInitial(elem);
+    MeshData mesh;
+    mesh.m_nchare = elem;
+    mesh.m_firstchunk = current_chunk;
+    mesh.m_proxy = CProxy_Worker::ckNew(p, mesh, cb, opts);
+    proxyMap[CkGroupID(p).idx] = mesh;
+    current_chunk += elem;
+  } else {
+    CkAbort("Uhoh...\n");
+  }
+}
+void Controller::setMesh( CkArrayID p, MeshData d ) {
   proxyMap[static_cast<std::size_t>(CkGroupID(p).idx)] = d;
-  contribute(cb);
 }
 
 void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {

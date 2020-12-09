@@ -22,9 +22,10 @@ module worker {
 
     class PotentialCollision;
     class SolutionData;
+    class MeshData;
 
     array [1D] Worker {
-      entry Worker( int firstchunk, CkCallback cb );
+      entry Worker( CkArrayID p, MeshData d, CkCallback cb );
       entry void processCollisions( CProxy_Worker proxy,
                                     int nchares,
                                     int offset,

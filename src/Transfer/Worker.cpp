@@ -13,6 +13,7 @@
 #include "Worker.hpp"
 #include "Reorder.hpp"
 #include "DerivedData.hpp"
+#include "Controller.hpp"
 
 #include "collidecharm.h"
 
@@ -29,11 +30,13 @@ PUPbytes(Collision);
 
 namespace exam2m {
 extern CollideHandle collideHandle;
+extern CProxy_Controller controllerProxy;
 }
 
 using exam2m::Worker;
 
-Worker::Worker( int firstchunk, CkCallback cb ) : m_firstchunk(firstchunk)
+Worker::Worker( CkArrayID p, MeshData d, CkCallback cb ) :
+    m_firstchunk(d.m_firstchunk)
 // *****************************************************************************
 //  Constructor
 //! \param[in] firstchunk Chunk ID used for the collision detection library
@@ -41,6 +44,8 @@ Worker::Worker( int firstchunk, CkCallback cb ) : m_firstchunk(firstchunk)
 // *****************************************************************************
 {
   CollideRegister(collideHandle, m_firstchunk + thisIndex);
+  d.m_proxy = thisProxy;
+  controllerProxy.ckLocalBranch()->setMesh( p, d );
   contribute(cb);
 }
 

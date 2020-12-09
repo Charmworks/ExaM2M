@@ -39,7 +39,7 @@ class Worker : public CBase_Worker {
 
   public:
     //! Constructor
-    explicit Worker( int firstchunk, CkCallback cb );
+    explicit Worker( CkArrayID p, MeshData d, CkCallback cb );
 
     #if defined(__clang__)
       #pragma clang diagnostic push
