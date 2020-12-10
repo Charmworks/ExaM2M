@@ -276,8 +276,6 @@ Worker::transferSolution(
   tk::Fields& u = *m_u;
   //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
-  // TODO: What if we get multiple solns for the same point (For example when a
-  // point in the dest exactly coincides with a point in the source)
   for (int i = 0; i < static_cast<int>(nPoints); i++) {
     u(soln[i].dest_index,0,0) = soln[i].solution;
   }

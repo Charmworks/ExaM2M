@@ -107,7 +107,7 @@ class Main : public CBase_Main {
     //! Entry method triggered when quiescence is detected
     void quiescence() {
       try {
-        CkAbort("Queiscence detected before tranfser completed\n");
+        CkAbort("Queiscence detected before transfer completed\n");
       } catch (...) { tk::processExceptionCharm(); }
     }
 

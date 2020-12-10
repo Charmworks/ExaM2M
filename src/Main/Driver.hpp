@@ -54,6 +54,7 @@ class Driver : public CBase_Driver {
       p | m_meshes;
       p | m_sourcemeshid;
       p | m_destmeshid;
+      p | m_timer;
       p | m_curriter;
       p | m_totaliter;
     }

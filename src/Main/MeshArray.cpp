@@ -87,8 +87,7 @@ MeshArray::MeshArray(
     m_u(i,0,0) = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
   }
 
-  // Tell the RTS that the MeshArray chares have been created and compute
-  // the total number of mesh points across whole problem
+  // Tell the RTS that the MeshArray chares have been created
   CkPrintf("Worker %i created\n", thisIndex);
   contribute( m_cbw.get< tag::workcreated >() );
 }
