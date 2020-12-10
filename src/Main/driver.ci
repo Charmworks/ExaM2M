@@ -29,6 +29,7 @@ module driver {
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
       entry [reductiontarget] void solutionfound();
+      entry void meshAdded();
 
       entry void run() {
         forall [meshid] (0:1,1) {
@@ -85,34 +86,46 @@ module driver {
         serial {
           CkPrintf("ExaM2M> Prepared all meshes, "
                    "starting mesh-to-mesh transfer\n");
-          m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
           exam2m::addMesh(
               m_meshes[m_sourcemeshid].m_mesharray,
               m_meshes[m_sourcemeshid].m_nchare,
-              CkCallback(
-                  CkIndex_MeshArray::transferSource(),
-                  m_meshes[m_sourcemeshid].m_mesharray));
+              CkCallback(CkIndex_Driver::meshAdded(), thisProxy));
           exam2m::addMesh(
               m_meshes[m_destmeshid].m_mesharray,
               m_meshes[m_destmeshid].m_nchare,
-              CkCallback(
-                  CkIndex_MeshArray::transferDest(),
-                  m_meshes[m_destmeshid].m_mesharray));
+              CkCallback(CkIndex_Driver::meshAdded(), thisProxy));
         }
 
-        // Solution has been transferred from source to destination, write out
-        // meshes and exit.
-        when solutionfound() {
+        when meshAdded(), meshAdded() {
           serial {
-            CkPrintf("ExaM2M> Library execution completed in: %f sec\n",
-                m_timer[0].dsec());
+            CkPrintf("Meshes added to ExaM2M library, beginning transfers\n");
+            m_timer.emplace_back();
           }
-          forall [meshid] (0:1,1) {
-            serial { m_meshes[meshid].m_mesharray.out(meshid); }
-            when written[meshid]() {}
+
+          for (m_curriter = 0; m_curriter < m_totaliter; m_curriter++) {
+            // Begin mesh to mesh transfer
+            serial {
+              m_timer[0].zero();
+              m_meshes[m_sourcemeshid].m_mesharray.transferSource();
+              m_meshes[m_destmeshid].m_mesharray.transferDest();
+            }
+            // Solution has been transferred from source to destination, write out
+            // meshes and exit.
+            when solutionfound() {
+              serial {
+                CkPrintf("ExaM2M> Library iteration %i completed in: %f sec\n",
+                    m_curriter, m_timer[0].dsec());
+              }
+            }
           }
+        }
+
+        // Write out final mesh data
+        forall [meshid] (0:1,1) {
+          serial { m_meshes[meshid].m_mesharray.out(meshid); }
+          when written[meshid]() {}
         }
         serial { mainProxy.finalize(); }
       };

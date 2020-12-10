@@ -26,7 +26,7 @@ extern tk::real g_virtualization;
 
 using exam2m::Driver;
 
-Driver::Driver()
+Driver::Driver() : m_totaliter(3)
 // *****************************************************************************
 //  Constructor
 // *****************************************************************************
