@@ -61,7 +61,8 @@ LibMain::LibMain(CkArgMsg* msg) {
 Controller::Controller() : current_chunk(0) {}
 
 void Controller::addMesh(CkArrayID p, int elem, CkCallback cb) {
-  if (proxyMap.count(CkGroupID(p).idx) == 0) {
+  auto id = static_cast<std::size_t>(CkGroupID(p).idx);
+  if (proxyMap.count(id) == 0) {
     CkArrayOptions opts;
     opts.bindTo(p);
     opts.setNumInitial(elem);
@@ -69,7 +70,7 @@ void Controller::addMesh(CkArrayID p, int elem, CkCallback cb) {
     mesh.m_nchare = elem;
     mesh.m_firstchunk = current_chunk;
     mesh.m_proxy = CProxy_Worker::ckNew(p, mesh, cb, opts);
-    proxyMap[CkGroupID(p).idx] = mesh;
+    proxyMap[id] = mesh;
     current_chunk += elem;
   } else {
     CkAbort("Uhoh...\n");
