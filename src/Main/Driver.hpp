@@ -54,6 +54,9 @@ class Driver : public CBase_Driver {
       p | m_meshes;
       p | m_sourcemeshid;
       p | m_destmeshid;
+      p | m_timer;
+      p | m_curriter;
+      p | m_totaliter;
     }
     //! \brief Pack/Unpack serialize operator|
     //! \param[in,out] p Charm++'s PUP::er serializer object reference
@@ -98,6 +101,10 @@ class Driver : public CBase_Driver {
     int m_destmeshid;
     //! Timers
     std::vector< tk::Timer > m_timer;
+    //! SDAG variable for iteration
+    int m_curriter;
+    //! Total number of iterations to run
+    int m_totaliter;
 };
 
 } // exam2m::

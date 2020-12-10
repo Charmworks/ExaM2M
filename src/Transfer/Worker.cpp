@@ -278,8 +278,6 @@ Worker::transferSolution( const std::vector<SolutionData>& soln )
   tk::Fields& u = *m_u;
   //CkPrintf("Dest worker %i received %lu solution points\n", thisIndex, nPoints);
 
-  // TODO: What if we get multiple solns for the same point (For example when a
-  // point in the dest exactly coincides with a point in the source)
   for (std::size_t i=0; i<soln.size(); ++i)
     for (std::size_t c=0; c<u.nprop(); ++c)
       u(soln[i].dest_index,c,0) = soln[i].solution[c];
