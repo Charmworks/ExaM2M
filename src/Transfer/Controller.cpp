@@ -13,7 +13,7 @@ namespace exam2m {
   #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 
-/* readonly */ static CProxy_Controller controllerProxy;
+/* readonly */ CProxy_Controller controllerProxy;
 //! \brief Charm handle to the collision detection library instance
 /* readonly */ CollideHandle collideHandle;
 
