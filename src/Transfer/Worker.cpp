@@ -238,7 +238,8 @@ Worker::determineActualCollisions(
 
   std::array< real, 4 > N;
   int numInTet = 0;
-  std::vector<SolutionData> return_data;
+  std::vector<SolutionData> soln;
+  auto ncomp = u.nprop();
 
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
@@ -252,25 +253,26 @@ Worker::determineActualCollisions(
       const auto B = inpoel[e*4+1];
       const auto C = inpoel[e*4+2];
       const auto D = inpoel[e*4+3];
-      data.solution = N[0]*u(A,0,0) + N[1]*u(B,0,0) + N[2]*u(C,0,0) + N[3]*u(D,0,0);
-      return_data.push_back(data);
+      data.solution.resize( ncomp );
+      for (std::size_t c=0; c<ncomp; ++c) {
+        data.solution[c] = N[0]*u(A,c,0) + N[1]*u(B,c,0)
+                         + N[2]*u(C,c,0) + N[3]*u(D,c,0);
+      }
+      soln.push_back(data);
     }
   }
   //CkPrintf("Source chare %i found %i/%i actual collisions\n",
   //    thisIndex, numInTet, nColls);
   // Send the solution data for the actual collisions back to the dest mesh
-  proxy[index].transferSolution(return_data.size(), return_data.data());
+  proxy[index].transferSolution( soln );
 }
 
 void
-Worker::transferSolution(
-    std::size_t nPoints,
-    SolutionData* soln )
+Worker::transferSolution( const std::vector<SolutionData>& soln )
 // *****************************************************************************
 //  Receive the solution data for destination mesh points that collided with the
 //  source mesh tetrahedrons
-//! \param[in] nPoints Number of solutions found
-//! \param[in] colls List of solutions
+//! \param[in] soln List of solutions
 // *****************************************************************************
 {
   tk::Fields& u = *m_u;
@@ -278,9 +280,9 @@ Worker::transferSolution(
 
   // TODO: What if we get multiple solns for the same point (For example when a
   // point in the dest exactly coincides with a point in the source)
-  for (int i = 0; i < static_cast<int>(nPoints); i++) {
-    u(soln[i].dest_index,0,0) = soln[i].solution;
-  }
+  for (std::size_t i=0; i<soln.size(); ++i)
+    for (std::size_t c=0; c<u.nprop(); ++c)
+      u(soln[i].dest_index,c,0) = soln[i].solution[c];
 
   // Inform the caller if we've received all solution data
   m_numreceived++;
