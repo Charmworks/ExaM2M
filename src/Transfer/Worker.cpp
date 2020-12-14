@@ -53,17 +53,20 @@ void
 Worker::setSourceTets(
     std::vector< std::size_t>* inpoel,
     tk::UnsMesh::Coords* coords,
-    const tk::Fields& u )
+    const tk::Fields& u,
+    CkCallback cb )
 // *****************************************************************************
 //  Set the data for the source tetrahedrons to be collided
 //! \param[in] inpoel Pointer to the connectivity data for the source mesh
 //! \param[in] coords Pointer to the coordinate data for the source mesh
 //! \param[in] u Pointer to the solution data for the source mesh
+//! \param[in] cb Callback to call once transfer is complete
 // *****************************************************************************
 {
   m_coord = coords;
   m_u = const_cast< tk::Fields* >( &u );
   m_inpoel = inpoel;
+  m_donecb.push_back( cb );
 
   // Send tetrahedron data to the collision detection library
   collideTets();
@@ -78,12 +81,12 @@ Worker::setDestPoints(
 //  Set the data for the destination points to be collided
 //! \param[in] coords Pointer to the coordinate data for the destination mesh
 //! \param[in] u Pointer to the solution data for the destination mesh
-//! \param[in] cb Callback to call once this chare received all solution data
+//! \param[in] cb Callback to call once transfer is complete
 // *****************************************************************************
 {
   m_coord = coords;
   m_u = const_cast< tk::Fields* >( &u );
-  m_donecb = cb;
+  m_donecb.push_back( cb );
 
   // Initialize msg counters, callback, and background solution data
   m_numsent = 0;
@@ -285,7 +288,7 @@ Worker::transferSolution( const std::vector<SolutionData>& soln )
   // Inform the caller if we've received all solution data
   m_numreceived++;
   if (m_numreceived == m_numsent) {
-    m_donecb.send();
+    for (const auto& c : m_donecb) c.send();
   }
 }
 

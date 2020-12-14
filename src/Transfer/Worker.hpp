@@ -55,7 +55,8 @@ class Worker : public CBase_Worker {
     //! Set the source mesh data
     void setSourceTets( std::vector< std::size_t>* inpoel,
                         tk::UnsMesh::Coords* coords,
-                        const tk::Fields& u );
+                        const tk::Fields& u,
+                        CkCallback cb );
 
     //! Set the destination mesh data
     void setDestPoints( tk::UnsMesh::Coords* coords,
@@ -105,8 +106,8 @@ class Worker : public CBase_Worker {
     int m_numsent;
     //! The number of messages received by the dest mesh
     int m_numreceived;
-    //! Called once the transfer is complete (m_numsent == m_numreceived)
-    CkCallback m_donecb;
+    //! All called once the transfer is complete (m_numsent == m_numreceived)
+    std::vector< CkCallback > m_donecb;
 
     //! Initialize dest mesh solution with background data
     void background();

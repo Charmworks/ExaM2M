@@ -238,7 +238,7 @@ void MeshArray::transferSource()
 //  Pass Mesh Data to m2m transfer library
 // *****************************************************************************
 {
-  exam2m::setSourceTets(thisProxy, thisIndex, &m_inpoel, &m_coord, m_u);
+  exam2m::setSourceTets(thisProxy, thisIndex, &m_inpoel, &m_coord, m_u, CkCallback(CkCallback::callbackType::ignore));
 }
 
 void MeshArray::transferDest()
