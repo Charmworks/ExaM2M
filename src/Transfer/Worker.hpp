@@ -55,13 +55,12 @@ class Worker : public CBase_Worker {
     //! Set the source mesh data
     void setSourceTets( std::vector< std::size_t>* inpoel,
                         tk::UnsMesh::Coords* coords,
-                        const tk::Fields& u,
-                        CkCallback cb );
+                        const tk::Fields& u );
 
     //! Set the destination mesh data
     void setDestPoints( tk::UnsMesh::Coords* coords,
                         const tk::Fields& u,
-                        CkCallback cb );
+                        const std::vector<CkCallback>& cb );
 
     //! Process potential collisions in the destination mesh
     void processCollisions( CProxy_Worker proxy,

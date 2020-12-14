@@ -8,8 +8,8 @@
 namespace exam2m {
 
 void addMesh(CkArrayID p, int elem, CkCallback cb);
-void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb);
-void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb);
+void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u);
+void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, const std::vector<CkCallback>& cbs);
 
 class LibMain : public CBase_LibMain {
 public:
@@ -47,9 +47,9 @@ class Controller : public CBase_Controller {
     void addMesh(CkArrayID p, int elem, CkCallback cb);
     void setMesh(CkArrayID p, MeshData d);
     void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel,
-                       tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb);
+                       tk::UnsMesh::Coords* coords, const tk::Fields& u);
     void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
-                       const tk::Fields& u, CkCallback cb);
+                       const tk::Fields& u, const std::vector<CkCallback>& cbs);
     void distributeCollisions(int nColl, Collision* colls);
 };
 
