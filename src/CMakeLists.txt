@@ -120,7 +120,7 @@ else()
   MESSAGE(STATUS "AMPIrun: " ${AMPI_RUN})
 endif()
 
-set(EXTRA_LINK_ARGS "-module collidecharm")
+set(EXTRA_LINK_ARGS "${EXTRA_LINK_ARGS} -module collidecharm")
 
 MESSAGE(STATUS "MPI C compiler: " ${MPI_C_COMPILER})
 MESSAGE(STATUS "MPI C++ compiler: " ${MPI_CXX_COMPILER})

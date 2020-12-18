@@ -229,6 +229,10 @@ if (CHARM_EXTRA_ARGS)
   MESSAGE(STATUS "Charm++ extra build args (CHARM_EXTRA_ARGS): ${CHARM_EXTRA_ARGS}")
 endif()
 
+if (CHARM_EXTRA_BUILD_OPTS)
+  MESSAGE(STATUS "Charm++ extra build options (CHARM_EXTRA_BUILD_OPTS): ${CHARM_EXTRA_BUILD_OPTS}")
+endif()
+
 # Compiler-specific settings
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")  # clang-specific settings
 
@@ -464,6 +468,7 @@ if (charm)
                   ${CHARM_SHARED}
                   ${CHARM_RELEASE_BUILD}
                   ${CHARM_ALPINE}
+                  ${CHARM_EXTRA_BUILD_OPTS}
                   -j${PROCESSOR_COUNT}
                   ${CHARM_CXXFLAGS}
     CONFIGURE_COMMAND ""
