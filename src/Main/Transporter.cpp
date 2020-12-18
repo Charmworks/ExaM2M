@@ -106,10 +106,14 @@ void Transporter::initMeshData( const std::string& file )
   // Create empty Workers, will hold chunk of the mesh
   mesh.m_worker = CProxy_Worker::ckNew();
 
+  // Create WorkerStats proxy
+  mesh.m_workerStats = CProxy_WorkerStats::ckNew(mesh.m_worker);
+
   // Create Partitioner nodegroup
   mesh.m_partitioner =
     CProxy_Partitioner::ckNew( file, cbp, cbm, cbw,
-       mesh.m_meshwriter, mesh.m_mapper, mesh.m_worker, bface, faces, bnode );
+       mesh.m_meshwriter, mesh.m_mapper, mesh.m_worker, mesh.m_workerStats,
+       bface, faces, bnode );
 
   m_meshes.push_back(mesh);
 }

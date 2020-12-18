@@ -19,6 +19,7 @@ using exam2m::Mapper;
 
 Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
                 const CProxy_Worker& worker,
+                const CProxy_WorkerStats& workerStats,
                 const tk::MapperCallback& cbm,
                 const tk::WorkerCallback& cbw,
                 const std::vector< std::size_t >& ginpoel,
@@ -29,6 +30,7 @@ Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
                 int nchare ) :
   m_meshwriter( meshwriter ),
   m_worker( worker ),
+  m_workerStats( workerStats ),
   m_cbm( cbm ),
   m_cbw( cbw ),
   m_ginpoel( ginpoel ),
@@ -234,7 +236,7 @@ Mapper::create()
 // *****************************************************************************
 {
   m_worker[ thisIndex ].insert( m_firstchunk, m_meshwriter, m_cbw,
-    m_ginpoel, m_coordmap, m_commap, m_bface, m_triinpoel, m_bnode, m_nchare );
+    m_ginpoel, m_coordmap, m_commap, m_bface, m_triinpoel, m_bnode, m_nchare, m_workerStats);
 
     contribute( m_cbm.get< tag::workinserted >() );
 

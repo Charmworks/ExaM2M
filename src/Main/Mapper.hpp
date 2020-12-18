@@ -32,6 +32,7 @@ class Mapper : public CBase_Mapper {
     //! Constructor
     explicit Mapper( const tk::CProxy_MeshWriter& meshwriter,
                      const CProxy_Worker& worker,
+                     const CProxy_WorkerStats& workerStats,
                      const tk::MapperCallback& cbm,
                      const tk::WorkerCallback& cbw,
                      const std::vector< std::size_t >& ginpoel,
@@ -103,6 +104,8 @@ class Mapper : public CBase_Mapper {
     tk::CProxy_MeshWriter m_meshwriter;
     //! Worker proxy
     CProxy_Worker m_worker;
+    //! Worker stats proxy
+    CProxy_WorkerStats m_workerStats;
     //! Charm++ callbacks associated to compile-time tags for Mapper
     tk::MapperCallback m_cbm;
     //! Charm++ callbacks associated to compile-time tags for Worker

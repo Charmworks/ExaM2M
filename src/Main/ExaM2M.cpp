@@ -36,6 +36,9 @@ CollideHandle collideHandle;
 
 CProxy_Transporter transporterProxy;
 
+//! \brief boolean to collect and print stats
+bool collectStats;
+
 #if defined(__clang__)
   #pragma clang diagnostic pop
 #endif
@@ -101,6 +104,13 @@ class Main : public CBase_Main {
       if (msg->argc > 3) {
         exam2m::g_virtualization = std::atof( msg->argv[3] );
       }
+
+      collectStats = false;
+      for(int i=0; i < msg->argc; i++) {
+        if(strcmp(msg->argv[i], "+printTetStats") == 0)
+          collectStats = true;
+      }
+
       delete msg;
       mainProxy = thisProxy;
       transporterProxy = CProxy_Transporter::ckNew( 0 );
@@ -112,7 +122,10 @@ class Main : public CBase_Main {
       CProxy_execute::ckNew();
 
       // TODO: Need to make sure this is actually correct
-      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
+      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.1, 0.1, 0.1));
+      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.2, 0.2, 0.2));
+      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.01, 0.01, 0.01));
+      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.05, 0.05, 0.05));
       collideHandle = CollideCreate(gridMap,
           CollideSerialClient(printCollisionHandler, 0));
 

@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.8.5)
 include(charm)
 
 add_library(Worker
-            Worker.cpp)
+            Worker.cpp
+            WorkerStats.cpp)
 
 target_include_directories(Worker PUBLIC
                            ${PROJECT_SOURCE_DIR}
@@ -17,14 +18,12 @@ target_include_directories(Worker PUBLIC
                            ${HIGHWAYHASH_INCLUDE_DIRS}
 )
 
-set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME exam2m_worker
-                      PUBLIC_HEADER "Controller.hpp")
+set_target_properties(Worker PROPERTIES LIBRARY_OUTPUT_NAME exam2m_worker)
 
 INSTALL(TARGETS Worker
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 addCharmModule( "worker" "Worker" )

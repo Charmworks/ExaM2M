@@ -21,6 +21,7 @@ module mapper {
     array [1D] Mapper {
       entry Mapper( const tk::CProxy_MeshWriter& meshwriter,
                     const CProxy_Worker& worker,
+                    const CProxy_WorkerStats& workerStats,
                     const tk::MapperCallback& cbm,
                     const tk::WorkerCallback& cbw,
                     const std::vector< std::size_t >& ginpoel,
