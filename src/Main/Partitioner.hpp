@@ -45,6 +45,7 @@ class Partitioner : public CBase_Partitioner {
                  const tk::CProxy_MeshWriter& meshwriter,
                  const CProxy_Mapper& mapper,
                  const CProxy_Worker& w,
+                 const CProxy_WorkerStats& workerStats,
                  const std::map< int, std::vector< std::size_t > >& bface,
                  const std::map< int, std::vector< std::size_t > >& faces,
                  const std::map< int, std::vector< std::size_t > >& bnode );
@@ -125,6 +126,8 @@ class Partitioner : public CBase_Partitioner {
     CProxy_Mapper m_mapper;
     //! Worker proxy
     CProxy_Worker m_worker;
+    //! Worker Stats proxy
+    CProxy_WorkerStats m_workerStats;
     //! Element connectivity of this compute node's mesh chunk (global ids)
     std::vector< std::size_t > m_ginpoel;
     //! Coordinates of mesh nodes of this compute node's mesh chunk

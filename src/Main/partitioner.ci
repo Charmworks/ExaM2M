@@ -30,6 +30,7 @@ module partitioner {
         const tk::CProxy_MeshWriter& meshwriter,
         const CProxy_Mapper& mapper,
         const CProxy_Worker& worker,
+        const CProxy_WorkerStats& workerStats,
         const std::map< int, std::vector< std::size_t > >& bface,
         const std::map< int, std::vector< std::size_t > >& faces,
         const std::map< int, std::vector< std::size_t > >& bnode );

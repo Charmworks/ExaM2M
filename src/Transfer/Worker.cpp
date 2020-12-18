@@ -13,7 +13,7 @@
 #include "Worker.hpp"
 #include "Reorder.hpp"
 #include "DerivedData.hpp"
-
+#include <assert.h>
 #include "collidecharm.h"
 
 #if defined(__clang__)
@@ -28,6 +28,25 @@ PUPbytes(Collision);
 #endif
 
 extern CollideHandle collideHandle;
+extern bool collectStats;
+
+namespace exam2m {
+  // Custom reduction type for getting min and max of bboxes along x,y,z
+  CkReduction::reducerType bboxDimMinMaxType;
+
+  // Custom reduction type for getting a histogram of bbox dims along x,y,z
+  CkReduction::reducerType bboxDimHistType;
+
+  // Function to register bboxDimMinMaxType
+  void registerBboxDimMinMaxType(void) {
+    bboxDimMinMaxType = CkReduction::addReducer(getBboxDimMinMax);
+  }
+
+  // Function to register bboxDimHistType
+  void registerBboxDimHistType(void) {
+    bboxDimHistType = CkReduction::addReducer(getBboxDimHist);
+  }
+}
 
 using exam2m::Worker;
 
@@ -41,7 +60,9 @@ Worker::Worker(
   const std::map< int, std::vector< std::size_t > >& bface,
   const std::vector< std::size_t >& triinpoel,
   const std::map< int, std::vector< std::size_t > >& bnode,
-  int nc ) :
+  int nc,
+  const CProxy_WorkerStats& workerStats
+ ) :
   m_firstchunk( firstchunk ),
   m_cbw( cbw ),
   m_nchare( nc ),
@@ -51,6 +72,7 @@ Worker::Worker(
   m_t( 0.0 ),
   m_lastDumpTime( -std::numeric_limits< tk::real >::max() ),  
   m_meshwriter( meshwriter ),
+  m_workerStats( workerStats),
   m_el( tk::global2local( ginpoel ) ),     // fills m_inpoel, m_gid, m_lid
   m_coord( setCoord( coordmap ) ),
   m_nodeCommMap(),
@@ -181,28 +203,110 @@ Worker::collideVertices()
 }
 
 void
-Worker::collideTets() const
+Worker::collideTets()
 // *****************************************************************************
 // Pass tet information to the collision detection library
 // *****************************************************************************
 {
   auto nBoxes = m_inpoel.size() / 4;
-  std::vector< bbox3d > boxes( nBoxes );
+
+  tetBoxes.resize(nBoxes);
   std::vector< int > prio( nBoxes );
+
   for (std::size_t i=0; i<nBoxes; ++i) {
-    boxes[i].empty();
+    tetBoxes[i].empty();
     prio[i] = m_firstchunk;
     for (std::size_t j=0; j<4; ++j) {
       // Get index of the jth point of the ith tet
       auto p = m_inpoel[i * 4 + j];
       // Add that point to the tets bounding box
-      boxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
+      tetBoxes[i].add(CkVector3d(m_coord[0][p], m_coord[1][p], m_coord[2][p]));
     }
   }
+
+  if(collectStats) // Get histogram of tet bounding boxes
+    getTetsHistStats();
+
   CollideBoxesPrio( collideHandle, m_firstchunk + thisIndex,
-                    static_cast<int>(nBoxes), boxes.data(), prio.data() );
-  //CkPrintf("Source chare %i(%i) contributed %lu tets\n",
-  //    thisIndex, m_firstchunk + thisIndex, nBoxes);
+                    static_cast<int>(nBoxes), tetBoxes.data(), prio.data() );
+
+  if(!collectStats) // clear vectors to store space
+    tetBoxes.clear();
+}
+
+void
+Worker::getTetsHistStats()
+// *****************************************************************************
+// Begin computation of tet bbox histogram starting with reduction to find
+// global min, max by contributing local min, max to custom reduction function 
+// *****************************************************************************
+{
+
+  // find local min and max
+  double minMax[6], len;
+  minMax[0] = minMax[3] = tetBoxes[0].getBound(0);
+  minMax[1] = minMax[4] = tetBoxes[0].getBound(1);
+  minMax[2] = minMax[5] = tetBoxes[0].getBound(2);
+
+  // local max and min elements
+  for(int i=1; i < tetBoxes.size(); i++) {
+    for(int j=0; j < 3; j++) {
+      len = tetBoxes[i].getBound(j);
+      if(len < minMax[j])
+        minMax[j] = len;
+      if(len > minMax[j + 3])
+        minMax[j + 3] = len;
+     }
+  }
+  // Reduction to determine global min & max
+  CkCallback cbMinMax(CkIndex_WorkerStats::receiveMinMaxData(NULL), m_workerStats);
+  contribute(6 * sizeof(double), minMax, bboxDimMinMaxType, cbMinMax);
+}
+
+void
+Worker::computeHist(
+  double bucketSize[3],
+  double min[3],
+  double max[3],
+  int numBuckets)
+// *****************************************************************************
+// Continue computation of tet bbox histogram starting with reduction to find
+// global histogram by contributing local histogram to custom reduction function 
+// *****************************************************************************
+{
+  int quotient;
+  int arraySize = 1 + 3 * numBuckets;
+  int *hist = new int[arraySize];
+
+  std::fill(hist, hist + arraySize, 0);
+  hist[0] = numBuckets;
+
+  for(int i=0; i < tetBoxes.size(); i++) {
+    for(int j=0; j < 3; j++) {
+      quotient = (int)((tetBoxes[i].getBound(j) - min[j])/bucketSize[j]);
+      assert(quotient >= 0);
+      if(quotient >= numBuckets) {
+        assert(fabs(tetBoxes[i].getBound(j) - max[j]) < std::numeric_limits<double>::epsilon());
+        quotient -= 1;
+      }
+      assert(quotient < numBuckets);
+      hist[1 + j*numBuckets + quotient]++;
+    }
+  }
+
+  tetBoxes.clear(); // clear vectors to store space
+
+  // compute local histogram
+  int sum[3] = {0,0,0};
+  for(int j=0; j < 3; j++) {
+    for(int i=0; i < numBuckets; i++) {
+      sum[j] += hist[1 + j*numBuckets + i];
+    }
+  }
+
+  // Reduction to compute global histogram
+  CkCallback histCb(CkIndex_WorkerStats::receiveHistData(NULL), m_workerStats);
+  contribute(arraySize * sizeof(int), hist, bboxDimHistType, histCb);
 }
 
 void

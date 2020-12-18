@@ -49,7 +49,8 @@ class Worker : public CBase_Worker {
         const std::map< int, std::vector< std::size_t > >& bface,
         const std::vector< std::size_t >& triinpoel,
         const std::map< int, std::vector< std::size_t > >& bnode,
-        int nc );
+        int nc,
+        const CProxy_WorkerStats& workerStatsProxy);
 
     #if defined(__clang__)
       #pragma clang diagnostic push
@@ -90,7 +91,7 @@ class Worker : public CBase_Worker {
     void collideVertices();
 
     //! Contribute tet information to the collision detection library
-    void collideTets() const;
+    void collideTets();
 
     //! Process potential collisions in the destination mesh
     void processCollisions( CProxy_Worker proxy,
@@ -108,6 +109,9 @@ class Worker : public CBase_Worker {
     //! Transfer the interpolated solution data back to destination mesh
     void transferSolution( std::size_t nPoints, SolutionData* soln );
 
+    //! Compute local histogram and contribute to global histogram reduction
+    void computeHist(double bucketSize[3], double min[3], double max[3], int numBuckets);
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function
@@ -122,6 +126,7 @@ class Worker : public CBase_Worker {
       p | m_t;
       p | m_lastDumpTime;
       p | m_meshwriter;
+      p | m_workerStats;
       p | m_el;
       if (p.isUnpacking()) {
         m_inpoel = std::get< 0 >( m_el );
@@ -166,6 +171,8 @@ class Worker : public CBase_Worker {
     tk::real m_lastDumpTime;
     //! Mesh writer proxy
     tk::CProxy_MeshWriter m_meshwriter;
+    //! WorkerStats proxy for stats collection
+    CProxy_WorkerStats m_workerStats;
     //! \brief Elements of the mesh chunk we operate on
     //! \details Initialized by the constructor. The first vector is the element
     //!   connectivity (local IDs), the second vector is the global node IDs of
@@ -199,11 +206,45 @@ class Worker : public CBase_Worker {
     //! Set mesh coordinates based on coordinates map
     tk::UnsMesh::Coords setCoord( const tk::UnsMesh::CoordMap& coordmap );
 
+    //! bboxes created out of tets
+    std::vector< bbox3d > tetBoxes;
+
     //! Determine if a point is in a tet
     bool intet(const CkVector3d &point,
                std::size_t e,
                std::array< real, 4 >& N) const;
+
+    //! Compute local min,max and contribute to global min,max reduction.
+    //! This function is used for computing the tet bbox histogram
+    void getTetsHistStats();
 };
+
+//! Chare used as reduction target for printing stats from Worker
+class WorkerStats : public CBase_WorkerStats {
+  CProxy_Worker m_workerProxy;
+  int numBuckets;
+  double bucketSize[3], minData[3];
+
+  public:
+    WorkerStats(CProxy_Worker workerProxy);
+    void receiveMinMaxData(CkReductionMsg *msg);
+    void receiveHistData(CkReductionMsg *msg);
+    void pup(PUP::er& p) {
+      p | m_workerProxy;
+      p | numBuckets;
+      PUParray(p, bucketSize, 3);
+      PUParray(p, minData, 3);
+    }
+};
+
+void registerBboxDimMinMaxType(void);
+void registerBboxDimHistType(void);
+
+// Custom reduction function for getting global bbox min, max
+CkReductionMsg *getBboxDimMinMax(int nMsg, CkReductionMsg **msgs);
+
+// Custom reduction function for getting histogram of bbox dimensions
+CkReductionMsg *getBboxDimHist(int nMsg, CkReductionMsg **msgs);
 
 } // exam2m::
 
