@@ -115,10 +115,11 @@ module transporter {
         // meshes and exit.
         when solutionFound() {
           serial {
-            CkPrintf("Narrow phase detection complete in: %f sec\n",
+            CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
                 m_timer[1].dsec());
-            CkPrintf("Total transfer time: %f sec\nWriting solution ... ",
+            CkPrintf("ExaM2M> Total transfer time: %f sec\n",
                 m_timer[0].dsec());
+            CkPrintf("ExaM2M> Writing solution ...\n");
           }
           forall [meshid] (0:1,1) {
             serial { m_meshes[meshid].m_worker.out(meshid); }
@@ -127,7 +128,7 @@ module transporter {
             }
           }
         }
-        serial { CkPrintf("done."); CkExit(); }
+        serial { CkPrintf("ExaM2M> Completed transfer and output, exiting ExaM2M now\n"); CkExit(); }
       };
     }
 
