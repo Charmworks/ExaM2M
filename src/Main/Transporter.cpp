@@ -165,7 +165,7 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
 //! \param[in] colls The list of potential collisions
 // *****************************************************************************
 {
-  std::cout << "Collisions found: " << nColl << std::endl;
+  std::cout << "ExaM2M> Collisions found: " << nColl << std::endl;
   auto first = m_meshes[m_destmeshid].m_firstchunk;
   auto nchare = static_cast< std::size_t >( m_meshes[m_destmeshid].m_nchare );
   std::vector< std::vector< Collision > > separated( nchare );
