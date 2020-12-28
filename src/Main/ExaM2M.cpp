@@ -121,11 +121,10 @@ class Main : public CBase_Main {
       // global-scope data.
       CProxy_execute::ckNew();
 
-      // TODO: Need to make sure this is actually correct
-      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.1, 0.1, 0.1));
-      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.2, 0.2, 0.2));
-      //CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.01, 0.01, 0.01));
-      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.05, 0.05, 0.05));
+      double gridX = 0.008, gridY = 0.008, gridZ = 0.008;
+
+      CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
+      CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
       collideHandle = CollideCreate(gridMap,
           CollideSerialClient(printCollisionHandler, 0));
 
