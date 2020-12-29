@@ -121,7 +121,7 @@ class Main : public CBase_Main {
       // global-scope data.
       CProxy_execute::ckNew();
 
-      double gridX = 0.008, gridY = 0.008, gridZ = 0.008;
+      double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
 
       CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
