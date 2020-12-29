@@ -106,7 +106,7 @@ module transporter {
               m_timer[0].dsec());
           m_timer.emplace_back();
           distributeCollisions(nColls, colls);
-          CkPrintf("ExaM2M> Serial processing complete in: %f sec\n",
+          CkPrintf("ExaM2M> Serial collision processing complete in: %f sec\n",
               m_timer[1].dsec());
           m_timer[1].zero();
         }
@@ -117,7 +117,7 @@ module transporter {
           serial {
             CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
                 m_timer[1].dsec());
-            CkPrintf("ExaM2M> Total transfer time: %f sec\n",
+            CkPrintf("ExaM2M> M2M total transfer complete in: %f sec\n",
                 m_timer[0].dsec());
             CkPrintf("ExaM2M> Writing solution ...\n");
           }
