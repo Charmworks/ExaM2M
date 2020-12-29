@@ -30,6 +30,7 @@ PUPbytes(Collision);
 #endif
 
 extern CProxy_Main mainProxy;
+extern CollideHandle collideHandle;
 
 namespace exam2m {
 
@@ -192,6 +193,12 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
         static_cast<int>(separated[I].size()),
         separated[I].data() );
   }
+}
+
+void Transporter::collisionResults(CkReductionMsg *msg) {
+  Collision *colls = (Collision *)msg->getData();
+  int nColl = msg->getSize()/sizeof(Collision);
+  processCollisions(nColl, colls);
 }
 
 #include "NoWarning/transporter.def.h"

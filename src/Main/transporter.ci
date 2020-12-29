@@ -27,6 +27,8 @@ module transporter {
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
+      entry [reductiontarget] void collisionDone();
+      entry [reductiontarget] void collisionResults(CkReductionMsg *msg);
       entry void processCollisions( int nColls, Collision colls[nColls] );
       entry void solutionFound();
 
@@ -99,12 +101,18 @@ module transporter {
           m_meshes[m_destmeshid].m_worker.collideVertices();
           CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
         }
-        // Collision detection library found collisions, now distribute them to
-        // the workers for further checking and solution transfer.
-        when processCollisions(int nColls, Collision colls[nColls]) serial {
+        when collisionDone() serial {
           CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n",
               m_timer[0].dsec());
           m_timer.emplace_back();
+          CollideGetResults(collideHandle);
+        }
+        // Collision detection library found collisions, now distribute them to
+        // the workers for further checking and solution transfer.
+        when processCollisions(int nColls, Collision colls[nColls]) serial {
+          CkPrintf("ExaM2M> Collision result collection complete in: %f sec\n",
+              m_timer[1].dsec());
+          m_timer[1].zero();
           distributeCollisions(nColls, colls);
           CkPrintf("ExaM2M> Serial processing complete in: %f sec\n",
               m_timer[1].dsec());

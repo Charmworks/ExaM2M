@@ -63,6 +63,8 @@ class Transporter : public CBase_Transporter {
     friend void operator|( PUP::er& p, Transporter& t ) { t.pup(p); }
     //@}
 
+    void collisionResults(CkReductionMsg *msg);
+
   private:
     //! Add mesh by filename
     void initMeshData( const std::string& file );

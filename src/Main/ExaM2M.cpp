@@ -21,6 +21,7 @@
 #include "collidecharm.h"
 
 using exam2m::CProxy_Transporter;
+using exam2m::CkIndex_Transporter;
 
 #if defined(__clang__)
   #pragma clang diagnostic push
@@ -126,7 +127,9 @@ class Main : public CBase_Main {
       CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
       collideHandle = CollideCreate(gridMap,
-          CollideSerialClient(printCollisionHandler, 0));
+          CollideSerialClient(
+            CkCallback(CkIndex_Transporter::collisionDone(), transporterProxy),
+            CkCallback(CkIndex_Transporter::collisionResults(NULL), transporterProxy) ));
 
     } catch (...) { tk::processExceptionCharm(); }
 
