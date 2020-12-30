@@ -102,8 +102,14 @@ class Main : public CBase_Main {
       m_mesh_complete( 0 ),
       m_driver( msg->argc, msg->argv )
     {
-      if (msg->argc > 3) {
-        exam2m::g_virtualization = std::atof( msg->argv[3] );
+
+      double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
+      if(msg->argc > 3) {
+        gridX = gridY = gridZ = std::atof(msg->argv[3]);
+      }
+
+      if (msg->argc > 4) {
+        exam2m::g_virtualization = std::atof( msg->argv[4] );
       }
 
       collectStats = false;
@@ -121,8 +127,6 @@ class Main : public CBase_Main {
       // necessary so that this->execute() can access already migrated
       // global-scope data.
       CProxy_execute::ckNew();
-
-      double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
 
       CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
