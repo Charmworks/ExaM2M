@@ -125,8 +125,15 @@ class Main : public CBase_Main {
 
       CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
+
+#if 1
+      CProxy_collResultMgr resultMgr = CProxy_collResultMgr::ckNew();
+      collideHandle = CollideCreate(gridMap,
+          CollideDistributedClient(CkCallback(CkIndex_collResultMgr::getCollResultUpdates(NULL), resultMgr)));
+#else
       collideHandle = CollideCreate(gridMap,
           CollideSerialClient(printCollisionHandler, 0));
+#endif
 
     } catch (...) { tk::processExceptionCharm(); }
 
@@ -180,6 +187,17 @@ class Main : public CBase_Main {
     int m_signal;                       //!< Used to set signal handlers
     int m_mesh_complete;                //!< Used to delay exit until all done
     exam2m::ExaM2MDriver m_driver;      //!< Driver
+};
+
+class collResultMgr : public CBase_collResultMgr {
+  public:
+    collResultMgr() {}
+    void getCollResultUpdates(CkDataMsg *msg) {
+      Collision *colls = (Collision *)msg->getData();
+      int nColl = msg->getSize()/sizeof(Collision);
+      std::cout << "ExaM2M> " << CkMyPe() << "  Collisions found: " << nColl << std::endl;
+      delete msg;
+    }
 };
 
 //! \brief Charm++ chare execute

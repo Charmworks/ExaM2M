@@ -34,6 +34,11 @@ mainmodule exam2m {
     entry void quiescence();
   }
 
+  group collResultMgr {
+    entry collResultMgr();
+    entry void getCollResultUpdates(CkDataMsg *msg);
+  }
+
   chare [migratable] execute { entry execute(); }
 
 }
