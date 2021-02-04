@@ -6,7 +6,7 @@
 	url = https://github.com/trilinos/Trilinos.git
 [submodule "external/src/hdf5"]
 	path = external/src/hdf5
-	url = https://github.com/live-clones/hdf5.git
+	url = https://github.com/HDFGroup/hdf5.git
 [submodule "external/src/netcdf"]
 	path = external/src/netcdf
 	url = https://github.com/Unidata/netcdf-c.git
