@@ -22,6 +22,10 @@ module worker {
 
     class PotentialCollision;
     class SolutionData;
+    class CProxy_WorkerStats;
+
+    initnode void registerBboxDimMinMaxType(void);
+    initnode void registerBboxDimHistType(void);
 
     array [1D] Worker {
       entry Worker( int firstchunk,
@@ -33,7 +37,8 @@ module worker {
                     const std::map< int, std::vector< std::size_t > >& bface,
                     const std::vector< std::size_t >& triinpoel,
                     const std::map< int, std::vector< std::size_t > >& bnode,
-                    int nchare );
+                    int nchare,
+                    const CProxy_WorkerStats& workerStatsProxy );
       entry void out( int meshid );
       entry void written();
       entry void background();
@@ -50,7 +55,14 @@ module worker {
                                             PotentialCollision colls[nColls] );
       entry void transferSolution( std::size_t nPoints,
                                    SolutionData soln[nPoints] );
-    }
+      entry void computeHist(double bucketSize[3], double min[3], double max[3], int numBuckets);
+    };
+
+    chare WorkerStats {
+      entry WorkerStats(CProxy_Worker workerProxy);
+      entry [reductiontarget] void receiveMinMaxData(CkReductionMsg *msg);
+      entry [reductiontarget] void receiveHistData(CkReductionMsg *msg);
+    };
 
   } // exam2m::
 

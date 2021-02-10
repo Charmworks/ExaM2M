@@ -82,6 +82,7 @@ class Transporter : public CBase_Transporter {
       tk::CProxy_MeshWriter m_meshwriter;  //!< Mesh writer nodegroup proxy
       CProxy_Mapper m_mapper;              //!< Mapper array proxy
       CProxy_Worker m_worker;              //!< Worker array proxy
+      CProxy_WorkerStats m_workerStats;    //!< Worker stats array proxy
       std::size_t m_nelem;                 //!< Total number of elements in mesh
       std::size_t m_npoin;                 //!< Total number of nodes in mesh
       void pup( PUP::er& p ) {
@@ -91,6 +92,7 @@ class Transporter : public CBase_Transporter {
         p | m_meshwriter;
         p | m_mapper;
         p | m_worker;
+        p | m_workerStats;
         p | m_nelem;
         p | m_npoin;
       }
