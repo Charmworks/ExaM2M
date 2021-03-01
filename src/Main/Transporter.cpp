@@ -39,11 +39,14 @@ extern tk::real g_virtualization;
 
 using exam2m::Transporter;
 
-Transporter::Transporter() : m_currentchunk(0)
+Transporter::Transporter(CProxy_collisionResultMgr cProxy)
 // *****************************************************************************
 //  Constructor
 // *****************************************************************************
-{}
+{
+  m_currentchunk = 0;
+  collisionMgrProxy = cProxy;
+}
 
 void Transporter::initMeshData( const std::string& file )
 // *****************************************************************************
@@ -193,5 +196,8 @@ Transporter::distributeCollisions(int nColl, Collision* colls)
         separated[I].data() );
   }
 }
+
+
+
 
 #include "NoWarning/transporter.def.h"

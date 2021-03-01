@@ -16,11 +16,13 @@
 #include "ExaM2MDriver.hpp"
 #include "ProcessException.hpp"
 
+#include "MeshData.hpp"
 #include "NoWarning/exam2m.decl.h"
 
 #include "collidecharm.h"
 
 using exam2m::CProxy_Transporter;
+using exam2m::CProxy_collisionResultMgr;
 
 #if defined(__clang__)
   #pragma clang diagnostic push
@@ -35,6 +37,7 @@ CProxy_Main mainProxy;
 CollideHandle collideHandle;
 
 CProxy_Transporter transporterProxy;
+
 
 //! \brief boolean to collect and print stats
 bool collectStats;
@@ -101,8 +104,13 @@ class Main : public CBase_Main {
       m_mesh_complete( 0 ),
       m_driver( msg->argc, msg->argv )
     {
-      if (msg->argc > 3) {
-        exam2m::g_virtualization = std::atof( msg->argv[3] );
+      double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
+      if(msg->argc > 3) {
+        gridX = gridY = gridZ = std::atof(msg->argv[3]);
+      }
+
+      if (msg->argc > 4) {
+        exam2m::g_virtualization = std::atof( msg->argv[4] );
       }
 
       collectStats = false;
@@ -113,6 +121,8 @@ class Main : public CBase_Main {
 
       delete msg;
       mainProxy = thisProxy;
+      CProxy_collisionResultMgr collisionMgrProxy = CProxy_collisionResultMgr::ckNew();
+
       transporterProxy = CProxy_Transporter::ckNew( 0 );
       transporterProxy.run();
       // Fire up an asynchronous execute object, which when created at some
@@ -121,12 +131,13 @@ class Main : public CBase_Main {
       // global-scope data.
       CProxy_execute::ckNew();
 
-      double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
-
       CkPrintf("ExaM2M> Collision Detection Library gridMap: %lf X %lf X %lf\n", gridX, gridY, gridZ);
       CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
+
       collideHandle = CollideCreate(gridMap,
-          CollideSerialClient(printCollisionHandler, 0));
+          CollideDistributedClient(
+            CkCallback(exam2m::CkIndex_collisionResultMgr::recvCollResults(NULL),
+                        collisionMgrProxy)));
 
     } catch (...) { tk::processExceptionCharm(); }
 
@@ -181,6 +192,7 @@ class Main : public CBase_Main {
     int m_mesh_complete;                //!< Used to delay exit until all done
     exam2m::ExaM2MDriver m_driver;      //!< Driver
 };
+
 
 //! \brief Charm++ chare execute
 //! \details By the time this object is constructed, the Charm++ runtime system

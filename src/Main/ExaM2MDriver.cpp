@@ -12,6 +12,7 @@
 
 #include "ExaM2MDriver.hpp"
 
+#include "MeshData.hpp"
 #include "NoWarning/transporter.decl.h"
 
 using exam2m::ExaM2MDriver;

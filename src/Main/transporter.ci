@@ -13,11 +13,17 @@ module transporter {
   extern module worker;
 
   include "collidecharm.h";
-
   namespace exam2m {
+    include "MeshData.hpp";
+
+    group collisionResultMgr {
+      entry collisionResultMgr();
+      entry void recvCollResults(CkDataMsg *msg);
+      entry void recv_meshData(std::vector <MeshData> meshes);
+    }
 
     chare [migratable] Transporter {
-      entry Transporter();
+      entry Transporter(CProxy_collisionResultMgr cProxy);
       entry void addMesh( const std::string& meshfile );
       entry [reductiontarget] void loaded( std::size_t nelem );
       entry [reductiontarget] void distributed();
@@ -94,6 +100,11 @@ module transporter {
           m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
+
+          // Send m_meshes to collisionResultMgr
+          collisionMgrProxy.recv_meshData(m_meshes);
+
+
           m_meshes[m_destmeshid].m_worker.background();
           m_meshes[m_sourcemeshid].m_worker.collideTets();
           m_meshes[m_destmeshid].m_worker.collideVertices();
