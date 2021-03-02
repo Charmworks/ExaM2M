@@ -33,6 +33,7 @@ module transporter {
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
+      entry [reductiontarget] void broadPhaseDone();
       entry void solutionFound();
 
       entry void run() {
@@ -125,8 +126,8 @@ module transporter {
         // meshes and exit.
         when solutionFound() {
           serial {
-            CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
-                m_timer[1].dsec());
+            //CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
+            //    m_timer[1].dsec());
             CkPrintf("ExaM2M> M2M total transfer complete in: %f sec\n",
                 m_timer[0].dsec());
             CkPrintf("ExaM2M> Writing solution ...\n");

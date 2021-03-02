@@ -30,14 +30,18 @@ class collisionMgr : public CBase_collisionMgr {
   public:
     collisionMgr() {}
     void recvCollResults(CkDataMsg *msg) {
+
+      CkCallback cb(CkReductionTarget(Transporter, broadPhaseDone), transporterProxy);
+      contribute(0, 0, CkReduction::nop, cb);
+
       Collision *colls = (Collision *)msg->getData();
       int nColl = msg->getSize()/sizeof(Collision);
       CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
 
-      if(!m_meshes.empty())
-        distributeCollisions(nColl, colls);
-      else
-        CkAbort("collisionMgr: mesh data hasn't been received yet!");
+      //if(!m_meshes.empty())
+      //  distributeCollisions(nColl, colls);
+      //else
+      //  CkAbort("collisionMgr: mesh data hasn't been received yet!");
     }
 
     void recv_meshData(std::vector< MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId) {
@@ -92,6 +96,10 @@ class Transporter : public CBase_Transporter {
     //! \param[in,out] t Transporter object reference
     friend void operator|( PUP::er& p, Transporter& t ) { t.pup(p); }
     //@}
+
+    void broadPhaseDone() {
+       CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n", m_timer[0].dsec());
+    }
 
   private:
     //! Add mesh by filename
