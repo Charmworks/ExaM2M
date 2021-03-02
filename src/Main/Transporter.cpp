@@ -39,7 +39,7 @@ extern tk::real g_virtualization;
 
 using exam2m::Transporter;
 
-Transporter::Transporter(CProxy_collisionResultMgr cProxy)
+Transporter::Transporter(CProxy_collisionMgr cProxy)
 // *****************************************************************************
 //  Constructor
 // *****************************************************************************
@@ -158,8 +158,10 @@ Transporter::Transporter( CkMigrateMessage* m ) : CBase_Transporter( m )
   std::cout << "Restarted from checkpoint\n";
 }
 
+using exam2m::collisionMgr;
+
 void
-Transporter::distributeCollisions(int nColl, Collision* colls)
+collisionMgr::distributeCollisions(int nColl, Collision* colls)
 // *****************************************************************************
 //  Called when all potential collisions have been found, and now need to be
 //  destributed to the chares in the destination mesh to determine actual

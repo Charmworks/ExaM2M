@@ -23,20 +23,32 @@
 
 namespace exam2m{
 
-class collisionResultMgr : public CBase_collisionResultMgr {
+class collisionMgr : public CBase_collisionMgr {
     std::vector <MeshData> m_meshes;
+    std::size_t m_sourcemeshid;
+    std::size_t m_destmeshid;
   public:
-    collisionResultMgr() {}
+    collisionMgr() {}
     void recvCollResults(CkDataMsg *msg) {
       Collision *colls = (Collision *)msg->getData();
       int nColl = msg->getSize()/sizeof(Collision);
       CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
+
+      if(!m_meshes.empty())
+        distributeCollisions(nColl, colls);
+      else
+        CkAbort("collisionMgr: mesh data hasn't been received yet!");
     }
-    void recv_meshData(std::vector< MeshData> meshes) {
+
+    void recv_meshData(std::vector< MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId) {
       m_meshes = meshes;
-
-
+      m_sourcemeshid = srcMeshId;
+      m_destmeshid = destMeshId;
     }
+
+    //! Take collision list and distribute it to the destination mesh
+    //! to start testing for actual collisions
+    void distributeCollisions( int nColl, Collision* colls );
 };
 
 //! Transporter drives time integration
@@ -57,7 +69,7 @@ class Transporter : public CBase_Transporter {
 
   public:
     //! Constructor
-    explicit Transporter(CProxy_collisionResultMgr cProxy);
+    explicit Transporter(CProxy_collisionMgr cProxy);
 
     //! Migrate constructor: returning from a checkpoint
     explicit Transporter( CkMigrateMessage* m );
@@ -89,10 +101,6 @@ class Transporter : public CBase_Transporter {
     //! number of elements and number of chares in the associated mesh
     void updatenelems( std::size_t meshid, std::size_t nelems );
 
-    //! Take collision list and distribute it to the destination mesh
-    //! to start testing for actual collisions
-    void distributeCollisions( int nColl, Collision* colls );
-
     //! Mesh Data for all meshes
     std::vector< MeshData > m_meshes;
     //! Chunk counter for ensuring unique chunk number for each mesh
@@ -104,7 +112,7 @@ class Transporter : public CBase_Transporter {
     //! Timers
     std::vector< tk::Timer > m_timer;
 
-    CProxy_collisionResultMgr collisionMgrProxy;
+    CProxy_collisionMgr collisionMgrProxy;
 };
 
 } // exam2m::

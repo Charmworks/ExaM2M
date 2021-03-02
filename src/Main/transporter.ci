@@ -16,14 +16,14 @@ module transporter {
   namespace exam2m {
     include "MeshData.hpp";
 
-    group collisionResultMgr {
-      entry collisionResultMgr();
+    group collisionMgr {
+      entry collisionMgr();
       entry void recvCollResults(CkDataMsg *msg);
-      entry void recv_meshData(std::vector <MeshData> meshes);
+      entry void recv_meshData(std::vector <MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId);
     }
 
     chare [migratable] Transporter {
-      entry Transporter(CProxy_collisionResultMgr cProxy);
+      entry Transporter(CProxy_collisionMgr cProxy);
       entry void addMesh( const std::string& meshfile );
       entry [reductiontarget] void loaded( std::size_t nelem );
       entry [reductiontarget] void distributed();
@@ -33,7 +33,6 @@ module transporter {
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
-      entry void processCollisions( int nColls, Collision colls[nColls] );
       entry void solutionFound();
 
       entry void run() {
@@ -101,26 +100,26 @@ module transporter {
           m_sourcemeshid = 0;
           m_destmeshid = 1;
 
-          // Send m_meshes to collisionResultMgr
-          collisionMgrProxy.recv_meshData(m_meshes);
-
+          // Send m_meshes to collisionMgr
+          collisionMgrProxy.recv_meshData(m_meshes, m_sourcemeshid, m_destmeshid);
 
           m_meshes[m_destmeshid].m_worker.background();
           m_meshes[m_sourcemeshid].m_worker.collideTets();
           m_meshes[m_destmeshid].m_worker.collideVertices();
           CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
         }
+
         // Collision detection library found collisions, now distribute them to
         // the workers for further checking and solution transfer.
-        when processCollisions(int nColls, Collision colls[nColls]) serial {
-          CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n",
-              m_timer[0].dsec());
-          m_timer.emplace_back();
-          distributeCollisions(nColls, colls);
-          CkPrintf("ExaM2M> Serial collision processing complete in: %f sec\n",
-              m_timer[1].dsec());
-          m_timer[1].zero();
-        }
+        //when processCollisions(int nColls, Collision colls[nColls]) serial {
+        //  CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n",
+        //      m_timer[0].dsec());
+        //  m_timer.emplace_back();
+        //  distributeCollisions(nColls, colls);
+        //  CkPrintf("ExaM2M> Serial collision processing complete in: %f sec\n",
+        //      m_timer[1].dsec());
+        //  m_timer[1].zero();
+        //}
 
         // Solution has been transferred from source to destination, write out
         // meshes and exit.

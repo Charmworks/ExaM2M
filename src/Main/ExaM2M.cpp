@@ -22,7 +22,7 @@
 #include "collidecharm.h"
 
 using exam2m::CProxy_Transporter;
-using exam2m::CProxy_collisionResultMgr;
+using exam2m::CProxy_collisionMgr;
 
 #if defined(__clang__)
   #pragma clang diagnostic push
@@ -75,12 +75,6 @@ tk::real g_virtualization = 0.0;
   #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #endif
 
-void printCollisionHandler( [[maybe_unused]] void *param,
-                            int nColl,
-                            Collision *colls )
-{
-  transporterProxy.processCollisions( nColl, colls );
-}
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -121,9 +115,9 @@ class Main : public CBase_Main {
 
       delete msg;
       mainProxy = thisProxy;
-      CProxy_collisionResultMgr collisionMgrProxy = CProxy_collisionResultMgr::ckNew();
+      CProxy_collisionMgr collisionMgrProxy = CProxy_collisionMgr::ckNew();
 
-      transporterProxy = CProxy_Transporter::ckNew( 0 );
+      transporterProxy = CProxy_Transporter::ckNew(collisionMgrProxy);
       transporterProxy.run();
       // Fire up an asynchronous execute object, which when created at some
       // future point in time will call back to this->execute(). This is
@@ -136,7 +130,7 @@ class Main : public CBase_Main {
 
       collideHandle = CollideCreate(gridMap,
           CollideDistributedClient(
-            CkCallback(exam2m::CkIndex_collisionResultMgr::recvCollResults(NULL),
+            CkCallback(exam2m::CkIndex_collisionMgr::recvCollResults(NULL),
                         collisionMgrProxy)));
 
     } catch (...) { tk::processExceptionCharm(); }
