@@ -27,6 +27,7 @@ class collisionMgr : public CBase_collisionMgr {
     std::vector <MeshData> m_meshes;
     std::size_t m_sourcemeshid;
     std::size_t m_destmeshid;
+    CProxy_Transporter transporterProxy;
   public:
     collisionMgr() {}
     void recvCollResults(CkDataMsg *msg) {
@@ -36,18 +37,19 @@ class collisionMgr : public CBase_collisionMgr {
 
       Collision *colls = (Collision *)msg->getData();
       int nColl = msg->getSize()/sizeof(Collision);
-      CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
+      //CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
 
-      //if(!m_meshes.empty())
-      //  distributeCollisions(nColl, colls);
-      //else
-      //  CkAbort("collisionMgr: mesh data hasn't been received yet!");
+      if(!m_meshes.empty())
+        distributeCollisions(nColl, colls);
+      else
+        CkAbort("collisionMgr: mesh data hasn't been received yet!");
     }
 
-    void recv_meshData(std::vector< MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId) {
+    void recv_meshData(std::vector< MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId, CProxy_Transporter tProxy) {
       m_meshes = meshes;
       m_sourcemeshid = srcMeshId;
       m_destmeshid = destMeshId;
+      transporterProxy = tProxy;
     }
 
     //! Take collision list and distribute it to the destination mesh
