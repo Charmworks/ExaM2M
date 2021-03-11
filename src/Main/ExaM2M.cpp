@@ -117,7 +117,7 @@ class Main : public CBase_Main {
       mainProxy = thisProxy;
       CProxy_collisionMgr collisionMgrProxy = CProxy_collisionMgr::ckNew();
 
-      transporterProxy = CProxy_Transporter::ckNew(collisionMgrProxy);
+      transporterProxy = CProxy_Transporter::ckNew(collisionMgrProxy, 0);
       transporterProxy.run();
       // Fire up an asynchronous execute object, which when created at some
       // future point in time will call back to this->execute(). This is
