@@ -35,7 +35,7 @@ module transporter {
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
       entry [reductiontarget] void broadPhaseDone();
-      entry void solutionFound();
+      //entry void solutionFound();
 
       entry void run() {
         forall [meshid] (0:1,1) {
@@ -108,7 +108,7 @@ module transporter {
           m_meshes[m_destmeshid].m_worker.background();
           m_meshes[m_sourcemeshid].m_worker.collideTets();
           m_meshes[m_destmeshid].m_worker.collideVertices();
-          CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
+          //CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
         }
 
         // Collision detection library found collisions, now distribute them to
@@ -125,22 +125,22 @@ module transporter {
 
         // Solution has been transferred from source to destination, write out
         // meshes and exit.
-        when solutionFound() {
-          serial {
-            //CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
-            //    m_timer[1].dsec());
-            CkPrintf("ExaM2M> M2M total transfer complete in: %f sec\n",
-                m_timer[0].dsec());
-            CkPrintf("ExaM2M> Writing solution ...\n");
-          }
-          forall [meshid] (0:1,1) {
-            serial { m_meshes[meshid].m_worker.out(meshid); }
-            when written[meshid]() serial {
-              CkPrintf("ExaM2M> Written field output for mesh %i\n", meshid);
-            }
-          }
-        }
-        serial { CkPrintf("ExaM2M> Completed transfer and output, exiting ExaM2M now\n"); CkExit(); }
+        //when solutionFound() {
+        //  serial {
+        //    //CkPrintf("ExaM2M> Narrow phase detection complete in: %f sec\n",
+        //    //    m_timer[1].dsec());
+        //    CkPrintf("ExaM2M> M2M total transfer complete in: %f sec\n",
+        //        m_timer[0].dsec());
+        //    CkPrintf("ExaM2M> Writing solution ...\n");
+        //  }
+        //  forall [meshid] (0:1,1) {
+        //    serial { m_meshes[meshid].m_worker.out(meshid); }
+        //    when written[meshid]() serial {
+        //      CkPrintf("ExaM2M> Written field output for mesh %i\n", meshid);
+        //    }
+        //  }
+        //}
+        //serial { CkPrintf("ExaM2M> Completed transfer and output, exiting ExaM2M now\n"); }
       };
     }
 

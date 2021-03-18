@@ -35,14 +35,14 @@ class collisionMgr : public CBase_collisionMgr {
       CkCallback cb(CkReductionTarget(Transporter, broadPhaseDone), transporterProxy);
       contribute(0, 0, CkReduction::nop, cb);
 
-      Collision *colls = (Collision *)msg->getData();
-      int nColl = msg->getSize()/sizeof(Collision);
-      //CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
+      //Collision *colls = (Collision *)msg->getData();
+      //int nColl = msg->getSize()/sizeof(Collision);
+      ////CmiPrintf("[%d] Received %d collision results\n", CmiMyPe(), nColl);
 
-      if(!m_meshes.empty())
-        distributeCollisions(nColl, colls);
-      else
-        CkAbort("collisionMgr: mesh data hasn't been received yet!");
+      //if(!m_meshes.empty())
+      //  distributeCollisions(nColl, colls);
+      //else
+      //  CkAbort("collisionMgr: mesh data hasn't been received yet!");
     }
 
     void recv_meshData(std::vector< MeshData> meshes, std::size_t srcMeshId, std::size_t destMeshId, CProxy_Transporter tProxy) {
@@ -80,6 +80,8 @@ class Transporter : public CBase_Transporter {
     //! Migrate constructor: returning from a checkpoint
     explicit Transporter( CkMigrateMessage* m );
 
+    void written() {}
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function
@@ -101,6 +103,7 @@ class Transporter : public CBase_Transporter {
 
     void broadPhaseDone() {
        CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n", m_timer[0].dsec());
+       CkExit();
     }
 
   private:
