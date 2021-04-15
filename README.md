@@ -13,6 +13,6 @@ apt-get install libhdf5-dev libhdf5-openmpi-dev libnetcdf-mpi-dev
 ## Build
 ```
 git clone --recurse-submodules https://github.com/Charmworks/ExaM2M.git
-mkdir external/build; cd external/build; cmake .. && make; cd -
+cd ExaM2M; mkdir external/build; cd external/build; cmake .. && make; cd -
 mkdir build; cd build; cmake ../src && make && ./charmrun +p2 Main/exam2m
 ```
