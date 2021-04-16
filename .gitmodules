@@ -19,3 +19,6 @@
 [submodule "external/src/hdf5-ampi"]
 	path = external/src/hdf5-ampi
 	url = http://charm.cs.illinois.edu/gerrit/hdf5-ampi
+[submodule "external/src/lapack"]
+	path = external/src/lapack
+	url = https://github.com/Reference-LAPACK/lapack.git
