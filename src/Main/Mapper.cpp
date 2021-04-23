@@ -18,9 +18,9 @@
 using exam2m::Mapper;
 
 Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
-                const CProxy_Worker& worker,
+                const CProxy_MeshArray& mesharray,
                 const tk::MapperCallback& cbm,
-                const tk::WorkerCallback& cbw,
+                const tk::MeshCallback& cbw,
                 const std::vector< std::size_t >& ginpoel,
                 const tk::UnsMesh::CoordMap& coordmap,
                 const std::map< int, std::vector< std::size_t > >& bface,
@@ -28,7 +28,7 @@ Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
                 const std::map< int, std::vector< std::size_t > >& bnode,
                 int nchare ) :
   m_meshwriter( meshwriter ),
-  m_worker( worker ),
+  m_mesharray( mesharray ),
   m_cbm( cbm ),
   m_cbw( cbw ),
   m_ginpoel( ginpoel ),
@@ -65,7 +65,7 @@ Mapper::Mapper( const tk::CProxy_MeshWriter& meshwriter,
 }
 
 void
-Mapper::setup( std::size_t npoin, int firstchunk )
+Mapper::setup( std::size_t npoin )
 // *****************************************************************************
 // Setup chare mesh boundary node communication map
 //! \param[in] npoin Total number of mesh points in mesh
@@ -76,7 +76,6 @@ Mapper::setup( std::size_t npoin, int firstchunk )
   // node id, bounded between [0...npoin-1], inclusive. To compute the bin id,
   // we use the chunksize which always gives a chare id that is (strictly)
   // lower than the number of chares.
-  m_firstchunk = firstchunk;
   auto N = static_cast< std::size_t >( m_nchare );
   std::size_t chunksize = npoin / N;
 
@@ -233,7 +232,7 @@ Mapper::create()
 //  Create worker chare array elements
 // *****************************************************************************
 {
-  m_worker[ thisIndex ].insert( m_firstchunk, m_meshwriter, m_cbw,
+  m_mesharray[ thisIndex ].insert( m_meshwriter, m_cbw,
     m_ginpoel, m_coordmap, m_commap, m_bface, m_triinpoel, m_bnode, m_nchare );
 
     contribute( m_cbm.get< tag::workinserted >() );

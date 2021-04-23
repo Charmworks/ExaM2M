@@ -1,14 +1,14 @@
 // *****************************************************************************
 /*!
-  \file      src/NoWarning/transporter.def.h
+  \file      src/NoWarning/mesharray.def.h
   \copyright 2020 Charmworks, Inc.
              All rights reserved. See the LICENSE file for details.
-  \brief     Include transporter.def.h with turning off specific compiler
+  \brief     Include mesharray.def.h with turning off specific compiler
              warnings
 */
 // *****************************************************************************
-#ifndef nowarning_transporter_def_h
-#define nowarning_transporter_def_h
+#ifndef nowarning_mesharray_def_h
+#define nowarning_mesharray_def_h
 
 #include "Macro.hpp"
 
@@ -23,7 +23,10 @@
   #pragma clang diagnostic ignored "-Wconversion"
   #pragma clang diagnostic ignored "-Wsign-compare"
   #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+  #pragma clang diagnostic ignored "-Wold-style-cast"
   #pragma clang diagnostic ignored "-Wextra-semi"
+  #pragma clang diagnostic ignored "-Wmissing-prototypes"
+  #pragma clang diagnostic ignored "-Wunused-variable"
   #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
   #pragma clang diagnostic ignored "-Wshadow"
 #elif defined(STRICT_GNUC)
@@ -36,7 +39,7 @@
   #pragma GCC diagnostic ignored "-Wsuggest-attribute=noreturn"
 #endif
 
-#include "../Main/transporter.def.h"
+#include "../Main/mesharray.def.h"
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -44,4 +47,4 @@
   #pragma GCC diagnostic pop
 #endif
 
-#endif // nowarning_transporter_def_h
+#endif // nowarning_mesharray_def_h

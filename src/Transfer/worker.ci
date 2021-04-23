@@ -22,23 +22,10 @@ module worker {
 
     class PotentialCollision;
     class SolutionData;
+    class MeshData;
 
     array [1D] Worker {
-      entry Worker( int firstchunk,
-                    const tk::CProxy_MeshWriter& meshwriter,
-                    const tk::WorkerCallback& cbw,
-                    const std::vector< std::size_t >& ginpoel,
-                    const tk::UnsMesh::CoordMap& coordmap,
-                    const tk::CommMaps& commap,
-                    const std::map< int, std::vector< std::size_t > >& bface,
-                    const std::vector< std::size_t >& triinpoel,
-                    const std::map< int, std::vector< std::size_t > >& bnode,
-                    int nchare );
-      entry void out( int meshid );
-      entry void written();
-      entry void background();
-      entry void collideVertices();
-      entry void collideTets();
+      entry Worker( CkArrayID p, MeshData d, CkCallback cb );
       entry void processCollisions( CProxy_Worker proxy,
                                     int nchares,
                                     int offset,

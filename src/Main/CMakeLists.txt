@@ -20,8 +20,8 @@ include(ConfigExecutable)
 add_executable(${EXAM2M_EXECUTABLE}
                Mapper.cpp
                Partitioner.cpp
-               Transporter.cpp
-               ExaM2MDriver.cpp
+               Driver.cpp
+               MeshArray.cpp
                ExaM2M.cpp)
 
 config_executable(${EXAM2M_EXECUTABLE})
@@ -30,6 +30,7 @@ target_include_directories(${EXAM2M_EXECUTABLE} PUBLIC
                            ${PROJECT_SOURCE_DIR}
                            ${PROJECT_SOURCE_DIR}/IO
                            ${PROJECT_SOURCE_DIR}/Mesh
+                           ${PROJECT_SOURCE_DIR}/Transfer
                            ${PROJECT_SOURCE_DIR}/Main
                            ${PROJECT_BINARY_DIR}/IO
                            ${PROJECT_BINARY_DIR}/Main
@@ -45,10 +46,17 @@ target_link_libraries(${EXAM2M_EXECUTABLE}
                       Worker
                       ${SEACASExodus_LIBRARIES}
                       ${Zoltan2_LIBRARIES}
+                      ${LAPACKE_LIBRARIES}    # only if MKL not found
+                      ${MKL_INTERFACE_LIBRARY}
+                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
+                      ${MKL_CORE_LIBRARY}
+                      ${MKL_INTERFACE_LIBRARY}
+                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
                       ${LIBCXX_LIBRARIES}     # only for static link with libc++
                       ${LIBCXXABI_LIBRARIES}) # only for static link with libc++
 
 addCharmModule( "mapper" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "partitioner" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "transporter" "${EXAM2M_EXECUTABLE}" )
+addCharmModule( "mesharray" "${EXAM2M_EXECUTABLE}" )
+addCharmModule( "driver" "${EXAM2M_EXECUTABLE}" )
 addCharmModule( "exam2m" "${EXAM2M_EXECUTABLE}" )

@@ -75,6 +75,7 @@ set(ENABLE_NETCDF ON CACHE BOOL "Enable NetCDF")
 set(ENABLE_TRILINOS ON CACHE BOOL "Enable Trilinos")
 set(ENABLE_BRIGAND ON CACHE BOOL "Enable Brigand")
 set(ENABLE_HIGHWAYHASH ON CACHE BOOL "Enable HighwayHash")
+set(ENABLE_LAPACK ON CACHE BOOL "Enable LAPACK")
 
 # Charm++
 if (ENABLE_CHARM)
@@ -383,12 +384,33 @@ if (ENABLE_HIGHWAYHASH)
   endif()
 endif()
 
+# BLAS and LAPACK
+if (ENABLE_LAPACK)
+  set(lapack "lapack")
+  if (NOT MATHLIB)        # set default
+    set(MATHLIB mkl)
+  endif()
+  if (MATHLIB STREQUAL mkl OR MATHLIB STREQUAL MKL)
+    find_package(MKL)     # Prefer MKL if found
+  endif()
+  if(MKL_FOUND)
+    set(lapack "")
+  else()
+    find_package(BLAS)
+    find_package(LAPACKE)
+    if(LAPACKE_FOUND)
+      set(lapack "")
+    endif()
+  endif()
+endif()
+
 # Get compiler flags (CFLAGS, CXXFLAGS, FFLAGS) independent of CMAKE_BUILD_TYPE
 # and echo flags that will be passed to all TPL builds
 include(get_compiler_flags)
 get_compiler_flags()
 
-set(tpls2build ${charm} ${hdf5} ${netcdf} ${trilinos} ${brigand} ${highwayhash})
+set(tpls2build ${charm} ${hdf5} ${netcdf} ${trilinos} ${brigand} ${highwayhash}
+               ${lapack})
 
 list(LENGTH tpls2build ntpl)
 list(SORT tpls2build)
@@ -529,6 +551,33 @@ if (netcdf)
                       --prefix=${CMAKE_INSTALL_PREFIX}
     BUILD_IN_SOURCE 1
     LOG_DOWNLOAD 1
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    LOG_INSTALL 1
+  )
+endif()
+
+#### lapack ####################################################################
+# http://www.netlib.org/lapack
+if(BUILD_SHARED_LIBS AND NOT ENABLE_AMPI)
+  set(LAPACK_BUILD_SHARED_LIBS on)
+elseif()
+  set(LAPACK_BUILD_SHARED_LIBS off)
+endif()
+if (lapack)
+  ExternalProject_Add(
+    lapack
+    PREFIX lapack
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/lapack
+    CMAKE_ARGS -D CMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+               -D CMAKE_Fortran_COMPILER:PATH=${UNDERLYING_Fortran_COMPILER}
+               -D CMAKE_Fortran_FLAGS:STRING=${FFLAGS}
+               -D BUILD_TESTING:BOOL=OFF
+               -D BUILD_SHARED_LIBS:BOOL=${LAPACK_BUILD_SHARED_LIBS}
+               -D LAPACKE:BOOL=ON
+               -D CMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+               ${MACOSX_RPATH}
+    DOWNLOAD_COMMAND ""
     LOG_CONFIGURE 1
     LOG_BUILD 1
     LOG_INSTALL 1

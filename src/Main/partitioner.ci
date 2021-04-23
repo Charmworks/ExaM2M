@@ -26,10 +26,10 @@ module partitioner {
         const std::string& meshfilename,
         const tk::PartitionerCallback& cbp,
         const tk::MapperCallback& cbm,
-        const tk::WorkerCallback& cbw,
+        const tk::MeshCallback& cbw,
         const tk::CProxy_MeshWriter& meshwriter,
         const CProxy_Mapper& mapper,
-        const CProxy_Worker& worker,
+        const CProxy_MeshArray& mesharray,
         const std::map< int, std::vector< std::size_t > >& bface,
         const std::map< int, std::vector< std::size_t > >& faces,
         const std::map< int, std::vector< std::size_t > >& bnode );

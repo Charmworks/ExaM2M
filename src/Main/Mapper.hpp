@@ -31,9 +31,9 @@ class Mapper : public CBase_Mapper {
   public:
     //! Constructor
     explicit Mapper( const tk::CProxy_MeshWriter& meshwriter,
-                     const CProxy_Worker& worker,
+                     const CProxy_MeshArray& mesharray,
                      const tk::MapperCallback& cbm,
-                     const tk::WorkerCallback& cbw,
+                     const tk::MeshCallback& cbw,
                      const std::vector< std::size_t >& ginpoel,
                      const tk::UnsMesh::CoordMap& coordmap,
                      const std::map< int, std::vector< std::size_t > >& bface,
@@ -53,7 +53,7 @@ class Mapper : public CBase_Mapper {
     #endif
 
     //! Setup chare mesh boundary node communication map
-    void setup( std::size_t npoin, int firstchunk );
+    void setup( std::size_t npoin );
     //! \brief Incoming query for a list mesh nodes for which this chare
     //!   compiles communication maps
     void query( int fromch, const tk::AllCommMaps& bnd );
@@ -97,16 +97,14 @@ class Mapper : public CBase_Mapper {
     //@}
 
   private:
-    //! First chunk ID for collision detection
-    int m_firstchunk;
     //! MeshWriter proxy
     tk::CProxy_MeshWriter m_meshwriter;
     //! Worker proxy
-    CProxy_Worker m_worker;
+    CProxy_MeshArray m_mesharray;
     //! Charm++ callbacks associated to compile-time tags for Mapper
     tk::MapperCallback m_cbm;
     //! Charm++ callbacks associated to compile-time tags for Worker
-    tk::WorkerCallback m_cbw;
+    tk::MeshCallback m_cbw;
     //! Tetrtahedron element connectivity of our chunk of the mesh (global ids)
     std::vector< std::size_t > m_ginpoel;
     //! Coordinates associated to global node IDs of our mesh chunk

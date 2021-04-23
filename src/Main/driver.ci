@@ -1,23 +1,24 @@
 // *****************************************************************************
 /*!
-  \file      src/Main/transporter.ci
+  \file      src/Main/driver.ci
   \copyright 2020 Charmworks, Inc.
              All rights reserved. See the LICENSE file for details.
-  \brief     Charm++ module interface file for Transporter
-  \details   Charm++ module interface file for Transporter
+  \brief     Charm++ module interface file for Driver
+  \details   Charm++ module interface file for Driver
 */
 // *****************************************************************************
 
-module transporter {
+module driver {
 
-  extern module worker;
+  extern module mesharray;
 
   include "collidecharm.h";
+  include "Controller.hpp";
 
   namespace exam2m {
 
-    chare [migratable] Transporter {
-      entry Transporter();
+    chare [migratable] Driver {
+      entry Driver();
       entry void addMesh( const std::string& meshfile );
       entry [reductiontarget] void loaded( std::size_t nelem );
       entry [reductiontarget] void distributed();
@@ -27,8 +28,8 @@ module transporter {
       entry [reductiontarget] void workinserted();
       entry [reductiontarget] void workcreated();
       entry [reductiontarget] void written();
-      entry void processCollisions( int nColls, Collision colls[nColls] );
-      entry void solutionFound();
+      entry [reductiontarget] void solutionfound();
+      entry void meshAdded();
 
       entry void run() {
         forall [meshid] (0:1,1) {
@@ -38,18 +39,15 @@ module transporter {
 
             // Once loaded, update number of elements and partition
             when loaded[meshid]( std::size_t nelem ) serial {
-              CkPrintf("ExaM2M> Loaded mesh %i\n", meshid);
               updatenelems(meshid, nelem);
 
               m_meshes[meshid].m_partitioner.partition(
-                m_meshes[meshid].m_nchare );
+                  m_meshes[meshid].m_nchare );
             }
             when distributed[meshid]() serial {
-              CkPrintf("ExaM2M> Distributed mesh %i\n", meshid);
               m_meshes[meshid].m_partitioner.map();
             }
             when mapinserted[meshid]( std::size_t error ) serial {
-              CkPrintf("ExaM2M> Created mapper for mesh %i\n", meshid);
               if (error) {
                 CkAbort("\n>>> ERROR: A Mapper chare was not assigned any mesh "
                   "elements. This can happen in SMP-mode with a large +ppn "
@@ -64,8 +62,7 @@ module transporter {
                   "Decrease +ppn.\n");
               } else {
                  m_meshes[meshid].m_mapper.doneInserting();
-                 m_meshes[meshid].m_mapper.setup(
-                   m_meshes[meshid].m_npoin, m_meshes[meshid].m_firstchunk );
+                 m_meshes[meshid].m_mapper.setup( m_meshes[meshid].m_npoin );
               }
             }
             when queried[meshid]() serial {
@@ -75,7 +72,7 @@ module transporter {
               m_meshes[meshid].m_mapper.create();
             }
             when workinserted[meshid]() serial {
-              m_meshes[meshid].m_worker.doneInserting();
+              m_meshes[meshid].m_mesharray.doneInserting();
             }
             when workcreated[meshid]() serial {
               CkPrintf("ExaM2M> Created worker for mesh %i\n", meshid);
@@ -86,48 +83,51 @@ module transporter {
           }
         }
 
-        // Both meshes are fully loaded on worker chares, so now we can test
-        // for collisions.
         serial {
           CkPrintf("ExaM2M> Prepared all meshes, "
                    "starting mesh-to-mesh transfer\n");
-          m_timer.emplace_back();
           m_sourcemeshid = 0;
           m_destmeshid = 1;
-          m_meshes[m_destmeshid].m_worker.background();
-          m_meshes[m_sourcemeshid].m_worker.collideTets();
-          m_meshes[m_destmeshid].m_worker.collideVertices();
-          CkStartQD(CkCallback(CkIndex_Transporter::solutionFound(), thisProxy));
-        }
-        // Collision detection library found collisions, now distribute them to
-        // the workers for further checking and solution transfer.
-        when processCollisions(int nColls, Collision colls[nColls]) serial {
-          CkPrintf("ExaM2M> Broad phase detection complete in: %f sec\n",
-              m_timer[0].dsec());
-          m_timer.emplace_back();
-          distributeCollisions(nColls, colls);
-          CkPrintf("ExaM2M> Serial processing complete in: %f sec\n",
-              m_timer[1].dsec());
-          m_timer[1].zero();
+          exam2m::addMesh(
+              m_meshes[m_sourcemeshid].m_mesharray,
+              m_meshes[m_sourcemeshid].m_nchare,
+              CkCallback(CkIndex_Driver::meshAdded(), thisProxy));
+          exam2m::addMesh(
+              m_meshes[m_destmeshid].m_mesharray,
+              m_meshes[m_destmeshid].m_nchare,
+              CkCallback(CkIndex_Driver::meshAdded(), thisProxy));
         }
 
-        // Solution has been transferred from source to destination, write out
-        // meshes and exit.
-        when solutionFound() {
+        when meshAdded(), meshAdded() {
           serial {
-            CkPrintf("Narrow phase detection complete in: %f sec\n",
-                m_timer[1].dsec());
-            CkPrintf("Total transfer time: %f sec\nWriting solution ... ",
-                m_timer[0].dsec());
+            CkPrintf("Meshes added to ExaM2M library, beginning transfers\n");
+            m_timer.emplace_back();
           }
-          forall [meshid] (0:1,1) {
-            serial { m_meshes[meshid].m_worker.out(meshid); }
-            when written[meshid]() serial {
-              CkPrintf("ExaM2M> Written field output for mesh %i\n", meshid);
+
+          for (m_curriter = 0; m_curriter < m_totaliter; m_curriter++) {
+            // Begin mesh to mesh transfer
+            serial {
+              m_timer[0].zero();
+              m_meshes[m_sourcemeshid].m_mesharray.transferSource();
+              m_meshes[m_destmeshid].m_mesharray.transferDest();
+            }
+            // Solution has been transferred from source to destination, write out
+            // meshes and exit.
+            when solutionfound() {
+              serial {
+                CkPrintf("ExaM2M> Library iteration %i completed in: %f sec\n",
+                    m_curriter, m_timer[0].dsec());
+              }
             }
           }
         }
-        serial { CkPrintf("done."); CkExit(); }
+
+        // Write out final mesh data
+        forall [meshid] (0:1,1) {
+          serial { m_meshes[meshid].m_mesharray.out(meshid); }
+          when written[meshid]() {}
+        }
+        serial { mainProxy.finalize(); }
       };
     }
 

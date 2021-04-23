@@ -14,22 +14,22 @@ module mapper {
   include "CommMap.hpp";
 
   extern module meshwriter;
-  extern module worker;
+  extern module mesharray;
 
   namespace exam2m {
 
     array [1D] Mapper {
       entry Mapper( const tk::CProxy_MeshWriter& meshwriter,
-                    const CProxy_Worker& worker,
+                    const CProxy_MeshArray& mesharray,
                     const tk::MapperCallback& cbm,
-                    const tk::WorkerCallback& cbw,
+                    const tk::MeshCallback& cbw,
                     const std::vector< std::size_t >& ginpoel,
                     const tk::UnsMesh::CoordMap& coordmap,
                     const std::map< int, std::vector< std::size_t > >& bface,
                     const std::vector< std::size_t >& triinpoel,
                     const std::map< int, std::vector< std::size_t > >& bnode,
                     int nchare );
-      entry void setup( std::size_t npoin, std::size_t firstchunk );
+      entry void setup( std::size_t npoin );
       entry void query( int fromch, const tk::AllCommMaps& bnd );
       entry void recvquery();
       entry void response();
