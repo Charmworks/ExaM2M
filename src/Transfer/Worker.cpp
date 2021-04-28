@@ -281,11 +281,18 @@ Worker::transferSolution(
   }
 
   // Inform the caller if we've received all solution data
-  m_numreceived++;
-  if (m_numreceived == m_numsent) {
-    m_donecb.send();
-  }
+  //m_numreceived++;
+  //if (m_numreceived == m_numsent) {
+  //  m_donecb.send();
+  //}
 }
+
+void
+Worker::solutionFound()
+{
+  m_donecb.send();
+}
+
 
 bool
 Worker::intet(const CkVector3d &point,

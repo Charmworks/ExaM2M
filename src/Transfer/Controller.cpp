@@ -147,13 +147,17 @@ Controller::distributeCollisions(int nColl, Collision* colls)
   // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
     CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[i].size());
-    proxyMap[m_destmesh].m_proxy[i].processCollisions(
-        proxyMap[m_sourcemesh].m_proxy,
-        proxyMap[m_sourcemesh].m_nchare,
-        proxyMap[m_sourcemesh].m_firstchunk,
-        static_cast<int>(separated[i].size()),
-        separated[i].data() );
+    if (separated[i].size()) {
+      proxyMap[m_destmesh].m_proxy[i].processCollisions(
+          proxyMap[m_sourcemesh].m_proxy,
+          proxyMap[m_sourcemesh].m_nchare,
+          proxyMap[m_sourcemesh].m_firstchunk,
+          static_cast<int>(separated[i].size()),
+          separated[i].data() );
+    }
   }
+  if (CkMyPe() == 0)
+    CkStartQD(CkCallback(CkIndex_Worker::solutionFound(), proxyMap[m_destmesh].m_proxy));
 }
 
 #if defined(__clang__)

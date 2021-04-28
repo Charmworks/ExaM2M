@@ -37,6 +37,7 @@ module worker {
                                             PotentialCollision colls[nColls] );
       entry void transferSolution( std::size_t nPoints,
                                    SolutionData soln[nPoints] );
+      entry void solutionFound();
     }
 
   } // exam2m::
