@@ -17,13 +17,6 @@ namespace exam2m {
 //! \brief Charm handle to the collision detection library instance
 /* readonly */ CollideHandle collideHandle;
 
-void collisionHandler( [[maybe_unused]] void *param,
-                        int nColl,
-                        Collision *colls )
-{
-  controllerProxy.ckLocalBranch()->distributeCollisions( nColl, colls );
-}
-
 #if defined(__clang__)
   #pragma clang diagnostic pop
 #endif
@@ -52,10 +45,25 @@ LibMain::LibMain(CkArgMsg* msg) {
   delete msg;
   controllerProxy = CProxy_Controller::ckNew();
 
-  // TODO: Need to make sure this is actually correct
-  CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
-  collideHandle = CollideCreate(gridMap,
-      CollideSerialClient(collisionHandler, 0));
+  double gridX = 0.05, gridY = 0.05, gridZ = 0.05;
+  if(msg->argc > 4) {
+    gridX = gridY = gridZ = std::atof(msg->argv[4]);
+  }
+
+  bool useSerial = false;
+  for(int i=0; i < msg->argc; i++) {
+    if(strcmp(msg->argv[i], "+useSerialCD") == 0)
+      useSerial = true;
+  }
+
+  CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(gridX, gridY, gridZ));
+  if (useSerial) {
+    CkCallback cb(CkIndex_Controller::receiveSerialCollisions(NULL), controllerProxy[0]);
+    collideHandle = CollideCreate(gridMap, CollideSerialClient(cb));
+  } else {
+    CkCallback cb(CkIndex_Controller::receiveDistributedCollisions(NULL), controllerProxy);
+    collideHandle = CollideCreate(gridMap, CollideDistributedClient(cb));
+  }
 }
 
 Controller::Controller() : current_chunk(0) {}
@@ -92,6 +100,24 @@ void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t 
   Worker* w = proxyMap[m_sourcemesh].m_proxy[index].ckLocal();
   assert(w);
   w->setSourceTets(inpoel, coords, u);
+}
+
+void
+Controller::receiveSerialCollisions(CkReductionMsg* msg)
+{
+  int nColl = msg->getSize() / sizeof(Collision);
+  Collision* colls = (Collision *)msg->getData();
+  distributeCollisions(nColl, colls);
+  delete msg;
+}
+
+void
+Controller::receiveDistributedCollisions(CkDataMsg* msg)
+{
+  int nColl = msg->getSize() / sizeof(Collision);
+  Collision* colls = (Collision *)msg->getData();
+  distributeCollisions(nColl, colls);
+  delete msg;
 }
 
 void

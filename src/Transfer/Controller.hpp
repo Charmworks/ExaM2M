@@ -50,6 +50,9 @@ class Controller : public CBase_Controller {
                        tk::UnsMesh::Coords* coords, const tk::Fields& u);
     void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
                        const tk::Fields& u, CkCallback cb);
+
+    void receiveSerialCollisions(CkReductionMsg* msg);
+    void receiveDistributedCollisions(CkDataMsg* msg);
     void distributeCollisions(int nColl, Collision* colls);
 };
 
