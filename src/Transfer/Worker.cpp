@@ -360,14 +360,21 @@ Worker::processCollisions(
     pColls[ static_cast<std::size_t>(chareindex) ].push_back( pColl );
   }
 
+  int nonZeroCount = 0;
+
   // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
     auto I = static_cast< std::size_t >( i );
-    proxy[i].determineActualCollisions( thisProxy,
-                                        thisIndex,
-                                        static_cast<int>(pColls[I].size()),
-                                        pColls[I].data() );
+
+    if(pColls[I].size() != 0) {
+      proxy[i].determineActualCollisions( thisProxy,
+                                          thisIndex,
+                                          static_cast<int>(pColls[I].size()),
+                                          pColls[I].data() );
+      nonZeroCount++;
+    }
   }
+  //CmiPrintf("[%d][%d] Sending only %d messages out of %d chares\n", CmiMyPe(), thisIndex, nonZeroCount, numchares);
 }
 
 void
@@ -411,7 +418,9 @@ Worker::determineActualCollisions(
   //CkPrintf("Source chare %i found %i/%i actual collisions\n",
   //    thisIndex, numInTet, nColls);
   // Send the solution data for the actual collisions back to the dest mesh
-  proxy[index].transferSolution(return_data.size(), return_data.data());
+
+  if(return_data.size() != 0)
+    proxy[index].transferSolution(return_data.size(), return_data.data());
 }
 
 void
