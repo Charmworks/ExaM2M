@@ -208,11 +208,11 @@ Worker::processCollisions(
   // Send out the lists of potential collisions to the source mesh chares
   for (int i = 0; i < numchares; i++) {
     auto I = static_cast< std::size_t >( i );
-    m_numsent++;
-    proxy[i].determineActualCollisions( thisProxy,
-                                        thisIndex,
-                                        static_cast<int>(pColls[I].size()),
-                                        pColls[I].data() );
+    if (pColls[I].size())
+      proxy[i].determineActualCollisions( thisProxy,
+                                          thisIndex,
+                                          static_cast<int>(pColls[I].size()),
+                                          pColls[I].data() );
   }
 }
 
@@ -259,7 +259,8 @@ Worker::determineActualCollisions(
   //CkPrintf("Source chare %i found %i/%i actual collisions\n",
   //    thisIndex, numInTet, nColls);
   // Send the solution data for the actual collisions back to the dest mesh
-  proxy[index].transferSolution(return_data.size(), return_data.data());
+  if (return_data.size())
+    proxy[index].transferSolution(return_data.size(), return_data.data());
 }
 
 void
