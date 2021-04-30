@@ -186,17 +186,24 @@ collisionMgr::distributeCollisions(int nColl, Collision* colls)
     }
   }
 
+  //auto nonZeroCount = 0;
+
   // Send out each list to the destination chares for further processing
   for (int i=0; i<static_cast<int>(nchare); ++i) {
     auto I = static_cast< std::size_t >( i );
-    //CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[I].size());
-    m_meshes[m_destmeshid].m_worker[i].processCollisions(
-        m_meshes[m_sourcemeshid].m_worker,
-        m_meshes[m_sourcemeshid].m_nchare,
-        static_cast<int>(m_meshes[m_sourcemeshid].m_firstchunk),
-        static_cast<int>(separated[I].size()),
-        separated[I].data() );
+
+    if(separated[I].size() != 0 ) {
+      //nonZeroCount++;
+      //CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[I].size());
+      m_meshes[m_destmeshid].m_worker[i].processCollisions(
+          m_meshes[m_sourcemeshid].m_worker,
+          m_meshes[m_sourcemeshid].m_nchare,
+          static_cast<int>(m_meshes[m_sourcemeshid].m_firstchunk),
+          static_cast<int>(separated[I].size()),
+          separated[I].data() );
+    }
   }
+  //CkPrintf("[%d] %d destPEs are receiving messages out of %d\n", CmiMyPe(), nonZeroCount, nchare);
 }
 
 
