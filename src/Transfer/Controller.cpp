@@ -130,7 +130,6 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 //! \param[in] colls The list of potential collisions
 // *****************************************************************************
 {
-  CkPrintf("Collisions found: %i\n", nColl);
   auto first = static_cast<int>(proxyMap[m_destmesh].m_firstchunk);
   auto nchare = static_cast<int>(proxyMap[m_destmesh].m_nchare);
   std::vector<Collision> separated[nchare];
@@ -146,7 +145,6 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 
   // Send out each list to the destination chares for further processing
   for (int i = 0; i < nchare; i++) {
-    CkPrintf("Dest mesh chunk %i has %lu\n", i, separated[i].size());
     if (separated[i].size()) {
       proxyMap[m_destmesh].m_proxy[i].processCollisions(
           proxyMap[m_sourcemesh].m_proxy,
