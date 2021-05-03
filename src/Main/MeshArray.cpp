@@ -88,7 +88,6 @@ MeshArray::MeshArray(
   }
 
   // Tell the RTS that the MeshArray chares have been created
-  CkPrintf("Worker %i created\n", thisIndex);
   contribute( m_cbw.get< tag::workcreated >() );
 }
 
