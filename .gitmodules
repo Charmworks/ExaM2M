@@ -18,7 +18,7 @@
 	url = https://github.com/google/highwayhash.git
 [submodule "external/src/hdf5-ampi"]
 	path = external/src/hdf5-ampi
-	url = http://charm.cs.illinois.edu/gerrit/hdf5-ampi
+	url = https://github.com/UIUC-PPL/hdf5-ampi.git
 [submodule "external/src/lapack"]
 	path = external/src/lapack
 	url = https://github.com/Reference-LAPACK/lapack.git
