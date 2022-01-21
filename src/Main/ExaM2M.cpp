@@ -50,6 +50,8 @@ namespace exam2m {
 // Global scope data
 tk::real g_virtualization = 0.0;
 
+int g_totaliter = 1;
+
 #if defined(__clang__)
   #pragma clang diagnostic pop
 #endif
@@ -75,7 +77,11 @@ class Main : public CBase_Main {
       }
 
       if (msg->argc > 3) {
-        exam2m::g_virtualization = std::atof( msg->argv[3] );
+        exam2m::g_totaliter = std::atoi( msg->argv[3] );
+      }
+
+      if (msg->argc > 4) {
+        exam2m::g_virtualization = std::atof( msg->argv[4] );
       }
 
       mainProxy = thisProxy;
