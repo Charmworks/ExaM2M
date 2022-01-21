@@ -104,7 +104,7 @@ module driver {
             m_timer.emplace_back();
           }
 
-          for (m_curriter = 0; m_curriter < m_totaliter; m_curriter++) {
+          for (m_curriter = 0; m_curriter < g_totaliter; m_curriter++) {
             // Begin mesh to mesh transfer
             serial {
               m_timer[0].zero();

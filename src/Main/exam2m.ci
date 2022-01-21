@@ -22,6 +22,7 @@ mainmodule exam2m {
 
     // Order important: must be the same as in Main/ExaM2M.cpp
     readonly tk::real g_virtualization;
+    readonly int g_totaliter;
 
   } // exam2m::
 

@@ -21,12 +21,13 @@ extern CProxy_Main mainProxy;
 namespace exam2m {
 
 extern tk::real g_virtualization;
+extern int g_totaliter;
 
 }
 
 using exam2m::Driver;
 
-Driver::Driver() : m_totaliter(1)
+Driver::Driver()
 // *****************************************************************************
 //  Constructor
 // *****************************************************************************
