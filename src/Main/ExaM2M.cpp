@@ -72,25 +72,22 @@ class Main : public CBase_Main {
       for (int i = 1; i < msg->argc; i++) CkPrintf("%s ", msg->argv[i]);
       CkPrintf("\n");
 
-      if ( msg->argc < 3 ) {
-        Throw( "The first two arguments must be exodus filenames");
+      if (msg->argc < 5) {
+        Throw( "Args require an iteration, virtualization, and at least two meshes" );
       }
 
-      if (msg->argc > 3) {
-        exam2m::g_totaliter = std::atoi( msg->argv[3] );
-      }
-
-      if (msg->argc > 4) {
-        exam2m::g_virtualization = std::atof( msg->argv[4] );
-      }
+      exam2m::g_totaliter = std::atoi( msg->argv[1] );
+      exam2m::g_virtualization = std::atof( msg->argv[2] );
 
       mainProxy = thisProxy;
 
       // Create the driver, add the two meshes, and tell it to run
       CProxy_Driver driverProxy = CProxy_Driver::ckNew( 0 );
-      driverProxy.addMesh(msg->argv[1]);
-      driverProxy.addMesh(msg->argv[2]);
-      driverProxy.run();
+
+      for (int i = 3; i < msg->argc; i++) {
+        driverProxy.addMesh(msg->argv[i]);
+      }
+      driverProxy.run(msg->argc - 3);
 
       delete msg;
     } catch (...) { tk::processExceptionCharm(); }
