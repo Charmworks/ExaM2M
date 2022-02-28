@@ -11,6 +11,7 @@
 module worker {
 
   extern module meshwriter;
+  extern module worker;
 
   include "UnsMesh.hpp";
   include "Callback.hpp";
