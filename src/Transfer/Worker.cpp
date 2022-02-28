@@ -170,7 +170,7 @@ Worker::processCollisions(
   const tk::UnsMesh::Coords& coord = *m_coord;
   int mychunk = thisIndex + m_firstchunk;
 
-  std::unordered_map<MeshData, std::vector<DetailedCollision>*> outgoing;
+  Controller::MeshDict outgoing;
   // Separate collisions for source meshes (dest = false)
   controllerProxy.ckLocalBranch()->separateCollisions(outgoing, false, nColl, colls);
 
@@ -195,7 +195,6 @@ Worker::processCollisions(
       itr.first.m_proxy[i].determineActualCollisions(
           thisProxy, thisIndex, itr.second[i].size(), itr.second[i].data());
     }
-    delete[] itr.second;
   }
 }
 

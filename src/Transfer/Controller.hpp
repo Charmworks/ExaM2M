@@ -77,6 +77,9 @@ class Controller : public CBase_Controller {
     #if defined(__clang__)
       #pragma clang diagnostic pop
     #endif
+
+    using MeshDict = std::unordered_map<MeshData, std::vector<std::vector<DetailedCollision>>>;
+
     void addMesh(CkArrayID p, int elem, CkCallback cb);
     void setMesh(CkArrayID p, MeshData d);
     void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel,
@@ -84,12 +87,10 @@ class Controller : public CBase_Controller {
     void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
                        const tk::Fields& u, CkCallback cb);
     void distributeCollisions(int nColl, Collision* colls);
-    void separateCollisions(
-        std::unordered_map<MeshData, std::vector<DetailedCollision>*>& outgoing,
-        bool dest, int nColl, Collision* colls);
-    void separateCollisions(
-        std::unordered_map<MeshData, std::vector<DetailedCollision>*>& outgoing,
-        bool dest, int nColl, DetailedCollision* colls);
+    void separateCollisions(MeshDict& outgoing, bool dest, int nColl,
+                            Collision* colls) const;
+    void separateCollisions(MeshDict& outgoing, bool dest, int nColl,
+                            DetailedCollision* colls) const;
 
 };
 

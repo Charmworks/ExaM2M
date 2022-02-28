@@ -15,6 +15,8 @@ module worker {
   include "UnsMesh.hpp";
   include "Callback.hpp";
   include "CommMap.hpp";
+  // NOTE: Including this here avoids warnings
+  include "collidecharm.h";
 
   namespace exam2m {
 

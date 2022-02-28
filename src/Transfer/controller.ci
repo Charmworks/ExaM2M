@@ -7,8 +7,6 @@ module controller {
     readonly CProxy_Controller controllerProxy;
     readonly CollideHandle collideHandle;
 
-    class MeshData;
-
     mainchare LibMain {
       entry LibMain(CkArgMsg* msg);
     };

@@ -13,10 +13,12 @@ namespace exam2m {
   #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 
+//! \brief Global readonly to access the controller group
 /* readonly */ CProxy_Controller controllerProxy;
 //! \brief Charm handle to the collision detection library instance
 /* readonly */ CollideHandle collideHandle;
 
+//!\brief Function called by charm collision library when it completes
 void collisionHandler( [[maybe_unused]] void *param,
                         int nColl,
                         Collision *colls )
@@ -60,34 +62,57 @@ LibMain::LibMain(CkArgMsg* msg) {
 
 Controller::Controller() : current_chunk(0) {}
 
-void Controller::addMesh(CkArrayID p, int elem, CkCallback cb) {
+void
+Controller::addMesh(CkArrayID p, int elem, CkCallback cb)
+//! \brief Creates a worker array bound to the passed in mesh array
+{
   auto id = static_cast<std::size_t>(CkGroupID(p).idx);
   if (proxyMap.count(id) == 0) {
+    // Create CkArrayOptions to bind to the user array with correct num elems
     CkArrayOptions opts;
     opts.bindTo(p);
     opts.setNumInitial(elem);
+
+    // Create mesh data, library-side worker array, and add it to the map
     MeshData mesh;
     mesh.m_nchare = elem;
     mesh.m_firstchunk = current_chunk;
     mesh.m_proxy = CProxy_Worker::ckNew(p, mesh, cb, opts);
     proxyMap[id] = mesh;
+
+    // Update number of total chunks
     current_chunk += elem;
   } else {
-    CkAbort("Uhoh...\n");
+    CkAbort("ERROR: Trying to add the same mesh mutliple times\n");
   }
 }
-void Controller::setMesh( CkArrayID p, MeshData d ) {
+
+void
+Controller::setMesh( CkArrayID p, MeshData d )
+//! \brief Called from Worker ctor to ensure mesh data is set on all PEs
+{
   proxyMap[static_cast<std::size_t>(CkGroupID(p).idx)] = d;
 }
 
-void Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb) {
+void
+Controller::setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
+    const tk::Fields& u, CkCallback cb)
+//! \brief Sets the designated mesh as a destination mesh and passes pointers
+//         to the destination mesh data.
+{
   proxyMap[CkGroupID(p).idx].dest = true;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
   assert(w);
   w->setDestPoints(coords, u, cb);
 }
 
-void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u) {
+void
+Controller::setSourceTets(CkArrayID p, int index,
+    std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords,
+    const tk::Fields& u)
+//! \brief Sets the designated mesh as a source mesh and passes pointers to the
+//         source mesh data.
+{
   proxyMap[CkGroupID(p).idx].dest = false;
   Worker* w = proxyMap[CkGroupID(p).idx].m_proxy[index].ckLocal();
   assert(w);
@@ -95,12 +120,21 @@ void Controller::setSourceTets(CkArrayID p, int index, std::vector< std::size_t 
 }
 
 void
-Controller::separateCollisions(
-    std::unordered_map<MeshData, std::vector<DetailedCollision>*>& outgoing,
-    bool dest, int nColl, Collision* colls) {
+Controller::separateCollisions(MeshDict& outgoing, bool dest, int nColl,
+                               Collision* colls) const
+// *****************************************************************************
+//  Called on a list of potential collisions in order to separate them based on
+//  the chare they are intended for, and to convert them into the more useful
+//  DetailedCollision struct.
+//! \param[inout] outgoing The map of lists where we will divide up collisions
+//! \param[in] dest  True if we want to separate for dest mesh, false for source
+//! \param[in] nColl Number of collisions we are separating
+//! \param[in] colls The list of collisions to separate
+// *****************************************************************************
+{
   for (const auto& itr : proxyMap) {
     if (itr.second.dest == dest) {
-      outgoing[itr.second] = new std::vector<DetailedCollision>[itr.second.m_nchare];
+      outgoing[itr.second].resize(itr.second.m_nchare);
     }
   }
 
@@ -151,13 +185,21 @@ Controller::separateCollisions(
 }
 
 void
-Controller::separateCollisions(
-    std::unordered_map<MeshData, std::vector<DetailedCollision>*>& outgoing,
-    bool dest, int nColl, DetailedCollision* colls) {
+Controller::separateCollisions(MeshDict& outgoing, bool dest, int nColl,
+                               DetailedCollision* colls) const
+// *****************************************************************************
+//  Called on a list of potential collisions in order to separate them based on
+//  the chare they are intended for. This version of the function is for
+//  collisions which have already been converted to DetailedCollision.
+//! \param[inout] outgoing The map of lists where we will divide up collisions
+//! \param[in] dest  True if we want to separate for dest mesh, false for source
+//! \param[in] nColl Number of collisions we are separating
+//! \param[in] colls The list of collisions to separate
+// *****************************************************************************
+{
   for (const auto& itr : proxyMap) {
     if (itr.second.dest == dest) {
-      // TODO: This should be made a vector probably to avoid memory management
-      outgoing[itr.second] = new std::vector<DetailedCollision>[itr.second.m_nchare];
+      outgoing[itr.second].resize(itr.second.m_nchare);
     }
   }
 
@@ -187,7 +229,7 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 {
   CkPrintf("Collisions found: %i\n", nColl);
 
-  std::unordered_map<MeshData, std::vector<DetailedCollision>*> outgoing;
+  MeshDict outgoing;
   separateCollisions(outgoing, true, nColl, colls);
 
   // Send out each list to the destination chares for further processing
@@ -199,7 +241,6 @@ Controller::distributeCollisions(int nColl, Collision* colls)
           static_cast<int>(itr.second[i].size()),
           itr.second[i].data() );
     }
-    delete[] itr.second;
   }
 }
 
