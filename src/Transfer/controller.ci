@@ -1,5 +1,7 @@
 module controller {
 
+  include "ckvector3d.h";
+
   extern module worker;
 
   namespace exam2m {
