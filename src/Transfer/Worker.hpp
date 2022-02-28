@@ -15,7 +15,6 @@
 #include "UnsMesh.hpp"
 #include "CommMap.hpp"
 #include "Fields.hpp"
-#include "ckvector3d.h"
 
 #include "NoWarning/worker.decl.h"
 

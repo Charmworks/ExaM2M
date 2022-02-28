@@ -168,7 +168,6 @@ Worker::processCollisions(
 // *****************************************************************************
 {
   const tk::UnsMesh::Coords& coord = *m_coord;
-  int mychunk = thisIndex + m_firstchunk;
 
   Controller::MeshDict outgoing;
   // Separate collisions for source meshes (dest = false)
