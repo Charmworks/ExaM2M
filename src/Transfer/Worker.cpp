@@ -17,6 +17,9 @@
 
 #include "collidecharm.h"
 
+#define SOURCE_PRIO 0
+#define DEST_PRIO 1
+
 #if defined(__clang__)
   #pragma clang diagnostic push
   #pragma clang diagnostic ignored "-Wold-style-cast"
@@ -120,7 +123,7 @@ Worker::collideVertices()
   for (std::size_t i=0; i<nVertices; ++i) {
     boxes[nBoxes].empty();
     boxes[nBoxes].add(CkVector3d(coord[0][i], coord[1][i], coord[2][i]));
-    prio[nBoxes] = firstchunk;
+    prio[nBoxes] = DEST_PRIO;
     ++nBoxes;
   }
   CollideBoxesPrio( collideHandle, firstchunk + thisIndex,
@@ -141,7 +144,7 @@ Worker::collideTets() const
   auto firstchunk = static_cast< int >( m_firstchunk );
   for (std::size_t i=0; i<nBoxes; ++i) {
     boxes[i].empty();
-    prio[i] = firstchunk;
+    prio[i] = SOURCE_PRIO;
     for (std::size_t j=0; j<4; ++j) {
       // Get index of the jth point of the ith tet
       auto p = inpoel[i * 4 + j];
@@ -155,17 +158,11 @@ Worker::collideTets() const
 
 void
 Worker::processCollisions(
-    CProxy_Worker proxy,
-    int numchares,
-    int chunkoffset,
     int nColl,
-    Collision* colls )
+    DetailedCollision* colls )
 // *****************************************************************************
 //  Process potential collisions by sending my points to the source mesh chares
 //  that they potentially collide with.
-//! \param[in] proxy Proxy for the source mesh chares
-//! \param[in] numchares Number of chares in the source mesh chare array
-//! \param[in] chunkoffset First chunk ID of the source mesh
 //! \param[in] nColl Number of potential collisions to process
 //! \param[in] colls List of potential collisions
 // *****************************************************************************
@@ -173,46 +170,32 @@ Worker::processCollisions(
   const tk::UnsMesh::Coords& coord = *m_coord;
   int mychunk = thisIndex + m_firstchunk;
 
-  std::vector< std::vector< PotentialCollision > >
-    pColls( static_cast<std::size_t>(numchares) );
+  std::unordered_map<MeshData, std::vector<DetailedCollision>*> outgoing;
+  // Separate collisions for source meshes (dest = false)
+  controllerProxy.ckLocalBranch()->separateCollisions(outgoing, false, nColl, colls);
 
-  // Separate potential collisions into lists based on the source mesh chare
-  // that is involved in the potential collision
-  for (int i = 0; i < nColl; i++) {
-    int chareindex;
-    PotentialCollision pColl;
-    if (colls[i].A.chunk == mychunk) {
-      chareindex = colls[i].B.chunk - chunkoffset;
-      pColl.dest_index = static_cast<std::size_t>(colls[i].A.number);
-      pColl.source_index = static_cast<std::size_t>(colls[i].B.number);
-    } else {
-      chareindex = colls[i].A.chunk - chunkoffset;
-      pColl.dest_index = static_cast<std::size_t>(colls[i].B.number);
-      pColl.source_index = static_cast<std::size_t>(colls[i].A.number);
+  for (auto& itr : outgoing) {
+    for (int i = 0; i < itr.first.m_nchare; i++) {
+      // Fill in the actual point for each collision
+      for (auto& coll : itr.second[i]) {
+        CkAssert(coll.dest_chunk == mychunk);
+        #if defined(STRICT_GNUC)
+          #pragma GCC diagnostic push
+          #pragma GCC diagnostic ignored "-Wdeprecated-copy"
+        #endif
+        coll.point = { coord[0][coll.dest_index],
+                       coord[1][coll.dest_index],
+                       coord[2][coll.dest_index] };
+        #if defined(STRICT_GNUC)
+          #pragma GCC diagnostic pop
+        #endif
+      }
+      m_numsent++;
+      // TODO: Don't send empty messages
+      itr.first.m_proxy[i].determineActualCollisions(
+          thisProxy, thisIndex, itr.second[i].size(), itr.second[i].data());
     }
-
-    #if defined(STRICT_GNUC)
-      #pragma GCC diagnostic push
-      #pragma GCC diagnostic ignored "-Wdeprecated-copy"
-    #endif
-    pColl.point = { coord[0][pColl.dest_index],
-                    coord[1][pColl.dest_index],
-                    coord[2][pColl.dest_index] };
-    #if defined(STRICT_GNUC)
-      #pragma GCC diagnostic pop
-    #endif
-
-    pColls[ static_cast<std::size_t>(chareindex) ].push_back( pColl );
-  }
-
-  // Send out the lists of potential collisions to the source mesh chares
-  for (int i = 0; i < numchares; i++) {
-    auto I = static_cast< std::size_t >( i );
-    m_numsent++;
-    proxy[i].determineActualCollisions( thisProxy,
-                                        thisIndex,
-                                        static_cast<int>(pColls[I].size()),
-                                        pColls[I].data() );
+    delete[] itr.second;
   }
 }
 
@@ -221,7 +204,7 @@ Worker::determineActualCollisions(
     CProxy_Worker proxy,
     int index,
     int nColls,
-    PotentialCollision* colls ) const
+    DetailedCollision* colls ) const
 // *****************************************************************************
 //  Identify actual collisions by calling intet on all possible collisions, and
 //  interpolate solution values to send back to the destination mesh.
@@ -243,11 +226,12 @@ Worker::determineActualCollisions(
   // Iterate over my potential collisions and determine call intet to determine
   // if an actual collision occurred, and if so what is the shape function
   for (int i = 0; i < nColls; i++) {
-    if (intet(colls[i].point, colls[i].source_index, N)) {
+    const DetailedCollision& coll = colls[i];
+    if (intet(coll.point, coll.source_index, N)) {
       numInTet++;
       SolutionData data;
-      data.dest_index = colls[i].dest_index;
-      auto e = colls[i].source_index;
+      data.dest_index = coll.dest_index;
+      auto e = coll.source_index;
       const auto A = inpoel[e*4+0];
       const auto B = inpoel[e*4+1];
       const auto C = inpoel[e*4+2];
@@ -256,8 +240,6 @@ Worker::determineActualCollisions(
       return_data.push_back(data);
     }
   }
-  //CkPrintf("Source chare %i found %i/%i actual collisions\n",
-  //    thisIndex, numInTet, nColls);
   // Send the solution data for the actual collisions back to the dest mesh
   proxy[index].transferSolution(return_data.size(), return_data.data());
 }
