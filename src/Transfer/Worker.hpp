@@ -20,13 +20,6 @@
 
 namespace exam2m {
 
-class PotentialCollision {
-  public:
-    std::size_t source_index, dest_index;
-    CkVector3d point;
-    void pup(PUP::er& p) { p | source_index; p | dest_index; p | point; }
-};
-
 class SolutionData {
   public:
     std::size_t dest_index;
@@ -63,17 +56,14 @@ class Worker : public CBase_Worker {
                         CkCallback cb );
 
     //! Process potential collisions in the destination mesh
-    void processCollisions( CProxy_Worker proxy,
-                            int nchare,
-                            int offset,
-                            int nColls,
-                            Collision* colls );
+    void processCollisions( int nColls,
+                            DetailedCollision* colls );
 
     //! Identify actual collisions in the source mesh
     void determineActualCollisions( CProxy_Worker proxy,
                                     int index,
                                     int nColls,
-                                    PotentialCollision* colls ) const;
+                                    DetailedCollision* colls ) const;
 
     //! Transfer the interpolated solution data back to destination mesh
     void transferSolution( std::size_t nPoints, SolutionData* soln );
@@ -120,7 +110,7 @@ class Worker : public CBase_Worker {
     //! Determine if a point is in a tet
     bool intet(const CkVector3d &point,
                std::size_t e,
-               std::array< real, 4 >& N) const;
+               std::array< tk::real, 4 >& N) const;
 };
 
 } // exam2m::

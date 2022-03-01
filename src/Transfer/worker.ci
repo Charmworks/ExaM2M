@@ -11,30 +11,27 @@
 module worker {
 
   extern module meshwriter;
-  extern module worker;
 
   include "UnsMesh.hpp";
   include "Callback.hpp";
   include "CommMap.hpp";
+  // NOTE: Including this here avoids warnings
   include "collidecharm.h";
 
   namespace exam2m {
 
-    class PotentialCollision;
+    class DetailedCollision;
     class SolutionData;
     class MeshData;
 
     array [1D] Worker {
       entry Worker( CkArrayID p, MeshData d, CkCallback cb );
-      entry void processCollisions( CProxy_Worker proxy,
-                                    int nchares,
-                                    int offset,
-                                    int nColls,
-                                    Collision colls[nColls] );
+      entry void processCollisions( int nColls,
+                                    DetailedCollision colls[nColls] );
       entry void determineActualCollisions( CProxy_Worker proxy,
                                             int index,
                                             int nColls,
-                                            PotentialCollision colls[nColls] );
+                                            DetailedCollision colls[nColls] );
       entry void transferSolution( std::size_t nPoints,
                                    SolutionData soln[nPoints] );
     }
