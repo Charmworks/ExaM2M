@@ -57,7 +57,8 @@ LibMain::LibMain(CkArgMsg* msg) {
   // TODO: Need to make sure this is actually correct
   CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
   collideHandle = CollideCreate(gridMap,
-      CollideSerialClient(collisionHandler, 0));
+      CollideDistributedClient(CkCallback(exam2m::CkIndex_Controller::distributeCollisions(NULL),controllerProxy)));
+      //CollideSerialClient(collisionHandler, 0));
 }
 
 Controller::Controller() : current_chunk(0) {}
@@ -227,7 +228,7 @@ Controller::distributeCollisions(int nColl, Collision* colls)
 //! \param[in] colls The list of potential collisions
 // *****************************************************************************
 {
-  CkPrintf("Collisions found: %i\n", nColl);
+  CkPrintf("[%i]: Collisions found: %i\n", CkMyPe(), nColl);
 
   MeshDict outgoing;
   separateCollisions(outgoing, true, nColl, colls);
