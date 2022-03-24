@@ -68,6 +68,8 @@ class Worker : public CBase_Worker {
     //! Transfer the interpolated solution data back to destination mesh
     void transferSolution( std::size_t nPoints, SolutionData* soln );
 
+    void done();
+
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{
     //! \brief Pack/Unpack serialize member function

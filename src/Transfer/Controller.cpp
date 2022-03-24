@@ -61,7 +61,7 @@ LibMain::LibMain(CkArgMsg* msg) {
       //CollideSerialClient(collisionHandler, 0));
 }
 
-Controller::Controller() : current_chunk(0) {}
+Controller::Controller() : current_chunk(0), num_sent(0), num_received(0), total_sent(0) {}
 
 void
 Controller::addMesh(CkArrayID p, int elem, CkCallback cb)
@@ -238,11 +238,53 @@ Controller::distributeCollisions(int nColl, Collision* colls)
     auto& mesh = itr.first;
     // TODO: Don't send out empty messages
     for (int i = 0; i < mesh.m_nchare; i++) {
-      mesh.m_proxy[i].processCollisions(
-          static_cast<int>(itr.second[i].size()),
-          itr.second[i].data() );
+      if (itr.second[i].size()) {
+        num_sent++;
+        mesh.m_proxy[i].processCollisions(
+            static_cast<int>(itr.second[i].size()),
+            itr.second[i].data() );
+      }
     }
   }
+  CkPrintf("[%i]: Sent %i\n", CkMyPe(), num_sent);
+  contribute(sizeof(int), &num_sent, CkReduction::sum_int, CkCallback(CkReductionTarget(Controller,allSent), thisProxy));
+}
+
+void
+Controller::allSent(int total) {
+  if (CkMyPe() == 0) CkPrintf("Total Sent Across All PEs: %i\n", total);
+  total_sent = total;
+  checkReceived();
+}
+
+void
+Controller::collsReceived() {
+  num_received++;
+}
+
+void
+Controller::checkReceived() {
+  contribute(sizeof(int), &num_received, CkReduction::sum_int, CkCallback(CkReductionTarget(Controller,checkDone), thisProxy));
+}
+
+void
+Controller::checkDone(int total) {
+  total_received = total;
+  if (CkMyPe() == 0) CkPrintf("Total Received so far across All PEs: %i\n", total);
+  if (total_sent != total_received) {
+    checkReceived();
+  } else {
+    if (CkMyPe() == 0) {
+      for (auto m : proxyMap) {
+        if (m.second.dest) {
+          m.second.m_proxy.done();
+        }
+      }
+    }
+  }
+  // TODO: If we have received everything, it's possible some workers did not have any collisions?
+  // If so, we need to bcast or something to let them know they can contribute to the done reduction
+  // or use some other method of CD to check when the transfer is complete.
 }
 
 #if defined(__clang__)
