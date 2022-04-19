@@ -78,18 +78,29 @@ MeshArray::MeshArray(
     m_edgeCommMap[c] = maps.get< tag::edge >();
   }
 
-  // Generate initial solution
-  const auto& x = m_coord[0];
-  const auto& y = m_coord[1];
-  const auto& z = m_coord[2];
-  auto npoin = m_coord[0].size();
-  for (std::size_t i=0; i<npoin; ++i) {
-    m_u(i,0,0) = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
-  }
-
   // Tell the RTS that the MeshArray chares have been created
-  CkPrintf("Worker %i created\n", thisIndex);
   contribute( m_cbw.get< tag::workcreated >() );
+}
+
+void
+MeshArray::setSolution(Solution& s, CkCallback cb) {
+  for (std::size_t i = 0; i < m_coord[0].size(); i++) {
+    m_u(i,0,0) = s.f(m_coord[0][i], m_coord[1][i], m_coord[2][i]);
+  }
+  contribute(cb);
+}
+
+void MeshArray::checkSolution(Solution& s, CkCallback cb) {
+  for (std::size_t i = 0; i < m_coord[0].size(); i++) {
+    tk::real expected = s.f(m_coord[0][i], m_coord[1][i], m_coord[2][i]);
+    tk::real diff = abs(m_u(i,0,0) - expected);
+    if (diff > std::numeric_limits<float>::epsilon() && m_u(i,0,0) > diff) {
+      CkAbort("Elem %i/%i (%f %f %f) DIFF TOO BIG! %f - %f = %e\n",
+          i, m_coord[0].size(), m_coord[0][i], m_coord[1][i], m_coord[2][i],
+          expected, m_u(i,0,0), diff);
+    }
+  }
+  contribute(cb);
 }
 
 void

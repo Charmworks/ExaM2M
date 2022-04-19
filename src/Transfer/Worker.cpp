@@ -88,25 +88,13 @@ Worker::setDestPoints(
   m_u = const_cast< tk::Fields* >( &u );
   m_donecb = cb;
 
-  // Initialize msg counters, callback, and background solution data
+  // Initialize msg counters and callback
   m_numsent = 1; // Set to one to account for the extra message expected from
                  // the controller when cd is done.
   m_numreceived = 0;
-  background();
 
   // Send vertex data to the collision detection library
   collideVertices();
-}
-
-void
-Worker::background()
-// *****************************************************************************
-// Initialize dest mesh solution with background data
-//! \details This is useful to see what points did not receive solution.
-// *****************************************************************************
-{
-  tk::Fields& u = *m_u;
-  for (std::size_t i = 0; i < u.nunk(); ++i) u(i,0,0) = -1.0;
 }
 
 void

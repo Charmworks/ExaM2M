@@ -52,7 +52,6 @@ class Driver : public CBase_Driver {
     //!    checkpoint/restart.
     void pup( PUP::er& p ) override {
       p | m_meshes;
-      p | m_sourcemeshid;
       p | m_timer;
       p | m_curriter;
     }
@@ -93,8 +92,6 @@ class Driver : public CBase_Driver {
 
     //! Mesh Data for all meshes
     std::vector<MeshData> m_meshes;
-    //! ID of the source mesh
-    int m_sourcemeshid;
     //! Timers
     std::vector< tk::Timer > m_timer;
     //! SDAG variable for iteration

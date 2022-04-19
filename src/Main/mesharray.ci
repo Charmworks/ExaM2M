@@ -18,6 +18,11 @@ module mesharray {
 
   namespace exam2m {
 
+    class Solution;
+    PUPable EmptySolution;
+    PUPable ExampleSolution;
+    PUPable LinearSolution;
+
     array [1D] MeshArray {
       entry MeshArray( const tk::CProxy_MeshWriter& meshwriter,
                        const tk::MeshCallback& cbw,
@@ -31,6 +36,8 @@ module mesharray {
       entry void out( int meshid );
       entry void written();
 
+      entry void setSolution(CkReference<exam2m::Solution>, CkCallback);
+      entry void checkSolution(CkReference<exam2m::Solution>, CkCallback);
       entry void solutionFound();
       entry void transferSource();
       entry void transferDest();

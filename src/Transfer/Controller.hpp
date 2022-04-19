@@ -1,3 +1,6 @@
+#ifndef Controller_h
+#define Controller_h
+
 // Controller for the library
 
 #include "NoWarning/controller.decl.h"
@@ -105,3 +108,5 @@ class Controller : public CBase_Controller {
 };
 
 }
+
+#endif // Controller_h

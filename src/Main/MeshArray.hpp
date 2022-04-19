@@ -16,9 +16,66 @@
 #include "CommMap.hpp"
 #include "Fields.hpp"
 
+namespace exam2m {
+
+class Solution : public PUP::able {
+PUPable_abstract(Solution);
+public:
+  virtual tk::real f(tk::real x, tk::real y, tk::real z) const = 0;
+};
+
+}
+
 #include "NoWarning/mesharray.decl.h"
 
 namespace exam2m {
+
+/*class Solution : public PUP::able {
+PUPable_abstract(Solution);
+public:
+  virtual tk::real f(tk::real x, tk::real y, tk::real z) const = 0;
+};*/
+
+class EmptySolution : public Solution {
+PUPable_decl(EmptySolution);
+public:
+  EmptySolution() {}
+  EmptySolution(CkMigrateMessage* m) {}
+  tk::real f(tk::real x, tk::real y, tk::real z) const {
+    return -1.0;
+  }
+};
+
+class ExampleSolution : public Solution {
+PUPable_decl(ExampleSolution);
+public:
+  ExampleSolution() {}
+  ExampleSolution(CkMigrateMessage* m) {}
+  tk::real f(tk::real x, tk::real y, tk::real z) const {
+    return 1.0 * exp( -(x*x + y*y + z*z)/(2.0 * 0.05) );
+  }
+};
+
+class LinearSolution : public Solution {
+PUPable_decl(LinearSolution);
+private:
+  tk::real a, b, c, d;
+public:
+  LinearSolution(tk::real _a, tk::real _b, tk::real _c, tk::real _d)
+      : a(_a), b(_b), c(_c), d(_d) {}
+  LinearSolution(CkMigrateMessage* m) {}
+
+  tk::real f(tk::real x, tk::real y, tk::real z) const {
+    return a*x + b*y + c*z + d;
+  }
+
+  virtual void pup(PUP::er& p) {
+    p | a;
+    p | b;
+    p | c;
+    p | d;
+  }
+};
 
 //! MeshArray chare array holding part of a mesh
 class MeshArray : public CBase_MeshArray {
@@ -69,6 +126,8 @@ class MeshArray : public CBase_MeshArray {
     //! Mesh and field data written to file(s)
     void written();
 
+    void setSolution(Solution& s, CkCallback cb);
+    void checkSolution(Solution& s, CkCallback cb);
     void solutionFound();
     void transferSource();
     void transferDest();
