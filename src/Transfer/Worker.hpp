@@ -100,9 +100,6 @@ class Worker : public CBase_Worker {
     //! Called once the transfer is complete (m_numsent == m_numreceived)
     CkCallback m_donecb;
 
-    //! Initialize dest mesh solution with background data
-    void background();
-
     //! Contribute vertex information to the collsion detection library
     void collideVertices();
 

@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "Driver.hpp"
+#include "MeshArray.hpp"
 #include "ExodusIIMeshReader.hpp"
 #include "LoadDistributor.hpp"
 

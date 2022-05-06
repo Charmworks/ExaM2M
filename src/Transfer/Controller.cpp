@@ -55,7 +55,7 @@ LibMain::LibMain(CkArgMsg* msg) {
   controllerProxy = CProxy_Controller::ckNew();
 
   // TODO: Need to make sure this is actually correct
-  CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(2, 100, 2));
+  CollideGrid3d gridMap(CkVector3d(0, 0, 0),CkVector3d(0.5, 0.5, 0.5));
   collideHandle = CollideCreate(gridMap,
       CollideDistributedClient(CkCallback(exam2m::CkIndex_Controller::distributeCollisions(NULL),controllerProxy)));
       //CollideSerialClient(collisionHandler, 0));
@@ -236,7 +236,6 @@ Controller::distributeCollisions(int nColl, Collision* colls)
   // Send out each list to the destination chares for further processing
   for (auto& itr : outgoing) {
     auto& mesh = itr.first;
-    // TODO: Don't send out empty messages
     for (int i = 0; i < mesh.m_nchare; i++) {
       if (itr.second[i].size()) {
         num_sent++;
@@ -246,6 +245,7 @@ Controller::distributeCollisions(int nColl, Collision* colls)
       }
     }
   }
+  // TODO: Count is not getting reset between iterations
   CkPrintf("[%i]: Sent %i\n", CkMyPe(), num_sent);
   contribute(sizeof(int), &num_sent, CkReduction::sum_int, CkCallback(CkReductionTarget(Controller,allSent), thisProxy));
 }
