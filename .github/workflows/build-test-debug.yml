@@ -19,6 +19,8 @@ jobs:
     - name: build-exam2m-external
       run: mkdir external/build && cd external/build && cmake .. && make && cd -
     - name: build-exam2m-debug
-      run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror ../src && make
+      # TODO: -Werror does not work until charm issue #3604 is resolved
+      #run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS=-Werror ../src && make
+      run: mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../src && make
     - name: test
       run: cd build && ctest -j2 --output-on-failure #running ctest -V over make test to get verbose output
