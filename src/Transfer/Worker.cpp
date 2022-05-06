@@ -89,7 +89,8 @@ Worker::setDestPoints(
   m_donecb = cb;
 
   // Initialize msg counters, callback, and background solution data
-  m_numsent = 0;
+  m_numsent = 1; // Set to one to account for the extra message expected from
+                 // the controller when cd is done.
   m_numreceived = 0;
   background();
 
@@ -171,28 +172,30 @@ Worker::processCollisions(
 
   Controller::MeshDict outgoing;
   // Separate collisions for source meshes (dest = false)
+  controllerProxy.ckLocalBranch()->collsReceived();
   controllerProxy.ckLocalBranch()->separateCollisions(outgoing, false, nColl, colls);
 
   for (auto& itr : outgoing) {
     for (int i = 0; i < itr.first.m_nchare; i++) {
       // Fill in the actual point for each collision
-      for (auto& coll : itr.second[i]) {
-        CkAssert(coll.dest_chunk == mychunk);
-        #if defined(STRICT_GNUC)
-          #pragma GCC diagnostic push
-          #pragma GCC diagnostic ignored "-Wdeprecated-copy"
-        #endif
-        coll.point = { coord[0][coll.dest_index],
-                       coord[1][coll.dest_index],
-                       coord[2][coll.dest_index] };
-        #if defined(STRICT_GNUC)
-          #pragma GCC diagnostic pop
-        #endif
+      if (itr.second[i].size()) {
+        for (auto& coll : itr.second[i]) {
+          CkAssert(coll.dest_chunk == mychunk);
+          #if defined(STRICT_GNUC)
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wdeprecated-copy"
+          #endif
+          coll.point = { coord[0][coll.dest_index],
+                         coord[1][coll.dest_index],
+                         coord[2][coll.dest_index] };
+          #if defined(STRICT_GNUC)
+            #pragma GCC diagnostic pop
+          #endif
+        }
+        m_numsent++;
+        itr.first.m_proxy[i].determineActualCollisions(
+            thisProxy, thisIndex, itr.second[i].size(), itr.second[i].data());
       }
-      m_numsent++;
-      // TODO: Don't send empty messages
-      itr.first.m_proxy[i].determineActualCollisions(
-          thisProxy, thisIndex, itr.second[i].size(), itr.second[i].data());
     }
   }
 }
@@ -261,6 +264,14 @@ Worker::transferSolution(
   }
 
   // Inform the caller if we've received all solution data
+  m_numreceived++;
+  if (m_numreceived == m_numsent) {
+    m_donecb.send();
+  }
+}
+
+void
+Worker::done() {
   m_numreceived++;
   if (m_numreceived == m_numsent) {
     m_donecb.send();

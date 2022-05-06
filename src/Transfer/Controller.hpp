@@ -67,6 +67,8 @@ class Controller : public CBase_Controller {
     std::unordered_map<CmiUInt8, MeshData> proxyMap;
     int current_chunk;
 
+    int num_sent, num_received, total_sent, total_received;
+
   public:
     Controller();
     #if defined(__clang__)
@@ -86,12 +88,20 @@ class Controller : public CBase_Controller {
                        tk::UnsMesh::Coords* coords, const tk::Fields& u);
     void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
                        const tk::Fields& u, CkCallback cb);
+
+    void distributeCollisions(CkDataMsg* msg) {
+      distributeCollisions(msg->getSize()/sizeof(Collision), (Collision*)msg->getData());
+    }
     void distributeCollisions(int nColl, Collision* colls);
     void separateCollisions(MeshDict& outgoing, bool dest, int nColl,
                             Collision* colls) const;
     void separateCollisions(MeshDict& outgoing, bool dest, int nColl,
                             DetailedCollision* colls) const;
 
+    void allSent(int);
+    void collsReceived();
+    void checkReceived();
+    void checkDone(int);
 };
 
 }
