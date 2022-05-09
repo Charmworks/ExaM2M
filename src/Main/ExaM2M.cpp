@@ -51,6 +51,7 @@ namespace exam2m {
 tk::real g_virtualization = 0.0;
 
 int g_totaliter = 1;
+int g_mode = 0;
 
 #if defined(__clang__)
   #pragma clang diagnostic pop
@@ -72,22 +73,23 @@ class Main : public CBase_Main {
       for (int i = 1; i < msg->argc; i++) CkPrintf("%s ", msg->argv[i]);
       CkPrintf("\n");
 
-      if (msg->argc < 5) {
+      if (msg->argc < 6) {
         Throw( "Args require an iteration, virtualization, and at least two meshes" );
       }
 
-      exam2m::g_totaliter = std::atoi( msg->argv[1] );
-      exam2m::g_virtualization = std::atof( msg->argv[2] );
+      exam2m::g_mode = std::atoi( msg->argv[1] );
+      exam2m::g_totaliter = std::atoi( msg->argv[2] );
+      exam2m::g_virtualization = std::atof( msg->argv[3] );
 
       mainProxy = thisProxy;
 
       // Create the driver, add the two meshes, and tell it to run
       CProxy_Driver driverProxy = CProxy_Driver::ckNew( 0 );
 
-      for (int i = 3; i < msg->argc; i++) {
+      for (int i = 4; i < msg->argc; i++) {
         driverProxy.addMesh(msg->argv[i]);
       }
-      driverProxy.run(msg->argc - 3);
+      driverProxy.run(msg->argc - 4);
 
       delete msg;
     } catch (...) { tk::processExceptionCharm(); }

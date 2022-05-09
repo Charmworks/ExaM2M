@@ -23,6 +23,7 @@ namespace exam2m {
 
 extern tk::real g_virtualization;
 extern int g_totaliter;
+extern int g_mode;
 
 }
 
