@@ -122,6 +122,7 @@ module driver {
           }
         }
         forall [meshid] (0:num_meshes - 1,1) when solutionSet() {}
+        serial { m_timer.emplace_back(); m_timer[2].zero(); }
         for (m_curriter = 0; m_curriter < g_totaliter; m_curriter++) {
           // Begin mesh to mesh transfer
           serial {
@@ -135,11 +136,14 @@ module driver {
             CkPrintf("ExaM2M> Iteration %i completed in: %f sec\n", m_curriter, m_timer[1].dsec());
           }
         }
+        serial { CkPrintf("ExaM2M> %i iterations completed in: %f sec\n", g_totaliter, m_timer[2].dsec()); }
 
         // Write out final mesh data
-        forall [meshid] (0:num_meshes - 1,1) {
-          serial { m_meshes[meshid].m_mesharray.out(meshid); }
-          when written[meshid]() {}
+        if (g_mode > 0) {
+          forall [meshid] (0:num_meshes - 1,1) {
+            serial { m_meshes[meshid].m_mesharray.out(meshid); }
+            when written[meshid]() {}
+          }
         }
         serial { thisProxy.testDone(); }
       }
@@ -194,15 +198,25 @@ module driver {
           m_timer.emplace_back();
 
           m_timer[0].zero();
-          thisProxy.testVsFile(num_meshes, 0);
+          if (g_mode < 3) {
+            thisProxy.testVsFile(num_meshes, 0);
+          } else {
+            thisProxy.testLinear(num_meshes);
+          }
         }
         when testDone() serial {
-          CkPrintf("ExaM2M> Empirical testing finished in: %f sec\n", m_timer[0].dsec());
-          m_timer[0].zero();
-          thisProxy.testLinear(num_meshes);
+          CkPrintf("ExaM2M> Testing Phase 1 finished in: %f sec\n", m_timer[0].dsec());
+          if (g_mode == 2) {
+            m_timer[0].zero();
+            thisProxy.testLinear(num_meshes);
+          } else {
+            thisProxy.testDone();
+          }
         }
         when testDone() serial {
-          CkPrintf("ExaM2M> Linear testing finished in: %f sec\n", m_timer[0].dsec());
+          if (g_mode == 2) {
+            CkPrintf("ExaM2M> Testing Phase 2 finished in: %f sec\n", m_timer[0].dsec());
+          }
           mainProxy.finalize();
         }
       };
