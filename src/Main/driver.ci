@@ -120,13 +120,13 @@ module driver {
               }
             }
           }
-        }
+	}
 
         // Write out final mesh data
-        forall [meshid] (0:1,1) {
-          serial { m_meshes[meshid].m_mesharray.out(meshid); }
-          when written[meshid]() {}
-        }
+	forall [meshid] (0:1,1) {
+		 serial { m_meshes[meshid].m_mesharray.out(meshid); }
+		 when written[meshid]() {}
+		   }
         serial { mainProxy.finalize(); }
       };
     }
