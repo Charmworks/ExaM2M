@@ -406,7 +406,7 @@ if (CHARM_FOUND AND BRIGAND_FOUND AND SEACASExodus_FOUND AND EXODIFF_FOUND AND
   add_subdirectory(IO)
   add_subdirectory(Mesh)
   add_subdirectory(Transfer)
-  add_subdirectory(Main)
+  #add_subdirectory(Main)
 endif()
 
 # Conditionally enforce static link for all executables. This must be after all
