@@ -386,21 +386,11 @@ endif()
 
 # BLAS and LAPACK
 if (ENABLE_LAPACK)
-  set(lapack "lapack")
-  if (NOT MATHLIB)        # set default
-    set(MATHLIB mkl)
-  endif()
-  if (MATHLIB STREQUAL mkl OR MATHLIB STREQUAL MKL)
-    find_package(MKL)     # Prefer MKL if found
-  endif()
-  if(MKL_FOUND)
+set(lapack "lapack")
+  find_package(BLAS)
+  find_package(LAPACKE)
+  if(LAPACKE_FOUND)
     set(lapack "")
-  else()
-    find_package(BLAS)
-    find_package(LAPACKE)
-    if(LAPACKE_FOUND)
-      set(lapack "")
-    endif()
   endif()
 endif()
 
@@ -599,30 +589,23 @@ endif()
 if (HOST_OS MATCHES "alpine")
   set(TRILINOS_ALPINE "-DBLAS_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib;-DLAPACK_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib;-DTrilinos_CXX11_FLAGS=-std=c++11")
 endif()
-if (MKL_FOUND)
-  set(TRILINOS_MKL "-DTPL_ENABLE_BLAS=ON;-DTPL_BLAS_LIBRARIES=${MKL_LIBRARIES};-DTPL_LAPACK_LIBRARIES=${MKL_LIBRARIES}")
-  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(TRILINOS_MKL "-DTPL_ENABLE_MKL=ON;-DMKL_LIBRARY_DIRS=$ENV{MKLROOT}/lib;-DMKL_INCLUDE_DIRS=$ENV{MKLROOT}/include;-DTPL_BLAS_LIBRARIES=${MKL_LIBRARIES};-DTPL_LAPACK_LIBRARIES=${MKL_LIBRARIES}")
-  endif()
+if(BLAS_FOUND)
+  set(TRILINOS_BLAS -DTPL_BLAS_LIBRARIES=${BLAS_LIBRARIES})
 else()
-  if(BLAS_FOUND)
-    set(TRILINOS_BLAS -DTPL_BLAS_LIBRARIES=${BLAS_LIBRARIES})
-  else()
-    set(TRILINOS_BLAS -DBLAS_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib)
-  endif()
-  if(LAPACKE_FOUND)
-    set(TRILINOS_LAPACK -DTPL_LAPACK_LIBRARIES=${LAPACKE_LIBRARIES})
-  else()
-    set(TRILINOS_LAPACK -DLAPACK_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib)
-  endif()
+  set(TRILINOS_BLAS -DBLAS_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+if(LAPACKE_FOUND)
+  set(TRILINOS_LAPACK -DTPL_LAPACK_LIBRARIES=${LAPACKE_LIBRARIES})
+else()
+  set(TRILINOS_LAPACK -DLAPACK_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib)
 endif()
 if(trilinos)
   ExternalProject_Add(
     trilinos
     DEPENDS ${hdf5} ${netcdf} ${lapack} ${ampi}
     PREFIX trilinos
+#    PATCH_COMMAND patch -p1 -t -i ${PROJECT_SOURCE_DIR}/../cmake/exodus_gcc10.patch
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/trilinos
-    PATCH_COMMAND patch -p1 -t -i ${PROJECT_SOURCE_DIR}/../cmake/exodiff_cstdint.patch
     CMAKE_ARGS -D Trilinos_ENABLE_ALL_PACKAGES:BOOL=OFF
                -D TPL_ENABLE_MPI:BOOL=ON
                -D Trilinos_ENABLE_ALL_OPTIONAL_PACKAGES=OFF
@@ -636,7 +619,6 @@ if(trilinos)
                ${tr_hdf5}
                ${TRILINOS_SHARED}
                ${TRILINOS_ALPINE}
-               ${TRILINOS_MKL}
                ${TRILINOS_BLAS}
                ${TRILINOS_LAPACK}
                ${MACOSX_RPATH}

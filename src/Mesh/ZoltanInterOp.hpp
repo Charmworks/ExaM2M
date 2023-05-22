@@ -30,7 +30,7 @@ namespace zoltan {
 std::vector< std::size_t >
 geomPartMesh( const std::string& algorithm,
               const std::array< std::vector< real >, 3 >& elemcoord,
-              const std::vector< long >& elemid,
+              const std::vector< long long >& elemid,
               int npart );
 
 } // zoltan::

@@ -22,18 +22,8 @@ message(STATUS "------------------------------------------")
 set(CHARM_ROOT ${TPL_DIR}/charm)
 find_package(Charm)
 
-#### MKL (optional)
-if (NOT MATHLIB)        # set default
-  set(MATHLIB mkl)
-endif()
-if (MATHLIB STREQUAL mkl OR MATHLIB STREQUAL MKL)
-  find_package(MKL)
-endif()
-
 #### BLAS/LAPACK library with LAPACKE C-interface
-if (NOT MKL_FOUND)    # Prefer Intel's MKL for BLAS/LAPACK if available
-  find_package(LAPACKE)
-endif()
+find_package(LAPACKE)
 
 ### HDF5/NetCDF (NetCDF only for static link)
 set(HDF5_PREFER_PARALLEL true)
