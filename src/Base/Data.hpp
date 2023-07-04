@@ -3,7 +3,7 @@
   \file      src/Base/Data.hpp
   \copyright 2012-2015 J. Bakosi,
              2016-2018 Los Alamos National Security, LLC.,
-             2019-2020 Triad National Security, LLC.
+             2019-2021 Triad National Security, LLC.
              All rights reserved. See the LICENSE file for details.
   \brief     Generic data storage with different memory layouts
   \details   Generic data storage with different memory layouts. See also the
@@ -53,87 +53,79 @@ class Data {
 
     //! Const data access dispatch
     //! \details Public interface to const-ref data access to a single real
-    //!   value. Use it as Data(p,c,o), where p is the unknown index, c is
+    //!   value. Use it as Data(p,c), where p is the unknown index, and c is
     //!   the component index specifying the scalar equation within a system of
-    //!   equations, and o is the offset specifying the position at which the
-    //!   system resides among other systems. Requirement: offset + component <
+    //!   equations. Requirement: component <
     //!   nprop, unknown < nunk, enforced with an assert in DEBUG mode, see also
     //!   the constructor.
     //! \param[in] unknown Unknown index
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \return Const reference to data of type tk::real
     const tk::real&
-    operator()( ncomp_t unknown, ncomp_t component, ncomp_t offset ) const
-    { return access( unknown, component, offset, int2type< Layout >() ); }
+    operator()( ncomp_t unknown, ncomp_t component ) const
+    { return access( unknown, component, int2type< Layout >() ); }
 
     //! Non-const data access dispatch
     //! \details Public interface to non-const-ref data access to a single real
-    //!   value. Use it as Data(p,c,o), where p is the unknown index, c is
+    //!   value. Use it as Data(p,c), where p is the unknown index, and c is
     //!   the component index specifying the scalar equation within a system of
-    //!   equations, and o is the offset specifying the position at which the
-    //!   system resides among other systems. Requirement: offset + component <
+    //!   equations. Requirement: component <
     //!   nprop, unknown < nunk, enforced with an assert in DEBUG mode, see also
     //!   the constructor.
     //! \param[in] unknown Unknown index
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \return Non-const reference to data of type tk::real
     //! \see "Avoid Duplication in const and Non-const Member Function," and
     //!   "Use const whenever possible," Scott Meyers, Effective C++, 3d ed.
     tk::real&
-    operator()( ncomp_t unknown, ncomp_t component, ncomp_t offset ) {
+    operator()( ncomp_t unknown, ncomp_t component ) {
       return const_cast< tk::real& >(
                static_cast< const Data& >( *this ).
-                 operator()( unknown, component, offset ) );
+                 operator()( unknown, component ) );
     }
 
     //! Const ptr to physical variable access dispatch
     //! \details Public interface to the first half of a physical variable
     //!   access. cptr() and var() are two member functions intended to be used
-    //!   together in case when component and offset would be expensive to
+    //!   together in case when component would be expensive to
     //!   compute for data access via the function call operator, i.e., cptr()
     //!   can be used to pre-compute part of the address, which returns a
     //!   pointer and var() can be used to finish the data access using the
     //!   pointer returned by cptr(). In other words, cptr() returns part of the
-    //!   address known based on component and offset and intended to be used in
+    //!   address known based on component and intended to be used in
     //!   a setup phase. Then var() takes this partial address and finishes the
     //!   address calculation given the unknown id. Thus the following two data
     //!   accesses are equivalent (modulo constness):
-    //!   * real& value = operator()( unk, comp, offs ); and
-    //!   * const real* p = cptr( comp, offs ); and
+    //!   * real& value = operator()( unk, comp ); and
+    //!   * const real* p = cptr( comp ); and
     //!     const real& value = var( p, unk ); or real& value = var( p, unk );
-    //!   Requirement: offset + component < nprop, enforced with an assert in
+    //!   Requirement: component < nprop, enforced with an assert in
     //!   DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \return Pointer to data of type tk::real for use with var()
     //! \see Example client code in Statistics::setupOrdinary() and
     //!   Statistics::accumulateOrd() in Statistics/Statistics.C.
     const tk::real*
-    cptr( ncomp_t component, ncomp_t offset ) const
-    { return cptr( component, offset, int2type< Layout >() ); }
+    cptr( ncomp_t component ) const
+    { return cptr( component, int2type< Layout >() ); }
 
     //! Const-ref data-access dispatch
     //! \details Public interface to the second half of a physical variable
     //!   access. cptr() and var() are two member functions intended to be used
-    //!   together in case when component and offset would be expensive to
+    //!   together in case when component would be expensive to
     //!   compute for data access via the function call operator, i.e., cptr()
     //!   can be used to pre-compute part of the address, which returns a
     //!   pointer and var() can be used to finish the data access using the
     //!   pointer returned by cptr(). In other words, cptr() returns part of the
-    //!   address known based on component and offset and intended to be used in
+    //!   address known based on component and intended to be used in
     //!   a setup phase. Then var() takes this partial address and finishes the
     //!   address calculation given the unknown id. Thus the following two data
     //!   accesses are equivalent (modulo constness):
-    //!   * real& value = operator()( unk, comp, offs ); and
-    //!   * const real* p = cptr( comp, offs ); and
+    //!   * real& value = operator()( unk, comp ); and
+    //!   * const real* p = cptr( comp ); and
     //!     const real& value = var( p, unk ); or real& value = var( p, unk );
     //!   Requirement: unknown < nunk, enforced with an assert in DEBUG mode,
     //!   see also the constructor.
@@ -149,17 +141,17 @@ class Data {
     //! Non-const-ref data-access dispatch
     //! \details Public interface to the second half of a physical variable
     //!   access. cptr() and var() are two member functions intended to be used
-    //!   together in case when component and offset would be expensive to
+    //!   together in case when component would be expensive to
     //!   compute for data access via the function call operator, i.e., cptr()
     //!   can be used to pre-compute part of the address, which returns a
     //!   pointer and var() can be used to finish the data access using the
     //!   pointer returned by cptr(). In other words, cptr() returns part of the
-    //!   address known based on component and offset and intended to be used in
+    //!   address known based on component and intended to be used in
     //!   a setup phase. Then var() takes this partial address and finishes the
     //!   address calculation given the unknown id. Thus the following two data
     //!   accesses are equivalent (modulo constness):
-    //!   * real& value = operator()( unk, comp, offs ); and
-    //!   * const real* p = cptr( comp, offs ); and
+    //!   * real& value = operator()( unk, comp ); and
+    //!   * const real* p = cptr( comp ); and
     //!     const real& value = var( p, unk ); or real& value = var( p, unk );
     //!   Requirement: unknown < nunk, enforced with an assert in DEBUG mode,
     //!   see also the constructor.
@@ -185,20 +177,51 @@ class Data {
     //! \return Number of propertes/unknown
     ncomp_t nprop() const noexcept { return m_nprop; }
 
-    //! Extract vector of unknowns given component and offset
-    //! \details Requirement: offset + component < nprop, enforced with an
+    //! Extract flat vector of all unknowns
+    //! \return Flat vector of reals
+    std::vector< tk::real >
+    flat() const {
+      std::vector< tk::real > w( m_nunk * m_nprop );
+      for (std::size_t j=0; j<m_nprop; ++j)
+        for (std::size_t i=0; i<m_nunk; ++i)
+          w[i*m_nprop+j] = operator()( i, j );
+      return w;
+    }
+
+    //! Assign from flat vector
+    //! \param[in] rhs Flat vector to assign from
+    //! \note This is the opposite of flat().
+    void operator=( const std::vector< tk::real >& rhs ) {
+      Assert( rhs.size() == m_nunk * m_nprop, "Size mismatch" );
+      for (std::size_t j=0; j<m_nprop; ++j)
+        for (std::size_t i=0; i<m_nunk; ++i)
+          operator()( i, j ) = rhs[i*m_nprop+j];
+    }
+
+    //! Assign from array(3) of vectors
+    //! \param[in] rhs Array(3) of vectors to assign from
+    void operator=( const std::array< std::vector< tk::real >, 3 >& rhs ) {
+      Assert( m_nprop == 3, "Size mismatch" );
+      Assert( rhs[0].size() == m_nunk, "Size mismatch" );
+      Assert( rhs[1].size() == m_nunk, "Size mismatch" );
+      Assert( rhs[2].size() == m_nunk, "Size mismatch" );
+      for (std::size_t j=0; j<3; ++j)
+        for (std::size_t i=0; i<m_nunk; ++i)
+          operator()( i, j ) = rhs[j][i];
+    }
+
+    //! Extract vector of unknowns given component
+    //! \details Requirement: component < nprop, enforced with an
     //!   assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
-    //! \return A vector of unknowns given by component at offset (length:
+    //! \return A vector of unknowns given by component (length:
     //!   nunk(), i.e., the first constructor argument)
     std::vector< tk::real >
-    extract( ncomp_t component, ncomp_t offset ) const {
+    extract_comp( ncomp_t component ) const {
       std::vector< tk::real > w( m_nunk );
       for (ncomp_t i=0; i<m_nunk; ++i)
-        w[i] = operator()( i, component, offset );
+        w[i] = operator()( i, component );
       return w;
     }
 
@@ -211,7 +234,7 @@ class Data {
     std::vector< tk::real >
     extract( ncomp_t unknown ) const {
       std::vector< tk::real > w( m_nprop );
-      for (ncomp_t i=0; i<m_nprop; ++i) w[i] = operator()( unknown, i, 0 );
+      for (ncomp_t i=0; i<m_nprop; ++i) w[i] = operator()( unknown, i );
       return w;
     }
 
@@ -226,83 +249,75 @@ class Data {
     operator[]( ncomp_t unknown ) const { return extract( unknown ); }
 
     //! Extract (a copy of) four values of unknowns
-    //! \details Requirement: offset + component < nprop, [A,B,C,D] < nunk,
+    //! \details Requirement: component < nprop, [A,B,C,D] < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \param[in] A Index of 1st unknown
     //! \param[in] B Index of 2nd unknown
     //! \param[in] C Index of 3rd unknown
     //! \param[in] D Index of 4th unknown
-    //! \return Array of the four values of component at offset
+    //! \return Array of the four values of component
     std::array< tk::real, 4 >
-    extract( ncomp_t component, ncomp_t offset,
+    extract( ncomp_t component,
              ncomp_t A, ncomp_t B, ncomp_t C, ncomp_t D ) const
     {
-      auto p = cptr( component, offset );
+      auto p = cptr( component );
       return {{ var(p,A), var(p,B), var(p,C), var(p,D) }};
     }
 
     //! Extract (a copy of) four values of unknowns
-    //! \details Requirement: offset + component < nprop, for all N[i] < nunk,
+    //! \details Requirement: component < nprop, for all N[i] < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \param[in] N Indices of the 4 unknowns
-    //! \return Array of the four values of component at offset
+    //! \return Array of the four values of component
     std::array< tk::real, 4 >
-    extract( ncomp_t component, ncomp_t offset,
+    extract( ncomp_t component,
              const std::array< ncomp_t, 4 >& N ) const
     {
-      return extract( component, offset, N[0], N[1], N[2], N[3] );
+      return extract( component, N[0], N[1], N[2], N[3] );
     }
 
     //! Extract (a copy of) three values of unknowns
-    //! \details Requirement: offset + component < nprop, [A,B,C] < nunk,
+    //! \details Requirement: component < nprop, [A,B,C] < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \param[in] A Index of 1st unknown
     //! \param[in] B Index of 2nd unknown
     //! \param[in] C Index of 3rd unknown
-    //! \return Array of the four values of component at offset
+    //! \return Array of the four values of component
     std::array< tk::real, 3 >
-    extract( ncomp_t component, ncomp_t offset,
+    extract( ncomp_t component,
              ncomp_t A, ncomp_t B, ncomp_t C ) const
     {
-      auto p = cptr( component, offset );
+      auto p = cptr( component );
       return {{ var(p,A), var(p,B), var(p,C) }};
     }
 
     //! Extract (a copy of) three values of unknowns
-    //! \details Requirement: offset + component < nprop, for all N[i] < nunk,
+    //! \details Requirement: component < nprop, for all N[i] < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \param[in] N Indices of the 3 unknowns
-    //! \return Array of the three values of component at offset
+    //! \return Array of the three values of component
     std::array< tk::real, 3 >
-    extract( ncomp_t component, ncomp_t offset,
+    extract( ncomp_t component,
              const std::array< ncomp_t, 3 >& N ) const
     {
-      return extract( component, offset, N[0], N[1], N[2] );
+      return extract( component, N[0], N[1], N[2] );
     }
 
-    //! Const-ref accessor to underlying raw data
+    //! Const-ref accessor to underlying raw data as a std::vector
     //! \return Constant reference to underlying raw data
-    const std::vector< tk::real >& data() const { return m_vec; }
+    const std::vector< tk::real >& vec() const { return m_vec; }
 
-    //! Non-const-ref accessor to underlying raw data
+    //! Non-const-ref accessor to underlying raw data as a std::vector
     //! \return Non-constant reference to underlying raw data
-    std::vector< tk::real >& data() { return m_vec; }
+    std::vector< tk::real >& vec() { return m_vec; }
 
     //! Compound operator-=
     //! \param[in] rhs Data object to subtract
@@ -310,7 +325,7 @@ class Data {
     Data< Layout >& operator-= ( const Data< Layout >& rhs ) {
       Assert( rhs.nunk() == m_nunk, "Incorrect number of unknowns" );
       Assert( rhs.nprop() == m_nprop, "Incorrect number of properties" );
-      std::transform( rhs.data().cbegin(), rhs.data().cend(),
+      std::transform( rhs.vec().cbegin(), rhs.vec().cend(),
                       m_vec.cbegin(), m_vec.begin(),
                       []( tk::real s, tk::real d ){ return d-s; } );
       return *this;
@@ -328,7 +343,7 @@ class Data {
     Data< Layout >& operator+= ( const Data< Layout >& rhs ) {
       Assert( rhs.nunk() == m_nunk, "Incorrect number of unknowns" );
       Assert( rhs.nprop() == m_nprop, "Incorrect number of properties" );
-      std::transform( rhs.data().cbegin(), rhs.data().cend(),
+      std::transform( rhs.vec().cbegin(), rhs.vec().cend(),
                       m_vec.cbegin(), m_vec.begin(),
                       []( tk::real s, tk::real d ){ return d+s; } );
       return *this;
@@ -346,7 +361,7 @@ class Data {
     Data< Layout >& operator*= ( const Data< Layout >& rhs ) {
       Assert( rhs.nunk() == m_nunk, "Incorrect number of unknowns" );
       Assert( rhs.nprop() == m_nprop, "Incorrect number of properties" );
-      std::transform( rhs.data().cbegin(), rhs.data().cend(),
+      std::transform( rhs.vec().cbegin(), rhs.vec().cend(),
                       m_vec.cbegin(), m_vec.begin(),
                       []( tk::real s, tk::real d ){ return d*s; } );
       return *this;
@@ -379,7 +394,7 @@ class Data {
     Data< Layout >& operator/= ( const Data< Layout >& rhs ) {
       Assert( rhs.nunk() == m_nunk, "Incorrect number of unknowns" );
       Assert( rhs.nprop() == m_nprop, "Incorrect number of properties" );
-      std::transform( rhs.data().cbegin(), rhs.data().cend(),
+      std::transform( rhs.vec().cbegin(), rhs.vec().cend(),
                       m_vec.cbegin(), m_vec.begin(),
                       []( tk::real s, tk::real d ){ return d/s; } );
       return *this;
@@ -412,10 +427,11 @@ class Data {
     { return push_back( prop, int2type< Layout >() ); }
 
     //! Resize data store to contain 'count' elements
-    //! \param[in] count Resize store to contain 'count' elements
+    //! \param[in] count Resize store to contain count * nprop elements
     //! \param[in] value Value to initialize new data with (default: 0.0)
     //! \note This works for both shrinking and enlarging, as this simply
-    //!   translates to std::vector::resize().
+    //!   translates to std::vector::resize(). Note that count changes, nprop
+    //!   does not, see the private overload resize().
     void resize( std::size_t count, tk::real value = 0.0 )
     { resize( count, value, int2type< Layout >() ); }
 
@@ -438,15 +454,13 @@ class Data {
     }
 
     //! Fill vector of unknowns with the same value
-    //! \details Requirement: offset + component < nprop, enforced with an
+    //! \details Requirement: component < nprop, enforced with an
     //!   assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \param[in] value Value to fill vector of unknowns with
-    void fill( ncomp_t component, ncomp_t offset, tk::real value ) {
-      auto p = cptr( component, offset );
+    inline void fill( ncomp_t component, tk::real value ) {
+      auto p = cptr( component );
       for (ncomp_t i=0; i<m_nunk; ++i) var(p,i) = value;
     }
 
@@ -456,8 +470,7 @@ class Data {
     { std::fill( begin(m_vec), end(m_vec), value ); }
 
     //! Check if vector of unknowns is empty
-    bool empty() const noexcept
-    { return m_vec.empty(); }
+    bool empty() const noexcept { return m_vec.empty(); }
 
     //! Layout name dispatch
     //! \return The name of the data layout used
@@ -485,58 +498,52 @@ class Data {
     template< uint8_t m > struct int2type { enum { value = m }; };
 
     //! Overloads for the various const data accesses
-    //! \details Requirement: offset + component < nprop, unknown < nunk,
+    //! \details Requirement: component < nprop, unknown < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] unknown Unknown index
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \return Const reference to data of type tk::real
     //! \see A. Alexandrescu, Modern C++ Design: Generic Programming and Design
     //!   Patterns Applied, Addison-Wesley Professional, 2001.
     const tk::real&
-    access( ncomp_t unknown, ncomp_t component, ncomp_t offset,
-            int2type< UnkEqComp > ) const
+    access( ncomp_t unknown, ncomp_t component, int2type< UnkEqComp > ) const
     {
-      Assert( offset + component < m_nprop, "Out-of-bounds access: offset + "
+      Assert( component < m_nprop, "Out-of-bounds access: "
               "component < number of properties" );
       Assert( unknown < m_nunk, "Out-of-bounds access: unknown < number of "
               "unknowns" );
-      return m_vec[ unknown*m_nprop + offset + component ];
+      return m_vec[ unknown*m_nprop + component ];
     }
     const tk::real&
-    access( ncomp_t unknown, ncomp_t component, ncomp_t offset,
-            int2type< EqCompUnk > ) const
+    access( ncomp_t unknown, ncomp_t component, int2type< EqCompUnk > ) const
     {
-      Assert( offset + component < m_nprop, "Out-of-bounds access: offset + "
+      Assert( component < m_nprop, "Out-of-bounds access: "
               "component < number of properties" );
       Assert( unknown < m_nunk, "Out-of-bounds access: unknown < number of "
               "unknowns" );
-      return m_vec[ (offset+component)*m_nunk + unknown ];
+      return m_vec[ (component)*m_nunk + unknown ];
     }
 
     // Overloads for the various const ptr to physical variable accesses
-    //! \details Requirement: offset + component < nprop, unknown < nunk,
+    //! \details Requirement: component < nprop, unknown < nunk,
     //!   enforced with an assert in DEBUG mode, see also the constructor.
     //! \param[in] component Component index, i.e., position of a scalar within
     //!   a system
-    //! \param[in] offset System offset specifying the position of the system of
-    //!   equations among other systems
     //! \return Pointer to data of type tk::real for use with var()
     //! \see A. Alexandrescu, Modern C++ Design: Generic Programming and Design
     //!   Patterns Applied, Addison-Wesley Professional, 2001.
     const tk::real*
-    cptr( ncomp_t component, ncomp_t offset, int2type< UnkEqComp > ) const {
-      Assert( offset + component < m_nprop, "Out-of-bounds access: offset + "
+    cptr( ncomp_t component, int2type< UnkEqComp > ) const {
+      Assert( component < m_nprop, "Out-of-bounds access: "
               "component < number of properties" );
-      return m_vec.data() + component + offset;
+      return m_vec.data() + component;
     }
     const tk::real*
-    cptr( ncomp_t component, ncomp_t offset, int2type< EqCompUnk > ) const {
-      Assert( offset + component < m_nprop, "Out-of-bounds access: offset + "
+    cptr( ncomp_t component, int2type< EqCompUnk > ) const {
+      Assert( component < m_nprop, "Out-of-bounds access: "
               "component < number of properties" );
-      return m_vec.data() + (offset+component)*m_nunk;
+      return m_vec.data() + (component)*m_nunk;
     }
 
     // Overloads for the various const physical variable accesses
@@ -547,14 +554,14 @@ class Data {
     //! \return Const reference to data of type tk::real
     //! \see A. Alexandrescu, Modern C++ Design: Generic Programming and Design
     //!   Patterns Applied, Addison-Wesley Professional, 2001.
-    const tk::real&
+    inline const tk::real&
     var( const tk::real* const pt, ncomp_t unknown, int2type< UnkEqComp > )
     const {
       Assert( unknown < m_nunk, "Out-of-bounds access: unknown < number of "
               "unknowns" );
       return *(pt + unknown*m_nprop);
     }
-    const tk::real&
+    inline const tk::real&
     var( const tk::real* const pt, ncomp_t unknown, int2type< EqCompUnk > )
     const {
       Assert( unknown < m_nunk, "Out-of-bounds access: unknown < number of "
@@ -572,7 +579,7 @@ class Data {
       m_vec.resize( (m_nunk+1) * m_nprop );
       ncomp_t u = m_nunk;
       ++m_nunk;
-      for (ncomp_t i=0; i<m_nprop; ++i) operator()( u, i, 0 ) = prop[i];
+      for (ncomp_t i=0; i<m_nprop; ++i) operator()( u, i ) = prop[i];
     }
 
     void push_back( const std::vector< tk::real >&, int2type< EqCompUnk > )
@@ -591,7 +598,7 @@ class Data {
     }
 
     void resize( std::size_t, tk::real, int2type< EqCompUnk > ) {
-      Throw( "Not implented. It would be inefficient" );
+      Throw( "Not implemented. It would be inefficient" );
     }
 
     // Overloads for the name-queries of data lauouts
@@ -631,8 +638,8 @@ Data< Layout > min( const Data< Layout >& a, const Data< Layout >& b ) {
   Assert( a.nunk() == b.nunk(), "Number of unknowns unequal" );
   Assert( a.nprop() == b.nprop(), "Number of properties unequal" );
   Data< Layout > r( a.nunk(), a.nprop() );
-  std::transform( a.data().cbegin(), a.data().cend(),
-                  b.data().cbegin(), r.data().begin(),
+  std::transform( a.vec().cbegin(), a.vec().cend(),
+                  b.vec().cbegin(), r.vec().begin(),
                   []( tk::real s, tk::real d ){ return std::min(s,d); } );
 
   return r;
@@ -652,8 +659,8 @@ Data< Layout > max( const Data< Layout >& a, const Data< Layout >& b ) {
   Assert( a.nunk() == b.nunk(), "Number of unknowns unequal" );
   Assert( a.nprop() == b.nprop(), "Number of properties unequal" );
   Data< Layout > r( a.nunk(), a.nprop() );
-  std::transform( a.data().cbegin(), a.data().cend(),
-                  b.data().cbegin(), r.data().begin(),
+  std::transform( a.vec().cbegin(), a.vec().cend(),
+                  b.vec().cbegin(), r.vec().begin(),
                   []( tk::real s, tk::real d ){ return std::max(s,d); } );
   return r;
 }
@@ -666,9 +673,9 @@ template< uint8_t Layout >
 bool operator== ( const Data< Layout >& lhs, const Data< Layout >& rhs ) {
   Assert( rhs.nunk() == lhs.nunk(), "Incorrect number of unknowns" );
   Assert( rhs.nprop() == lhs.nprop(), "Incorrect number of properties" );
-  auto l = lhs.data().cbegin();
-  auto r = rhs.data().cbegin();
-  while (l != lhs.data().cend()) {
+  auto l = lhs.vec().cbegin();
+  auto r = rhs.vec().cbegin();
+  while (l != lhs.vec().cend()) {
     if (std::abs(*l - *r) > std::numeric_limits< tk::real >::epsilon())
      return false;
     ++l; ++r;
@@ -690,7 +697,7 @@ bool operator!= ( const Data< Layout >& lhs, const Data< Layout >& rhs )
 //! \return The index, i.e., the raw position, of and the largest absolute value
 //!   of the difference between all corresponding elements of _lhs_ and _rhs_.
 //! \details The position returned is the position in the underlying raw data
-//!   structure, independent of components, offsets, etc. If lhs == rhs with
+//!   structure, independent of components, etc. If lhs == rhs with
 //!   precision  std::numeric_limits< tk::real >::epsilon(), a pair of (0,0.0)
 //!   is returned.
 //! \note The Data objects _lhs_ and _rhs_ must have the same number of
@@ -700,13 +707,13 @@ std::pair< std::size_t, tk::real >
 maxdiff( const Data< Layout >& lhs, const Data< Layout >& rhs ) {
   Assert( lhs.nunk() == rhs.nunk(), "Number of unknowns unequal" );
   Assert( lhs.nprop() == rhs.nprop(), "Number of properties unequal" );
-  auto l = lhs.data().cbegin();
-  auto r = rhs.data().cbegin();
+  auto l = lhs.vec().cbegin();
+  auto r = rhs.vec().cbegin();
   std::pair< std::size_t, tk::real > m( 0, std::abs(*l - *r) );
   ++l; ++r;
-  while (l != lhs.data().cend()) {
+  while (l != lhs.vec().cend()) {
     const auto d = std::abs(*l - *r);
-    if (d > m.second) m = { std::distance(lhs.data().cbegin(),l), d };
+    if (d > m.second) m = { std::distance(lhs.vec().cbegin(),l), d };
     ++l; ++r;
   }
   return m;

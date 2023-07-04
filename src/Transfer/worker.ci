@@ -35,8 +35,7 @@ module worker {
                                             int index,
                                             int nColls,
                                             PotentialCollision colls[nColls] );
-      entry void transferSolution( std::size_t nPoints,
-                                   SolutionData soln[nPoints] );
+      entry void transferSolution( const std::vector< SolutionData >& soln );
     }
 
   } // exam2m::

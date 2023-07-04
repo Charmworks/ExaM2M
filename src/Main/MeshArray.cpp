@@ -84,7 +84,7 @@ MeshArray::MeshArray(
   const auto& z = m_coord[2];
   auto npoin = m_coord[0].size();
   for (std::size_t i=0; i<npoin; ++i) {
-    m_u(i,0,0) = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
+    m_u(i,0) = 1.0 * exp( -(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])/(2.0 * 0.05) );
   }
 
   // Tell the RTS that the MeshArray chares have been created
@@ -111,7 +111,7 @@ MeshArray::out( int meshid )
   std::vector< std::vector< tk::real > > nodefields;
 
   nodefieldnames.push_back( "scalar" );
-  nodefields.push_back( m_u.extract(0, 0) );
+  nodefields.push_back( m_u.extract(0) );
 
   // Surface field data in nodes
   std::vector< std::string > nodesurfnames;

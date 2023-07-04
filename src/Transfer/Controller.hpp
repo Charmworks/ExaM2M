@@ -9,7 +9,7 @@ namespace exam2m {
 
 void addMesh(CkArrayID p, int elem, CkCallback cb);
 void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel, tk::UnsMesh::Coords* coords, const tk::Fields& u);
-void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, const tk::Fields& u, CkCallback cb);
+void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords, tk::Fields& u, CkCallback cb);
 
 class LibMain : public CBase_LibMain {
 public:
@@ -49,7 +49,7 @@ class Controller : public CBase_Controller {
     void setSourceTets(CkArrayID p, int index, std::vector< std::size_t >* inpoel,
                        tk::UnsMesh::Coords* coords, const tk::Fields& u);
     void setDestPoints(CkArrayID p, int index, tk::UnsMesh::Coords* coords,
-                       const tk::Fields& u, CkCallback cb);
+                       tk::Fields& u, CkCallback cb);
     void distributeCollisions(int nColl, Collision* colls);
 };
 

@@ -30,7 +30,7 @@ class PotentialCollision {
 class SolutionData {
   public:
     std::size_t dest_index;
-    tk::real solution;
+    std::vector< tk::real > solution;
     void pup(PUP::er& p) { p | dest_index; p | solution; }
 };
 
@@ -59,7 +59,7 @@ class Worker : public CBase_Worker {
 
     //! Set the destination mesh data
     void setDestPoints( tk::UnsMesh::Coords* coords,
-                        const tk::Fields& u,
+                        tk::Fields& u,
                         CkCallback cb );
 
     //! Process potential collisions in the destination mesh
@@ -76,7 +76,7 @@ class Worker : public CBase_Worker {
                                     PotentialCollision* colls ) const;
 
     //! Transfer the interpolated solution data back to destination mesh
-    void transferSolution( std::size_t nPoints, SolutionData* soln );
+    void transferSolution( const std::vector< SolutionData >& soln );
 
     /** @name Charm++ pack/unpack serializer member functions */
     ///@{

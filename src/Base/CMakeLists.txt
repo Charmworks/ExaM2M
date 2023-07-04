@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.5)
 
 add_library(Base
-            Vector.cpp
             Exception.cpp
             LoadDistributor.cpp
             ProcessException.cpp)

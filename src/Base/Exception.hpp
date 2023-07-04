@@ -3,7 +3,8 @@
   \file      src/Base/Exception.hpp
   \copyright 2012-2015 J. Bakosi,
              2016-2018 Los Alamos National Security, LLC.,
-             2019-2020 Triad National Security, LLC.
+             2019-2023 Triad National Security, LLC.
+             All rights reserved. See the LICENSE file for details.
   \brief     Exception class declaration
   \details   Exception class declaration. The basic functionality provided by
     the Exception class is to facilitate printing out a message, together with
@@ -21,6 +22,12 @@
 
 //! Toolkit declarations and definitions for general purpose utilities
 namespace tk {
+
+#ifdef NDEBUG    // asserts disabled
+static constexpr bool ndebug = true;
+#else            // asserts enabled
+static constexpr bool ndebug = false;
+#endif
 
 //! \brief Throw macro that always throws an exception
 //! \details Throw Exception with arguments passed in. Add source filename,
@@ -75,14 +82,16 @@ class Exception : public std::exception {
                         unsigned int line = 0 ) noexcept;
 
     //! Destructor
-    virtual ~Exception() noexcept;
+    virtual ~Exception() noexcept override;
 
     //! Force move constructor for throws
     Exception(Exception&&) = default;
 
     //! Redefine std::exception's what()
     //! \return C-style string to exception message
-    virtual const char* what() const noexcept { return m_message.c_str(); }
+    virtual const char* what() const noexcept override {
+      return m_message.c_str();
+    }
 
     //! Handle Exception
     virtual ErrCode handleException() noexcept;
