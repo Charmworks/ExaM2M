@@ -44,7 +44,7 @@ class GeometricMeshElemAdapter : public Zoltan2::MeshAdapter< ZoltanTypes > {
     GeometricMeshElemAdapter(
       std::size_t nelem,
       const std::array< std::vector< real >, 3 >& centroid,
-      const std::vector< long >& elemid )
+      const std::vector< long long >& elemid )
     : m_nelem( nelem ),
       m_topology( EntityTopologyType::TETRAHEDRON ),
       m_centroid( centroid ),
@@ -103,13 +103,13 @@ class GeometricMeshElemAdapter : public Zoltan2::MeshAdapter< ZoltanTypes > {
     //! Mesh element coordinates (centroids)
     const std::array< std::vector< real >, 3 >& m_centroid;
     //! Global mesh element ids
-    const std::vector< long >& m_elemid;
+    const std::vector< long long >& m_elemid;
 };
 
 std::vector< std::size_t >
 geomPartMesh( const std::string& algorithm,
               const std::array< std::vector< real >, 3 >& centroid,
-              const std::vector< long >& elemid,
+              const std::vector< long long >& elemid,
               int npart )
 // *****************************************************************************
 //  Partition mesh using Zoltan2 with a geometric partitioner, such as RCB, RIB
@@ -140,7 +140,7 @@ geomPartMesh( const std::string& algorithm,
   //    identifiers and global counts
   // See also
   // external/src/trilinos/packages/zoltan2/src/input/Zoltan2_InputTraits.hpp
-  using ZoltanTypes = Zoltan2::BasicUserTypes< real, long, long >;
+  using ZoltanTypes = Zoltan2::BasicUserTypes< real >;
 
   // Create mesh adapter for Zoltan for mesh element partitioning
   using InciterZoltanAdapter = GeometricMeshElemAdapter< ZoltanTypes >;

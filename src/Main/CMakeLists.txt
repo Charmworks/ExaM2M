@@ -17,46 +17,45 @@ include(ConfigExecutable)
 
 # Configure executable targets
 
-add_executable(${EXAM2M_EXECUTABLE}
-               Mapper.cpp
-               Partitioner.cpp
-               Driver.cpp
-               MeshArray.cpp
-               ExaM2M.cpp)
+#add_executable(${EXAM2M_EXECUTABLE}
+#               Mapper.cpp
+#               Partitioner.cpp
+#               Driver.cpp
+#               MeshArray.cpp
+#               ExaM2M.cpp)
+#
+#config_executable(${EXAM2M_EXECUTABLE})
 
-config_executable(${EXAM2M_EXECUTABLE})
+#target_include_directories(${EXAM2M_EXECUTABLE} PUBLIC
+#                           ${PROJECT_SOURCE_DIR}
+#                           ${PROJECT_SOURCE_DIR}/IO
+#                           ${PROJECT_SOURCE_DIR}/Mesh
+#                           ${PROJECT_SOURCE_DIR}/Transfer
+#                           ${PROJECT_SOURCE_DIR}/Main
+#                           ${PROJECT_BINARY_DIR}/IO
+#                           ${PROJECT_BINARY_DIR}/Main
+#                           ${NETCDF_INCLUDES}
+#                           ${CHARM_INCLUDE_DIRS}
+#                           ${HIGHWAYHASH_INCLUDE_DIRS})
 
-target_include_directories(${EXAM2M_EXECUTABLE} PUBLIC
-                           ${PROJECT_SOURCE_DIR}
-                           ${PROJECT_SOURCE_DIR}/IO
-                           ${PROJECT_SOURCE_DIR}/Mesh
-                           ${PROJECT_SOURCE_DIR}/Transfer
-                           ${PROJECT_SOURCE_DIR}/Main
-                           ${PROJECT_BINARY_DIR}/IO
-                           ${PROJECT_BINARY_DIR}/Main
-                           ${NETCDF_INCLUDES}
-                           ${CHARM_INCLUDE_DIRS}
-                           ${HIGHWAYHASH_INCLUDE_DIRS})
+message("LAPACK linking debug ${LAPACKE_LIBRARIES}")
 
-target_link_libraries(${EXAM2M_EXECUTABLE}
-                      Base
-                      Mesh
-                      ExodusIIMeshIO
-                      MeshWriter
-                      Worker
-                      ${SEACASExodus_LIBRARIES}
-                      ${Zoltan2_LIBRARIES}
-                      ${LAPACKE_LIBRARIES}    # only if MKL not found
-                      ${MKL_INTERFACE_LIBRARY}
-                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
-                      ${MKL_CORE_LIBRARY}
-                      ${MKL_INTERFACE_LIBRARY}
-                      ${MKL_SEQUENTIAL_LAYER_LIBRARY}
-                      ${LIBCXX_LIBRARIES}     # only for static link with libc++
-                      ${LIBCXXABI_LIBRARIES}) # only for static link with libc++
+#target_link_libraries(${EXAM2M_EXECUTABLE}
+#                      Base
+#                      Mesh
+#                      ExodusIIMeshIO
+#                      MeshWriter
+#                      Worker
+#                      ${LAPACKE_LIBRARIES}
+#                      ${SEACASExodus_LIBRARIES}
+#                      ${LAPACKE_LIBRARIES}
+#                      ${Zoltan2_LIBRARIES}
+#                      ${LAPACKE_LIBRARIES}
+#                      ${LIBCXX_LIBRARIES}     # only for static link with libc++
+#                      ${LIBCXXABI_LIBRARIES}) # only for static link with libc++
 
-addCharmModule( "mapper" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "partitioner" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "mesharray" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "driver" "${EXAM2M_EXECUTABLE}" )
-addCharmModule( "exam2m" "${EXAM2M_EXECUTABLE}" )
+#addCharmModule( "mapper" "${EXAM2M_EXECUTABLE}" )
+#addCharmModule( "partitioner" "${EXAM2M_EXECUTABLE}" )
+#addCharmModule( "mesharray" "${EXAM2M_EXECUTABLE}" )
+#addCharmModule( "driver" "${EXAM2M_EXECUTABLE}" )
+#addCharmModule( "exam2m" "${EXAM2M_EXECUTABLE}" )
